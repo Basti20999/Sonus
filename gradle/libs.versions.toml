@@ -1,5 +1,11 @@
 [versions]
 jspecify = "1.0.0"
+checkerqual = "3.49.5"
+netty = "4.1.123.Final"
+adventure = "4.23.0"
 
 [libraries]
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+checkerqual = { module = "org.checkerframework:checker-qual", version.ref = "checkerqual" }
+netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
+adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
