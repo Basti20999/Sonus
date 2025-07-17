@@ -27,10 +27,10 @@ public final class ProtocolRegistry<T extends ProtocolMessage<?>> {
         }
     }
 
-    public T readArray(byte[] array) {
+    public T readArray(byte[] array, int version) {
         ByteBuf buf = Unpooled.wrappedBuffer(array);
         try {
-            return this.read(buf);
+            return this.read(buf, version);
         } finally {
             buf.release();
         }
