@@ -1,3 +1,7 @@
+plugins {
+    alias(libs.plugins.pluginyml.bukkit) apply false
+}
+
 allprojects {
     group = "dev.minceraft.sonus"
     version = "2.0.0-SNAPSHOT"

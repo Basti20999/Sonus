@@ -1,11 +1,25 @@
 [versions]
+# plugins
+pluginyml = "0.6.0"
+
+# protocol
 jspecify = "1.0.0"
 checkerqual = "3.49.5"
 netty = "4.1.123.Final"
 adventure = "4.23.0"
 
+# paper agent
+paper-api = "1.21.7-R0.1-SNAPSHOT"
+
+[plugins]
+pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginyml" }
+
 [libraries]
+# protocol
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 checkerqual = { module = "org.checkerframework:checker-qual", version.ref = "checkerqual" }
 netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
 adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
+
+# paper agent
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
