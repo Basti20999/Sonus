@@ -7,8 +7,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.NullMarked;
 
-import static dev.minceraft.sonus.protocol.util.SonusConstants.CURRENT_VERSION;
-import static dev.minceraft.sonus.protocol.util.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
+import static dev.minecraft.sonus.common.SonusConstants.CURRENT_VERSION;
+import static dev.minecraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
 
 @NullMarked
 public class SonusAgentPlugin extends JavaPlugin {

@@ -4,8 +4,8 @@ package dev.minceraft.service.player;
 import dev.minceraft.service.adapter.VoiceAdapter;
 import dev.minceraft.service.audio.SonusAudio;
 import dev.minceraft.service.rooms.AbstractRoom;
-import dev.minceraft.service.source.IAudioSource;
-import dev.minceraft.sonus.util.WorldVec3d;
+import dev.minecraft.sonus.common.IAudioSource;
+import dev.minecraft.sonus.common.data.WorldVec3d;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

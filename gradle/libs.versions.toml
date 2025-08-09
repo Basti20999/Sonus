@@ -3,10 +3,16 @@
 pluginyml = "0.6.0"
 
 # protocol
+leangen = "2.0.1"
 jspecify = "1.0.0"
 checkerqual = "3.49.5"
 netty = "4.1.123.Final"
+iouring = "0.0.24.Final"
 adventure = "4.23.0"
+slf4j = "2.0.17"
+guava = "33.4.8-jre"
+gson = "2.10.1"
+fastutil = "8.5.13"
 
 # paper agent
 paper-api = "1.21.7-R0.1-SNAPSHOT"
@@ -16,10 +22,21 @@ pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "plug
 
 [libraries]
 # protocol
+leangen = { module = "io.leangen.geantyref:geantyref", version.ref = "leangen" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 checkerqual = { module = "org.checkerframework:checker-qual", version.ref = "checkerqual" }
-netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
 adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+fastutil = { module = "it.unimi.dsi:fastutil", version.ref = "fastutil" }
+
+# netty
+netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
+netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
+netty-transport-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty" }
+netty-transport-iouring = { module = "io.netty.incubator:netty-incubator-transport-native-io_uring", version.ref = "iouring" }
+netty-transport-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
 
 # paper agent
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }

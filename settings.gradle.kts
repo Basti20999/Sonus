@@ -5,3 +5,5 @@ rootProject.name = "Sonus"
 include("protocol")
 include("service")
 include("agent-paper")
+include("svc-protocol")
+include("common")

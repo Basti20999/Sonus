@@ -1,0 +1,12 @@
+package dev.minecraft.sonus.common.protocol.util;
+// Created by booky10 in Sonus (01:26 17.07.2025)
+
+import io.netty.buffer.ByteBuf;
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
+@FunctionalInterface
+public interface BufWriter<T> {
+
+    void write(ByteBuf buf, T value);
+}
