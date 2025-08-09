@@ -2,8 +2,7 @@ package de.pianoman911.sonus.svcprotocol.meta;
 
 import com.google.gson.JsonObject;
 import de.pianoman911.sonus.svcprotocol.util.SvcPluginChannels;
-import dev.minecraft.sonus.common.data.ISonusPlayer;
-import dev.minecraft.sonus.common.protocol.codec.ServerBound;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 

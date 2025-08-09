@@ -1,7 +1,6 @@
 package de.pianoman911.sonus.svcprotocol.voice;
 
-import dev.minecraft.sonus.common.data.ISonusPlayer;
-import dev.minecraft.sonus.common.protocol.codec.ServerBound;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 
 public class ConnectionCheckSvcPacket extends SvcVoicePacket<ConnectionCheckSvcPacket> implements ServerBound {

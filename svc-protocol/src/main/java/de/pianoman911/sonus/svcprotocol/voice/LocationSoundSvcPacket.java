@@ -1,9 +1,9 @@
 package de.pianoman911.sonus.svcprotocol.voice;
 
-import dev.minecraft.sonus.common.data.ISonusPlayer;
-import dev.minecraft.sonus.common.data.Vec3d;
-import dev.minecraft.sonus.common.protocol.util.DataTypeUtil;
-import dev.minecraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;

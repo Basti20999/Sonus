@@ -1,7 +1,7 @@
 package dev.minceraft.sonus.protocol.registry;
 // Created by booky10 in Sonus (01:46 17.07.2025)
 
-import dev.minecraft.sonus.common.protocol.util.VarInt;
+import dev.minceraft.sonus.common.protocol.util.VarInt;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;

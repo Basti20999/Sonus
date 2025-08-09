@@ -1,8 +1,8 @@
 package de.pianoman911.sonus.svcprotocol.data;
 
 import com.google.gson.JsonObject;
-import dev.minecraft.sonus.common.protocol.util.DataTypeUtil;
-import dev.minecraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;

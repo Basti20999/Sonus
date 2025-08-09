@@ -12,8 +12,8 @@ import de.pianoman911.sonus.svcprotocol.voice.MicSvcPacket;
 import de.pianoman911.sonus.svcprotocol.voice.PingSvcPacket;
 import de.pianoman911.sonus.svcprotocol.voice.PlayerSoundSvcPacket;
 import de.pianoman911.sonus.svcprotocol.voice.SvcVoicePacket;
-import dev.minecraft.sonus.common.protocol.registry.SimpleRegistry;
-import dev.minecraft.sonus.common.protocol.util.VarInt;
+import dev.minceraft.sonus.common.protocol.registry.SimpleRegistry;
+import dev.minceraft.sonus.common.protocol.util.VarInt;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 

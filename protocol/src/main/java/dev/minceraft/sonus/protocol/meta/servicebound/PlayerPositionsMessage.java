@@ -3,8 +3,8 @@ package dev.minceraft.sonus.protocol.meta.servicebound;
 
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
-import dev.minecraft.sonus.common.protocol.util.DataTypeUtil;
-import dev.minecraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.common.data.WorldVec3d;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;

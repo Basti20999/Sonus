@@ -1,6 +1,6 @@
 package de.pianoman911.sonus.svcprotocol.meta;
 
-import dev.minecraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 
 public interface IMetaSvcHandler {
 

@@ -6,7 +6,7 @@ import dev.minceraft.service.player.PlayerManager;
 import dev.minceraft.service.player.SonusPlayer;
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.servicebound.PlayerPositionsMessage;
-import dev.minecraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.common.data.WorldVec3d;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Map;

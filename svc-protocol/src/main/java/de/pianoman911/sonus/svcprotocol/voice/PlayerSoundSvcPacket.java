@@ -1,8 +1,8 @@
 package de.pianoman911.sonus.svcprotocol.voice;
 
-import dev.minecraft.sonus.common.data.ISonusPlayer;
-import dev.minecraft.sonus.common.protocol.util.DataTypeUtil;
-import dev.minecraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 

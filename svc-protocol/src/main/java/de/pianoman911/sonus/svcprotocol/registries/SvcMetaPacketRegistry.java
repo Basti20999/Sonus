@@ -14,7 +14,7 @@ import de.pianoman911.sonus.svcprotocol.meta.RequestSecretSvcPacket;
 import de.pianoman911.sonus.svcprotocol.meta.SecretSvcPacket;
 import de.pianoman911.sonus.svcprotocol.meta.SvcMetaPacket;
 import de.pianoman911.sonus.svcprotocol.meta.UpdateStateSvcPacket;
-import dev.minecraft.sonus.common.protocol.registry.SimpleRegistry;
+import dev.minceraft.sonus.common.protocol.registry.SimpleRegistry;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;

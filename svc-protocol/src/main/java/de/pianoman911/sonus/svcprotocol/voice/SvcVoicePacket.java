@@ -3,9 +3,8 @@ package de.pianoman911.sonus.svcprotocol.voice;
 
 import de.pianoman911.sonus.svcprotocol.AbstractSvcPacket;
 import de.pianoman911.sonus.svcprotocol.SvcUdpMagicCodec;
-import dev.minecraft.sonus.common.data.ISonusPlayer;
-import dev.minecraft.sonus.common.protocol.codec.IUdpPacket;
-import dev.minecraft.sonus.common.protocol.udp.AbstractMagicUdpCodec;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.protocol.udp.AbstractMagicUdpCodec;
 
 import java.net.InetSocketAddress;
 

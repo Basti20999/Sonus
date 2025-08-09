@@ -3,7 +3,7 @@ package dev.minceraft.service.rooms;
 
 import dev.minceraft.service.audio.SonusAudio;
 import dev.minceraft.service.player.SonusPlayer;
-import dev.minecraft.sonus.common.IAudioSource;
+import dev.minceraft.sonus.common.IAudioSource;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;

@@ -4,8 +4,8 @@ import de.pianoman911.sonus.svcprotocol.meta.IMetaSvcHandler;
 import de.pianoman911.sonus.svcprotocol.meta.SvcMetaPacket;
 import de.pianoman911.sonus.svcprotocol.registries.SvcMetaPacketRegistry;
 import de.pianoman911.sonus.svcprotocol.util.SvcPluginChannels;
-import dev.minecraft.sonus.common.data.ISonusPlayer;
-import dev.minecraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 

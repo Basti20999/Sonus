@@ -1,7 +1,6 @@
 package de.pianoman911.sonus.svcprotocol.voice;
 
-import dev.minecraft.sonus.common.data.ISonusPlayer;
-import dev.minecraft.sonus.common.protocol.codec.ClientBound;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 

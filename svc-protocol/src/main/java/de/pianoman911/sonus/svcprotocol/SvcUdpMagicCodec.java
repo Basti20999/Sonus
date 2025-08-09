@@ -2,7 +2,7 @@ package de.pianoman911.sonus.svcprotocol;
 
 
 import de.pianoman911.sonus.svcprotocol.voice.SvcVoicePacket;
-import dev.minecraft.sonus.common.protocol.udp.AbstractMagicUdpCodec;
+import dev.minceraft.sonus.common.protocol.udp.AbstractMagicUdpCodec;
 import io.leangen.geantyref.TypeToken;
 
 public class SvcUdpMagicCodec extends AbstractMagicUdpCodec<SvcVoicePacket<?>> {
