@@ -3,7 +3,7 @@ package dev.minceraft.sonus.service.network;
 
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.adapter.AdapterManager;
-import dev.minceraft.sonus.service.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;

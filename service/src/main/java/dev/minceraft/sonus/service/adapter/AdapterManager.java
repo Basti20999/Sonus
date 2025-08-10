@@ -1,6 +1,8 @@
 package dev.minceraft.sonus.service.adapter;
 // Created by booky10 in Sonus (01:45 10.08.2025)
 
+import dev.minceraft.sonus.common.adapter.VoiceAdapter;
+import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import net.kyori.adventure.util.Services;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;

@@ -1,0 +1,99 @@
+package dev.minceraft.sonus.protocol.svc.data;
+
+import com.google.gson.JsonObject;
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import io.netty.buffer.ByteBuf;
+
+import java.util.UUID;
+
+public class SonusClientGroup {
+
+    private final UUID groupId;
+    private final String name;
+    private final boolean password;
+    private final boolean persistent;
+    private final boolean hidden;
+    private final SonusGroupType type;
+
+    public SonusClientGroup(String name, UUID groupId, boolean password, boolean persistent, boolean hidden, SonusGroupType type) {
+        this.name = name;
+        this.groupId = groupId;
+        this.password = password;
+        this.persistent = persistent;
+        this.hidden = hidden;
+        this.type = type;
+    }
+
+    public SonusClientGroup(ByteBuf buf) {
+        this.groupId = new UUID(buf.readLong(), buf.readLong());
+        this.name = Utf8String.read(buf, 512);
+        this.password = buf.readBoolean();
+        this.persistent = buf.readBoolean();
+        this.hidden = buf.readBoolean();
+        this.type = SonusGroupType.values()[buf.readShort()];
+    }
+
+    public SonusClientGroup(JsonObject json) {
+        this.groupId = UUID.fromString(json.get("groupId").getAsString());
+        this.name = json.get("name").getAsString();
+        this.password = json.get("password").getAsBoolean();
+        this.persistent = json.get("persistent").getAsBoolean();
+        this.hidden = json.get("hidden").getAsBoolean();
+        this.type = SonusGroupType.ID_INDEX.valueOrThrow(json.get("type").getAsString());
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public boolean hasPassword() {
+        return this.password;
+    }
+
+    public UUID getId() {
+        return this.groupId;
+    }
+
+    public boolean isPersistent() {
+        return this.persistent;
+    }
+
+    public boolean isHidden() {
+        return this.hidden;
+    }
+
+    public SonusGroupType getSonusGroupType() {
+        return this.type;
+    }
+
+    public void encode(ByteBuf buf) {
+        buf.writeLong(this.groupId.getMostSignificantBits());
+        buf.writeLong(this.groupId.getLeastSignificantBits());
+        Utf8String.write(buf, this.name);
+        buf.writeBoolean(this.password);
+        buf.writeBoolean(this.persistent);
+        buf.writeBoolean(this.hidden);
+        buf.writeShort(this.type.ordinal());
+    }
+
+    public void encode(JsonObject json) {
+        json.addProperty("name", this.name);
+        json.addProperty("groupId", this.groupId.toString());
+        json.addProperty("password", this.password);
+        json.addProperty("persistent", this.persistent);
+        json.addProperty("hidden", this.hidden);
+        json.addProperty("type", this.type.getId());
+    }
+
+    @Override
+    public String toString() {
+        return "SonusClientGroup{" +
+                "groupId=" + groupId +
+                ", name='" + name + '\'' +
+                ", password=" + password +
+                ", persistent=" + persistent +
+                ", hidden=" + hidden +
+                ", type=" + type +
+                '}';
+    }
+}
