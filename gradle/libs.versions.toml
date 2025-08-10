@@ -14,6 +14,9 @@ guava = "33.4.8-jre"
 gson = "2.10.1"
 fastutil = "8.5.13"
 
+# config
+configurate = "4.1.2"
+
 # paper agent
 paper-api = "1.21.7-R0.1-SNAPSHOT"
 
@@ -31,6 +34,10 @@ guava = { module = "com.google.guava:guava", version.ref = "guava" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 fastutil = { module = "it.unimi.dsi:fastutil", version.ref = "fastutil" }
 
+#config
+configurate-core = { module = "org.spongepowered:configurate-core", version.ref = "configurate" }
+configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate" }
+
 # netty
 netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
@@ -40,3 +47,7 @@ netty-transport-kqueue = { module = "io.netty:netty-transport-native-kqueue", ve
 
 # paper agent
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
+
+[bundles]
+configurate = ["configurate-core", "configurate-yaml"]
+netty-transport = ["netty-transport-epoll", "netty-transport-iouring", "netty-transport-kqueue"]

@@ -1,4 +1,4 @@
-package dev.minceraft.service.player;
+package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
 import org.jspecify.annotations.NullMarked;

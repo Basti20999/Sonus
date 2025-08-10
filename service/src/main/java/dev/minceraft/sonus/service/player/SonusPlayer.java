@@ -1,9 +1,9 @@
-package dev.minceraft.service.player;
+package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
-import dev.minceraft.service.adapter.VoiceAdapter;
-import dev.minceraft.service.audio.SonusAudio;
-import dev.minceraft.service.rooms.AbstractRoom;
+import dev.minceraft.sonus.service.adapter.VoiceAdapter;
+import dev.minceraft.sonus.service.audio.SonusAudio;
+import dev.minceraft.sonus.service.rooms.AbstractRoom;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import org.jspecify.annotations.NullMarked;

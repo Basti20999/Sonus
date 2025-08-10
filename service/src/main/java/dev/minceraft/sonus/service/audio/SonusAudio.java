@@ -1,4 +1,4 @@
-package dev.minceraft.service.audio;
+package dev.minceraft.sonus.service.audio;
 // Created by booky10 in Sonus (02:44 17.07.2025)
 
 import org.jspecify.annotations.NullMarked;

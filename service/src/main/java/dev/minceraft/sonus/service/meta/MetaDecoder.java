@@ -1,7 +1,7 @@
-package dev.minceraft.service.meta;
+package dev.minceraft.sonus.service.meta;
 // Created by booky10 in Sonus (02:21 17.07.2025)
 
-import dev.minceraft.service.SonusService;
+import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
 import io.netty.buffer.ByteBuf;
