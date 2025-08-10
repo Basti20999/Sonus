@@ -5,6 +5,7 @@ import dev.minceraft.sonus.common.protocol.util.PacketDirection;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -37,14 +38,11 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> {
         }
     }
 
-    public T read(D data, PacketDirection direction) {
+    @Nullable
+    public T read(D data) {
         int packetId = this.idCodec.decoder.applyAsInt(data);
         T packet = this.constructors.get(packetId).get();
         this.codec.decoder.accept(data, packet);
-
-        if (packet instanceof BothBound bothBound) {
-            bothBound.setDirection(direction);
-        }
         return packet;
     }
 

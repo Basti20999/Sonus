@@ -2,6 +2,7 @@ package dev.minceraft.sonus.common.protocol.util;
 // Created by booky10 in Sonus (01:17 17.07.2025)
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import org.jspecify.annotations.NullMarked;
 
 // copied from https://github.com/PaperMC/Velocity/blob/81deb1fff82957705108755f420be621c9ba4f8f/proxy/src/main/java/com/velocitypowered/proxy/protocol/ProtocolUtils.java#L158-L254
@@ -9,8 +10,29 @@ import org.jspecify.annotations.NullMarked;
 public final class VarInt {
 
     private static final int MAXIMUM_VARINT_SIZE = 5;
+    private static final int[] VAR_INT_EXACT_BYTE_LENGTHS = new int[33];
 
     private VarInt() {
+    }
+
+    @SuppressWarnings("MagicNumber")
+    private static void initVarIntLengths() {
+        for (int i = 0; i < VAR_INT_EXACT_BYTE_LENGTHS.length; ++i) {
+            VAR_INT_EXACT_BYTE_LENGTHS[i] = (int) Math.ceil((31d - (i - 1)) / 7d);
+        }
+        // special case for the number 0
+        VAR_INT_EXACT_BYTE_LENGTHS[32] = 1;
+    }
+
+    public static ByteBuf buffer(int value) {
+        ByteBuf buf = Unpooled.wrappedBuffer(new byte[size(value)]);
+        buf.resetWriterIndex();
+        write(buf, value);
+        return buf;
+    }
+
+    static int size(int value) {
+        return VAR_INT_EXACT_BYTE_LENGTHS[Integer.numberOfLeadingZeros(value)];
     }
 
     /**

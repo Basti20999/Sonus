@@ -22,10 +22,6 @@ public record WrappedUdpPipelineData(
         this.context.put("remote", remoteAddress);
     }
 
-    public static WrappedUdpPipelineData fromUdpPacket(IUdpPacket packet) {
-        return new WrappedUdpPipelineData(ContextMap.newInstance(), packet.getRemoteAddress(), packet.getCodec(), packet);
-    }
-
     @SuppressWarnings("unchecked")
     public <T> T unwrap() {
         return (T) this.data;
