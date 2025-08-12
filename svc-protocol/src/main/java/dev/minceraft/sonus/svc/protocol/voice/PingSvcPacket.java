@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.voice;
 
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.PacketDirection;
 import io.netty.buffer.ByteBuf;
@@ -21,16 +20,6 @@ public class PingSvcPacket extends SvcVoicePacket<PingSvcPacket> {
     }
 
     @Override
-    public PacketDirection getDirection() {
-        return this.direction;
-    }
-
-    @Override
-    public void setDirection(PacketDirection direction) {
-        this.direction = direction;
-    }
-
-    @Override
     public void encode(ByteBuf buf) {
         DataTypeUtil.writeUniqueId(buf, this.id);
         buf.writeLong(this.timestamp);
@@ -43,8 +32,8 @@ public class PingSvcPacket extends SvcVoicePacket<PingSvcPacket> {
     }
 
     @Override
-    public void handle(ISonusPlayer player, IVoiceSvcHandler handler) {
-        handler.handlePingPacket(player, this);
+    public void handle(IVoiceSvcHandler handler) {
+        handler.handlePingPacket(this);
     }
 
     public UUID getId() {

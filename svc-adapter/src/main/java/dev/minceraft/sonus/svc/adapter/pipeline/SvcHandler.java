@@ -1,16 +1,13 @@
 package dev.minceraft.sonus.svc.adapter.pipeline;
 
 import dev.minceraft.sonus.common.ISonusService;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.udp.AbstractUdpPipelineHandler;
-import dev.minceraft.sonus.common.protocol.util.ContextMap;
+import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
 import io.netty.channel.ChannelHandlerContext;
 
-import java.util.UUID;
-
-public class SvcHandler extends AbstractUdpPipelineHandler<SvcVoicePacket<?>> {
+public class SvcHandler extends AbstractUdpPipelineHandler<SvcVoicePacket<?>, SvcUdpContext> {
 
     private final ISonusService service;
 
@@ -20,13 +17,11 @@ public class SvcHandler extends AbstractUdpPipelineHandler<SvcVoicePacket<?>> {
     }
 
     @Override
-    public void handle(ChannelHandlerContext ctx, SvcVoicePacket<?> msg, ContextMap ctxMap) {
-        UUID playerId = ctxMap.getUnchecked("playerId");
-        ISonusPlayer player = this.service.getPlayer(playerId);
-        if (player == null) {
-            ctx.close();
-            return;
+    public void handle(ChannelHandlerContext ctx, SvcVoicePacket<?> msg, SvcUdpContext svcCtx) {
+        SvcConnection connection = svcCtx.connection;
+        if (connection == null) {
+            throw new IllegalStateException("Try to handle a message without a connection set in the context!");
         }
-        // TODO: per-player handler
+        msg.handle(connection.getVoiceHandler());
     }
 }

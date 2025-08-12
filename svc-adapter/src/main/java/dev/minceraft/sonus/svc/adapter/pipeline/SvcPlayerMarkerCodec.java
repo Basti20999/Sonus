@@ -1,8 +1,9 @@
 package dev.minceraft.sonus.svc.adapter.pipeline;
 
-import dev.minceraft.sonus.common.protocol.util.ContextMap;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
+import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -15,17 +16,24 @@ import java.util.UUID;
 @ChannelHandler.Sharable
 public class SvcPlayerMarkerCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
 
-    public static final SvcPlayerMarkerCodec INSTANCE = new SvcPlayerMarkerCodec();
+    private final SvcProtocolAdapter adapter;
 
-    @Override
-    public void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, ContextMap ctxMap) {
-        out.add(msg);
+    public SvcPlayerMarkerCodec(SvcProtocolAdapter adapter) {
+        this.adapter = adapter;
     }
 
     @Override
-    public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, ContextMap ctxMap) {
+    public void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
+        out.add(msg); // Only used for serverbound packets, so we just pass it through
+    }
+
+    @Override
+    public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
         UUID playerId = DataTypeUtil.readUniqueId(msg);
-        ctxMap.put("playerId", playerId);
-        out.add(msg.retainedSlice());
+        SvcConnection connection = this.adapter.getSessionManager().getConnection(playerId);
+        if (connection != null) {
+            svcCtx.connection = connection;
+            out.add(msg.retainedSlice());
+        }
     }
 }

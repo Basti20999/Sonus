@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.voice;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.PacketDirection;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -23,7 +22,7 @@ public class KeepAliveSvcPacket extends SvcVoicePacket<KeepAliveSvcPacket> {
     }
 
     @Override
-    public void handle(ISonusPlayer player, IVoiceSvcHandler handler) {
-        handler.handleKeepAlivePacket(player, this);
+    public void handle(IVoiceSvcHandler handler) {
+        handler.handleKeepAlivePacket(this);
     }
 }

@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.svc.adapter.pipeline;
 
 
-import dev.minceraft.sonus.common.protocol.util.ContextMap;
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
 import dev.minceraft.sonus.svc.protocol.registries.SvcVoicePacketRegistry;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
@@ -17,17 +16,16 @@ public class SvcPacketCodec extends SvcUdpPipelineNode<ByteBuf, SvcVoicePacket<?
     public static final SvcPacketCodec INSTANCE = new SvcPacketCodec();
 
     @Override
-    public void encode(ChannelHandlerContext ctx, SvcVoicePacket<?> msg, List<Object> out, ContextMap ctxMap) throws Exception {
+    public void encode(ChannelHandlerContext ctx, SvcVoicePacket<?> msg, List<Object> out, SvcUdpContext svcCtx) throws Exception {
         ByteBuf buf = ctx.alloc().buffer();
         SvcVoicePacketRegistry.REGISTRY.write(buf, msg);
         out.add(buf);
     }
 
     @Override
-    public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, ContextMap ctxMap) throws Exception {
+    public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) throws Exception {
         SvcVoicePacket<?> packet = SvcVoicePacketRegistry.REGISTRY.read(msg);
         if (packet != null) {
-            packet.setRemoteAddress(ctxMap.getUnchecked("remote"));
             out.add(packet);
         }
     }

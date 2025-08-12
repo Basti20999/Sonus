@@ -1,15 +1,14 @@
 package dev.minceraft.sonus.svc.protocol.voice;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class AuthenticateAckSvcPacket extends SvcVoicePacket<AuthenticateAckSvcPacket> implements ClientBound {
+public class AuthenticateAckSvcPacket extends SvcVoicePacket<AuthenticateAckSvcPacket> {
 
     @Override
-    public void handle(ISonusPlayer player, IVoiceSvcHandler handler) {
-        handler.handleAuthenticateAck(player, this);
+    public void handle(IVoiceSvcHandler handler) {
+        handler.handleAuthenticateAck(this);
     }
 
     @Override

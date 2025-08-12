@@ -1,0 +1,21 @@
+package dev.minceraft.sonus.svc.adapter;
+
+import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class SvcSessionManager {
+
+    private final SvcProtocolAdapter adapter;
+    private final Map<UUID, SvcConnection> connection = new HashMap<>();
+
+    public SvcSessionManager(SvcProtocolAdapter adapter) {
+        this.adapter = adapter;
+    }
+
+    public SvcConnection getConnection(UUID playerId) {
+        return this.connection.get(playerId);
+    }
+}

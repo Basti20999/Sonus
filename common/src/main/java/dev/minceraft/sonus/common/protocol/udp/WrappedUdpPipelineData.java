@@ -1,25 +1,24 @@
 package dev.minceraft.sonus.common.protocol.udp;
 
-import dev.minceraft.sonus.common.protocol.util.ContextMap;
 import org.jspecify.annotations.NullMarked;
 
 import java.net.InetSocketAddress;
 
 @NullMarked
 public record WrappedUdpPipelineData(
-        ContextMap context,
+        UdpBasedContext<?> context,
         InetSocketAddress remoteAddress,
         AbstractMagicUdpCodec<?> codec,
         Object data
 ) {
 
-    public WrappedUdpPipelineData(ContextMap context, InetSocketAddress remoteAddress, AbstractMagicUdpCodec<?> codec, Object data) {
+    public WrappedUdpPipelineData(UdpBasedContext<?> context, InetSocketAddress remoteAddress, AbstractMagicUdpCodec<?> codec, Object data) {
         this.context = context;
         this.remoteAddress = remoteAddress;
         this.codec = codec;
         this.data = data;
 
-        this.context.put("remote", remoteAddress);
+        this.context.remoteAddress = remoteAddress;
     }
 
     @SuppressWarnings("unchecked")

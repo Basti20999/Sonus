@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.svc.adapter.pipeline;
 
 
-import dev.minceraft.sonus.common.protocol.util.ContextMap;
 import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
 import io.netty.buffer.ByteBuf;
@@ -20,14 +19,14 @@ public final class SvcFrameCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
     public static final SvcFrameCodec INSTANCE = new SvcFrameCodec();
 
     @Override
-    public void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, ContextMap ctxMap) {
+    public void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
         out.add(Unpooled.compositeBuffer(2)
                 .addComponent(true, VarInt.buffer(msg.readableBytes()))
                 .addComponent(true, msg));
     }
 
     @Override
-    public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, ContextMap ctxMap) {
+    public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
         int size = VarInt.read(msg);
         if (msg.readableBytes() != size) {
             msg.release();

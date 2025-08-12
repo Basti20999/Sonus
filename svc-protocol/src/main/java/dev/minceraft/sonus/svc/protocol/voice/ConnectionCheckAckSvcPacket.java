@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.voice;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
@@ -19,7 +18,7 @@ public class ConnectionCheckAckSvcPacket extends SvcVoicePacket<ConnectionCheckA
     }
 
     @Override
-    public void handle(ISonusPlayer player, IVoiceSvcHandler handler) {
-        handler.handleConnectionCheckAck(player, this);
+    public void handle(IVoiceSvcHandler handler) {
+        handler.handleConnectionCheckAck(this);
     }
 }

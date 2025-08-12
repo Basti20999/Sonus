@@ -14,4 +14,5 @@ public interface IUdpServer {
 
     InetSocketAddress getRemoteAddress();
 
+    void sendPacket(WrappedUdpPipelineData data);
 }

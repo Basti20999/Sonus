@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.common.protocol.udp;
 
-import dev.minceraft.sonus.common.protocol.util.ContextMap;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
@@ -13,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public abstract class AbstractUdpPipelineNode<I, O> extends ChannelDuplexHandler {
+public abstract class AbstractUdpPipelineNode<I, O, C extends UdpBasedContext<C>> extends ChannelDuplexHandler {
 
     private static final Recycler<OutList> OUT_LIST_RECYCLER = new Recycler<OutList>() {
         @Override
@@ -42,7 +41,9 @@ public abstract class AbstractUdpPipelineNode<I, O> extends ChannelDuplexHandler
             try {
                 @SuppressWarnings("unchecked")
                 O cast = (O) packet.data();
-                this.encode(ctx, cast, out.list, packet.context());
+                @SuppressWarnings("unchecked")
+                C context = (C) packet.context();
+                this.encode(ctx, cast, out.list, context);
                 out.write(ctx, promise, packet::withPacket);
             } finally {
                 ReferenceCountUtil.release(msg);
@@ -54,7 +55,7 @@ public abstract class AbstractUdpPipelineNode<I, O> extends ChannelDuplexHandler
         }
     }
 
-    public abstract void encode(ChannelHandlerContext ctx, O msg, List<Object> out, ContextMap ctxMap) throws Exception;
+    public abstract void encode(ChannelHandlerContext ctx, O msg, List<Object> out, C adapterCtx) throws Exception;
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -66,7 +67,9 @@ public abstract class AbstractUdpPipelineNode<I, O> extends ChannelDuplexHandler
             try {
                 @SuppressWarnings("unchecked")
                 I cast = (I) packet.data();
-                this.decode(ctx, cast, out.list, packet.context());
+                @SuppressWarnings("unchecked")
+                C context = (C) packet.context();
+                this.decode(ctx, cast, out.list, context);
 
                 for (Object obj : out.list) {
                     ctx.fireChannelRead(packet.withPacket(obj));
@@ -81,7 +84,7 @@ public abstract class AbstractUdpPipelineNode<I, O> extends ChannelDuplexHandler
         }
     }
 
-    public abstract void decode(ChannelHandlerContext ctx, I msg, List<Object> out, ContextMap ctxMap) throws Exception;
+    public abstract void decode(ChannelHandlerContext ctx, I msg, List<Object> out, C adapterCtx) throws Exception;
 
     private static final class OutList {
 

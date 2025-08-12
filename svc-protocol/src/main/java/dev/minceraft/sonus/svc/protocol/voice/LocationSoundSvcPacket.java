@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.voice;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
@@ -52,7 +51,7 @@ public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacke
 
 
     @Override
-    public void handle(ISonusPlayer player, IVoiceSvcHandler handler) {
-        handler.handleLocationSoundPacket(player, this);
+    public void handle(IVoiceSvcHandler handler) {
+        handler.handleLocationSoundPacket(this);
     }
 }

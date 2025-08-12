@@ -1,7 +1,5 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
-import dev.minceraft.sonus.svc.protocol.voice.AuthenticateAckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckAckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckSvcPacket;
@@ -12,56 +10,69 @@ import dev.minceraft.sonus.svc.protocol.voice.LocationSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.MicSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.PingSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.PlayerSoundSvcPacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VoiceHandler implements IVoiceSvcHandler {
 
-    @Override
-    public void handleAuthenticateAck(ISonusPlayer player, AuthenticateAckSvcPacket packet) {
-        IVoiceSvcHandler.super.handleAuthenticateAck(player, packet);
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
+
+    private final SvcConnection connection;
+
+    public VoiceHandler(SvcConnection connection) {
+        this.connection = connection;
     }
 
     @Override
-    public void handleAuthenticate(ISonusPlayer player, AuthenticateSvcPacket packet) {
-        IVoiceSvcHandler.super.handleAuthenticate(player, packet);
+    public void handleAuthenticate(AuthenticateSvcPacket packet) {
+        if (!packet.getSecret().equals(this.connection.getSecret())) {
+            return; // Ignore packets with mismatched secret
+        }
+        if (!packet.getPlayerId().equals(this.connection.getPlayer().getUniqueId())) {
+            LOGGER.warn("Received AuthenticateSvcPacket for player {} with mismatched ID: {}.",
+                    this.connection.getPlayer().getUniqueId(), packet.getPlayerId());
+            return;
+        }
+        this.connection.sendPacket(new AuthenticateSvcPacket());
     }
 
     @Override
-    public void handleConnectionCheckAck(ISonusPlayer player, ConnectionCheckAckSvcPacket packet) {
-        IVoiceSvcHandler.super.handleConnectionCheckAck(player, packet);
+    public void handleConnectionCheckAck(ConnectionCheckAckSvcPacket packet) {
+        IVoiceSvcHandler.super.handleConnectionCheckAck(packet);
     }
 
     @Override
-    public void handleConnectionCheck(ISonusPlayer player, ConnectionCheckSvcPacket packet) {
-        IVoiceSvcHandler.super.handleConnectionCheck(player, packet);
+    public void handleConnectionCheck(ConnectionCheckSvcPacket packet) {
+        IVoiceSvcHandler.super.handleConnectionCheck(packet);
     }
 
     @Override
-    public void handleGroupSoundPacket(ISonusPlayer player, GroupSoundSvcPacket packet) {
-        IVoiceSvcHandler.super.handleGroupSoundPacket(player, packet);
+    public void handleGroupSoundPacket(GroupSoundSvcPacket packet) {
+        IVoiceSvcHandler.super.handleGroupSoundPacket(packet);
     }
 
     @Override
-    public void handleKeepAlivePacket(ISonusPlayer player, KeepAliveSvcPacket packet) {
-        IVoiceSvcHandler.super.handleKeepAlivePacket(player, packet);
+    public void handleKeepAlivePacket(KeepAliveSvcPacket packet) {
+        IVoiceSvcHandler.super.handleKeepAlivePacket(packet);
     }
 
     @Override
-    public void handleLocationSoundPacket(ISonusPlayer player, LocationSoundSvcPacket packet) {
-        IVoiceSvcHandler.super.handleLocationSoundPacket(player, packet);
+    public void handleLocationSoundPacket(LocationSoundSvcPacket packet) {
+        IVoiceSvcHandler.super.handleLocationSoundPacket(packet);
     }
 
     @Override
-    public void handleMicPacket(ISonusPlayer player, MicSvcPacket packet) {
-        IVoiceSvcHandler.super.handleMicPacket(player, packet);
+    public void handleMicPacket(MicSvcPacket packet) {
+        IVoiceSvcHandler.super.handleMicPacket(packet);
     }
 
     @Override
-    public void handlePingPacket(ISonusPlayer player, PingSvcPacket packet) {
-        IVoiceSvcHandler.super.handlePingPacket(player, packet);
+    public void handlePingPacket(PingSvcPacket packet) {
+        IVoiceSvcHandler.super.handlePingPacket(packet);
     }
 
     @Override
-    public void handlePlayerSoundPacket(ISonusPlayer player, PlayerSoundSvcPacket packet) {
-        IVoiceSvcHandler.super.handlePlayerSoundPacket(player, packet);
+    public void handlePlayerSoundPacket(PlayerSoundSvcPacket packet) {
+        IVoiceSvcHandler.super.handlePlayerSoundPacket(packet);
     }
 }
