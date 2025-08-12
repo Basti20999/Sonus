@@ -3,12 +3,11 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class RequestSecretSvcPacket extends SvcMetaPacket<RequestSecretSvcPacket> implements ServerBound {
+public class RequestSecretSvcPacket extends SvcMetaPacket<RequestSecretSvcPacket> {
 
     private int compatibilityVersion;
 
@@ -27,7 +26,7 @@ public class RequestSecretSvcPacket extends SvcMetaPacket<RequestSecretSvcPacket
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         json.addProperty("compatibilityVersion", this.compatibilityVersion);
     }
 
@@ -37,8 +36,8 @@ public class RequestSecretSvcPacket extends SvcMetaPacket<RequestSecretSvcPacket
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handleRequestSecretPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleRequestSecretPacket( this);
     }
 
     public int getCompatibilityVersion() {

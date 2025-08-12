@@ -3,13 +3,12 @@ package dev.minceraft.sonus.svc.protocol.meta;
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> implements ClientBound {
+public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> {
 
     private @MonotonicNonNull SonusPlayerState state;
 
@@ -28,7 +27,7 @@ public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> im
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         this.state.encode(json);
     }
 
@@ -38,8 +37,8 @@ public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> im
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handlePlayerStatePacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handlePlayerStatePacket(this);
     }
 
     public SonusPlayerState getState() {

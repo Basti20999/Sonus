@@ -3,13 +3,12 @@ package dev.minceraft.sonus.svc.protocol.meta;
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class AddGroupSvcPacket extends SvcMetaPacket<AddGroupSvcPacket> implements ClientBound {
+public class AddGroupSvcPacket extends SvcMetaPacket<AddGroupSvcPacket> {
 
     private @MonotonicNonNull SonusClientGroup group;
 
@@ -28,7 +27,7 @@ public class AddGroupSvcPacket extends SvcMetaPacket<AddGroupSvcPacket> implemen
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         this.group.encode(json);
     }
 
@@ -38,8 +37,8 @@ public class AddGroupSvcPacket extends SvcMetaPacket<AddGroupSvcPacket> implemen
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handleAddGroupPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleAddGroupPacket(this);
     }
 
     public SonusClientGroup getGroup() {

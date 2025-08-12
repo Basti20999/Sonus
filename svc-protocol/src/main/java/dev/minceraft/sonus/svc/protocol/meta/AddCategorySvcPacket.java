@@ -3,14 +3,12 @@ package dev.minceraft.sonus.svc.protocol.meta;
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.data.SonusVolumeCategory;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class AddCategorySvcPacket extends SvcMetaPacket<AddCategorySvcPacket> implements ClientBound {
+public class AddCategorySvcPacket extends SvcMetaPacket<AddCategorySvcPacket> {
 
     private @MonotonicNonNull SonusVolumeCategory category;
 
@@ -24,17 +22,17 @@ public class AddCategorySvcPacket extends SvcMetaPacket<AddCategorySvcPacket> im
     }
 
     @Override
-    public void encode(ByteBuf buf, int version) {
+    public void encode(ByteBuf buf) {
         this.category.encode(buf);
     }
 
     @Override
-    public void decode(ByteBuf buf, int version) {
+    public void decode(ByteBuf buf) {
         this.category = new SonusVolumeCategory(buf);
     }
 
     @Override
-    public void encode(@NotNull JsonObject json, int version) {
+    public void encode(JsonObject json) {
         this.category.encode(json);
     }
 
@@ -44,8 +42,8 @@ public class AddCategorySvcPacket extends SvcMetaPacket<AddCategorySvcPacket> im
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handleAddCategoryPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleAddCategoryPacket(this);
     }
 
     public SonusVolumeCategory getCategory() {

@@ -30,6 +30,8 @@ public class SvcProtocolAdapter implements VoiceProtocolAdapter {
         udpServer.registerHandler("svc-cipher", SvcCipherCodec.INSTANCE);
         udpServer.registerHandler("svc-codec", SvcPacketCodec.INSTANCE);
         udpServer.registerHandler("svc-handler", new SvcHandler(service));
+
+        service.getPmListener().registerCodec(new SvcPluginMessageCodec(this));
     }
 
     @Override

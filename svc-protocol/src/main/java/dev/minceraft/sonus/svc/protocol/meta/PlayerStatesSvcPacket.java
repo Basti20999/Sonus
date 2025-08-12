@@ -6,7 +6,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -16,7 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @NullMarked
-public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> implements ClientBound {
+public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> {
 
     private @MonotonicNonNull Map<UUID, SonusPlayerState> states;
 
@@ -43,7 +42,7 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         JsonArray array = new JsonArray(this.states.size());
         for (SonusPlayerState value : this.states.values()) {
             JsonObject object = new JsonObject();
@@ -64,8 +63,8 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handlePlayerStatesPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handlePlayerStatesPacket(this);
     }
 
     public Map<UUID, SonusPlayerState> getStates() {

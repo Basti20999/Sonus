@@ -2,9 +2,8 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 
 import com.google.gson.JsonObject;
-import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -12,7 +11,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class RemoveGroupSvcPacket extends SvcMetaPacket<RemoveGroupSvcPacket> implements ClientBound {
+public class RemoveGroupSvcPacket extends SvcMetaPacket<RemoveGroupSvcPacket> {
 
     private @MonotonicNonNull UUID groupId;
 
@@ -31,7 +30,7 @@ public class RemoveGroupSvcPacket extends SvcMetaPacket<RemoveGroupSvcPacket> im
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         json.addProperty("groupId", this.groupId.toString());
     }
 
@@ -41,8 +40,8 @@ public class RemoveGroupSvcPacket extends SvcMetaPacket<RemoveGroupSvcPacket> im
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handleRemoveGroupPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleRemoveGroupPacket(this);
     }
 
     public UUID getGroupId() {

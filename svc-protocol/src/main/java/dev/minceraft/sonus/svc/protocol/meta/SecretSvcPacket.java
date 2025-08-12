@@ -2,11 +2,10 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 
 import com.google.gson.JsonObject;
-import dev.minceraft.sonus.svc.protocol.data.Codec;
-import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.data.Codec;
+import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -14,7 +13,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> implements ClientBound {
+public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
 
     private @MonotonicNonNull UUID secret;
     private int serverPort;
@@ -60,7 +59,7 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> implements C
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         json.addProperty("secret", this.secret.toString());
         json.addProperty("serverPort", this.serverPort);
         json.addProperty("playerId", this.playerId.toString());
@@ -88,8 +87,8 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> implements C
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handleSecretPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleSecretPacket(this);
     }
 
     public UUID getSecret() {

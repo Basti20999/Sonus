@@ -2,9 +2,8 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 
 import com.google.gson.JsonObject;
-import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -12,7 +11,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.UUID;
 
 @NullMarked
-public class JoinedGroupSvcPacket extends SvcMetaPacket<JoinedGroupSvcPacket> implements ClientBound {
+public class JoinedGroupSvcPacket extends SvcMetaPacket<JoinedGroupSvcPacket> {
 
     private @Nullable UUID groupId;
     private boolean wrongPassword;
@@ -34,7 +33,7 @@ public class JoinedGroupSvcPacket extends SvcMetaPacket<JoinedGroupSvcPacket> im
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         if (this.groupId != null) {
             json.addProperty("groupId", this.groupId.toString());
         }
@@ -48,8 +47,8 @@ public class JoinedGroupSvcPacket extends SvcMetaPacket<JoinedGroupSvcPacket> im
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handleJoinedGroupPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleJoinedGroupPacket(this);
     }
 
     public @Nullable UUID getGroupId() {

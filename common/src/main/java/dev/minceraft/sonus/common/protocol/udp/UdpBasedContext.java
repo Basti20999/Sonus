@@ -16,7 +16,7 @@ public abstract class UdpBasedContext<T extends UdpBasedContext<T>> {
     }
 
     public static <T extends UdpBasedContext<T>> Recycler<T> createRecycler(Function<Recycler.Handle<T>, T> factory) {
-        return new Recycler<T>() {
+        return new Recycler<>() {
             @Override
             protected T newObject(Handle<T> handle) {
                 return factory.apply(handle);

@@ -1,18 +1,17 @@
 package dev.minceraft.sonus.svc.protocol.meta;
 
 import com.google.gson.JsonObject;
-import dev.minceraft.sonus.svc.protocol.data.SonusGroupType;
-import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.data.SonusGroupType;
+import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class CreateGroupSvcPacket extends SvcMetaPacket<CreateGroupSvcPacket> implements ServerBound {
+public class CreateGroupSvcPacket extends SvcMetaPacket<CreateGroupSvcPacket> {
 
     private @MonotonicNonNull String name;
     private @Nullable String password;
@@ -37,7 +36,7 @@ public class CreateGroupSvcPacket extends SvcMetaPacket<CreateGroupSvcPacket> im
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         json.addProperty("name", this.name);
         if (this.password != null) {
             json.addProperty("password", this.password);
@@ -55,8 +54,8 @@ public class CreateGroupSvcPacket extends SvcMetaPacket<CreateGroupSvcPacket> im
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handleCreateGroupPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleCreateGroupPacket(this);
     }
 
     public String getName() {

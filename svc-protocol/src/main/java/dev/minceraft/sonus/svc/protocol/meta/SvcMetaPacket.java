@@ -1,21 +1,20 @@
 package dev.minceraft.sonus.svc.protocol.meta;
 
 
-import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.codec.IJsonCodec;
+import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import net.kyori.adventure.key.Key;
+import org.jspecify.annotations.NullMarked;
 
 
-public abstract class SvcMetaPacket<T extends SvcMetaPacket<?>> extends AbstractSvcPacket implements IJsonCodec<IMetaSvcHandler> {
+@NullMarked
+public abstract class SvcMetaPacket<T extends SvcMetaPacket<?>> extends AbstractSvcPacket<IMetaSvcHandler> implements IJsonCodec<IMetaSvcHandler> {
 
     protected final Key pluginMessageChannel;
 
     protected SvcMetaPacket(Key pluginMessageChannel) {
         this.pluginMessageChannel = pluginMessageChannel;
     }
-
-    public abstract void handle(ISonusPlayer player, IMetaSvcHandler handler);
 
     public Key getPluginMessageChannel() {
         return this.pluginMessageChannel;

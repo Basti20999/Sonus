@@ -1,32 +1,43 @@
 package dev.minceraft.sonus.svc.protocol.meta;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
-
 public interface IMetaSvcHandler {
 
-    void handleAddCategoryPacket(ISonusPlayer player, AddCategorySvcPacket packet);
+    default void handleAddCategoryPacket(AddCategorySvcPacket packet) {
+    }
 
-    void handleAddGroupPacket(ISonusPlayer player, AddGroupSvcPacket packet);
+    default void handleAddGroupPacket(AddGroupSvcPacket packet) {
+    }
 
-    void handleCreateGroupPacket(ISonusPlayer player, CreateGroupSvcPacket packet);
+    default void handleCreateGroupPacket(CreateGroupSvcPacket packet) {
+    }
 
-    void handleJoinedGroupPacket(ISonusPlayer player, JoinedGroupSvcPacket packet);
+    default void handleJoinedGroupPacket(JoinedGroupSvcPacket packet) {
+    }
 
-    void handleJoinGroupPacket(ISonusPlayer player, JoinGroupSvcPacket packet);
+    default void handleJoinGroupPacket(JoinGroupSvcPacket packet) {
+    }
 
-    void handleLeaveGroupPacket(ISonusPlayer player, LeaveGroupSvcPacket packet);
+    default void handleLeaveGroupPacket(LeaveGroupSvcPacket packet) {
+    }
 
-    void handlePlayerStatesPacket(ISonusPlayer player, PlayerStatesSvcPacket packet);
+    default void handlePlayerStatesPacket(PlayerStatesSvcPacket packet) {
+    }
 
-    void handlePlayerStatePacket(ISonusPlayer player, PlayerStateSvcPacket packet);
+    default void handlePlayerStatePacket(PlayerStateSvcPacket packet) {
+    }
 
-    void handleRemoveCategoryPacket(ISonusPlayer player, RemoveCategorySvcPacket packet);
+    default void handleRemoveCategoryPacket(RemoveCategorySvcPacket packet) {
+    }
 
-    void handleRemoveGroupPacket(ISonusPlayer player, RemoveGroupSvcPacket packet);
+    default void handleRemoveGroupPacket(RemoveGroupSvcPacket packet) {
+    }
 
-    void handleRequestSecretPacket(ISonusPlayer player, RequestSecretSvcPacket packet);
+    default void handleRequestSecretPacket(RequestSecretSvcPacket packet) {
+    }
 
-    void handleSecretPacket(ISonusPlayer player, SecretSvcPacket packet);
+    default void handleSecretPacket(SecretSvcPacket packet) {
+    }
 
-    void handleUpdateStatePacket(ISonusPlayer player, UpdateStateSvcPacket packet);
+    default void handleUpdateStatePacket(UpdateStateSvcPacket packet) {
+    }
 }

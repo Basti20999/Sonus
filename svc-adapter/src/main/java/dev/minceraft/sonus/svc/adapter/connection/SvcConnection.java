@@ -23,6 +23,7 @@ public class SvcConnection {
     private final UUID secret = UUID.randomUUID();
     private final SvcPlayerCipherCodec cipher = new SvcPlayerCipherCodec(this.secret);
     private final VoiceHandler voiceHandler = new VoiceHandler(this);
+    private final MetaHandler metaHandler = new MetaHandler(this);
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
 
@@ -67,15 +68,19 @@ public class SvcConnection {
     }
 
     public SvcPlayerCipherCodec getCipher() {
-        return cipher;
+        return this.cipher;
     }
 
     public VoiceHandler getVoiceHandler() {
-        return voiceHandler;
+        return this.voiceHandler;
+    }
+
+    public MetaHandler getMetaHandler() {
+        return this.metaHandler;
     }
 
     public InetSocketAddress getRemoteAddress() {
-        return remoteAddress;
+        return this.remoteAddress;
     }
 
     public void setRemoteAddress(InetSocketAddress remoteAddress) {

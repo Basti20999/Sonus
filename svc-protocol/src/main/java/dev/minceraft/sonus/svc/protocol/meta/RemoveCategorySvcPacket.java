@@ -2,15 +2,14 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 
 import com.google.gson.JsonObject;
-import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class RemoveCategorySvcPacket extends SvcMetaPacket<RemoveCategorySvcPacket> implements ClientBound {
+public class RemoveCategorySvcPacket extends SvcMetaPacket<RemoveCategorySvcPacket>{
 
     private @MonotonicNonNull String categoryId;
 
@@ -29,7 +28,7 @@ public class RemoveCategorySvcPacket extends SvcMetaPacket<RemoveCategorySvcPack
     }
 
     @Override
-    public void encode(JsonObject json, int version) {
+    public void encode(JsonObject json) {
         json.addProperty("categoryId", this.categoryId);
     }
 
@@ -39,8 +38,8 @@ public class RemoveCategorySvcPacket extends SvcMetaPacket<RemoveCategorySvcPack
     }
 
     @Override
-    public void handle(ISonusPlayer player, IMetaSvcHandler handler) {
-        handler.handleRemoveCategoryPacket(player, this);
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleRemoveCategoryPacket(this);
     }
 
     public String getCategoryId() {

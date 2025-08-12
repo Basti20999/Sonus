@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.common.protocol.registry;
 // Created by booky10 in Sonus (01:46 17.07.2025)
 
-import dev.minceraft.sonus.common.protocol.util.PacketDirection;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -24,17 +23,15 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> {
 
     private final List<Supplier<? extends T>> constructors;
     private final Map<Class<? extends T>, Integer> packetIds;
-    private final BiConsumer<Integer, T> idMapper;
 
     private SimpleRegistry(Codec<D, T> codec, IdCodec<D> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idMapper) {
         this.codec = codec;
         this.idCodec = idCodec;
         this.constructors = packets.stream().<Supplier<? extends T>>map(Entry::ctor).toList();
         this.packetIds = new IdentityHashMap<>(packets.size());
-        this.idMapper = idMapper;
         for (int i = 0; i < packets.size(); i++) {
             this.packetIds.put(packets.get(i).clazz(), i);
-            this.idMapper.accept(i, packets.get(i).ctor().get());
+            idMapper.accept(i, packets.get(i).ctor().get());
         }
     }
 
@@ -52,7 +49,7 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> {
         this.codec.encoder.accept(data, packet);
     }
 
-    public static final class Builder<D, T extends ProtocolMessage<?, ?>> {
+    public static final class Builder<D, T extends ProtocolMessage<?>> {
 
         private final List<Entry<? extends T>> packets = new ArrayList<>();
         private @MonotonicNonNull Codec<D, T> codec;
@@ -94,7 +91,7 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> {
         }
     }
 
-    private record Entry<T extends ProtocolMessage<?, ?>>(Class<T> clazz, Supplier<T> ctor) {}
+    private record Entry<T extends ProtocolMessage<?>>(Class<T> clazz, Supplier<T> ctor) {}
 
     private record IdCodec<D>(ToIntFunction<D> decoder, ObjIntConsumer<D> encoder) {}
 
