@@ -75,7 +75,7 @@ public class MetaHandler implements IMetaSvcHandler {
 
     @Override
     public void handleRequestSecretPacket(RequestSecretSvcPacket packet) {
-        IMetaSvcHandler.super.handleRequestSecretPacket(packet);
+        packet.getCompatibilityVersion()
     }
 
     @Override

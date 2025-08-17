@@ -18,4 +18,8 @@ public class SvcSessionManager {
     public SvcConnection getConnection(UUID playerId) {
         return this.connection.get(playerId);
     }
+
+    public void addConnection(SvcConnection connection) {
+        this.connection.put(connection.getPlayer().getUniqueId(), connection);
+    }
 }

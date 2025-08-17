@@ -4,15 +4,22 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
+import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.RequestSecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @NullMarked
 public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private final SvcProtocolAdapter adapter;
 
@@ -34,12 +41,30 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
             return;
         }
 
-        // TODO: Init connection via request secret packet -> new connection
         SvcConnection connection = this.adapter.getSessionManager().getConnection(player.getUniqueId());
         if (connection == null) {
-            // No connection found for the player, handle accordingly
+            if (metaPacket instanceof RequestSecretSvcPacket secret) { // Initial connection
+                connection = this.initConnection(secret, player);
+                this.adapter.getSessionManager().addConnection(connection);
+            } else {
+                // No connection found for the player, handle accordingly
+                return;
+            }
+        } else if (metaPacket instanceof RequestSecretSvcPacket) {
+            LOGGER.warn("Received RequestSecretSvcPacket for player {} but connection already exists. Ignoring.", player.getUniqueId());
+            return;
+        }
+        if (connection == null) { // Incompatible version or failed to initialize connection
             return;
         }
         metaPacket.handle(connection.getMetaHandler());
+    }
+
+    @Nullable
+    private SvcConnection initConnection(RequestSecretSvcPacket packet, ISonusPlayer player) {
+        if (packet.getCompatibilityVersion() != AbstractSvcPacket.COMPATIBILITY_VERSION) {
+            return null; // Incompatible version
+        }
+        return new SvcConnection(this.adapter, player);
     }
 }
