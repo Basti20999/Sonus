@@ -1,6 +1,6 @@
 package dev.minceraft.sonus.common.protocol.udp;
 
-import dev.minceraft.sonus.common.protocol.util.ContextMap;
+import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import dev.minceraft.sonus.common.protocol.util.TypeUtil;
 import io.leangen.geantyref.TypeToken;
 import io.netty.buffer.ByteBuf;
@@ -20,17 +20,20 @@ public abstract class AbstractMagicUdpCodec<T> extends MessageToMessageCodec<Dat
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
+    private final VoiceProtocolAdapter adapter;
     private final byte magicByte;
     private final ByteBuf magicByteBuf;
     private final Class<T> packetClass;
 
-    public AbstractMagicUdpCodec(byte magicByte, Class<T> packetClass) {
+    public AbstractMagicUdpCodec(VoiceProtocolAdapter adapter, byte magicByte, Class<T> packetClass) {
+        this.adapter = adapter;
         this.magicByte = magicByte;
         this.magicByteBuf = Unpooled.wrappedBuffer(new byte[]{magicByte});
         this.packetClass = packetClass;
     }
 
-    public AbstractMagicUdpCodec(byte magicByte, TypeToken<T> packetTypeToken) {
+    public AbstractMagicUdpCodec(VoiceProtocolAdapter adapter, byte magicByte, TypeToken<T> packetTypeToken) {
+        this.adapter = adapter;
         this.magicByte = magicByte;
         this.magicByteBuf = Unpooled.wrappedBuffer(new byte[]{magicByte});
         this.packetClass = TypeUtil.resolveType(packetTypeToken);
@@ -71,7 +74,7 @@ public abstract class AbstractMagicUdpCodec<T> extends MessageToMessageCodec<Dat
             return; // Invalid magic byte
         }
         if ((this.magicByte & 0xFF) == magic) {
-            out.add(new WrappedUdpPipelineData(ContextMap.newInstance(), msg.sender(), this, msg.content().retainedSlice()));
+            out.add(new WrappedUdpPipelineData(this.adapter.newPipelineContext(), msg.sender(), this, msg.content().retainedSlice()));
         }
     }
 
@@ -79,8 +82,12 @@ public abstract class AbstractMagicUdpCodec<T> extends MessageToMessageCodec<Dat
         return buf.readUnsignedByte();
     }
 
-    public void clearRestMagicByte(ByteBuf buf){
+    public void clearRestMagicByte(ByteBuf buf) {
         // Default does nothing
+    }
+
+    public VoiceProtocolAdapter getAdapter() {
+        return this.adapter;
     }
 
     public byte getMagicByte() {

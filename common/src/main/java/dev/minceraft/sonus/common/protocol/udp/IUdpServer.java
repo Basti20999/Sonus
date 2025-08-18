@@ -10,8 +10,6 @@ public interface IUdpServer {
 
     void registerHandler(String name, ChannelHandler handler);
 
-    InetSocketAddress getHostAddress();
-
     InetSocketAddress getRemoteAddress();
 
     void sendPacket(WrappedUdpPipelineData data);

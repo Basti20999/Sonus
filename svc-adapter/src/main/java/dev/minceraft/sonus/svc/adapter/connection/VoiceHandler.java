@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
+import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateAckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateSvcPacket;
@@ -15,11 +16,11 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
-    private final SvcProtocolAdapter adapter;
+    private final SvcProtocolAdapter protocolAdapter;
     private final SvcConnection connection;
 
-    public VoiceHandler(SvcProtocolAdapter adapter, SvcConnection connection) {
-        this.adapter = adapter;
+    public VoiceHandler(SvcProtocolAdapter protocolAdapter, SvcConnection connection) {
+        this.protocolAdapter = protocolAdapter;
         this.connection = connection;
     }
 
@@ -43,7 +44,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
         this.connection.setLastKeepAlive(System.currentTimeMillis());
         this.connection.setConnected(true);
-        this.adapter.getSessionManager().onConnectionEstablished(this.connection);
+        this.protocolAdapter.getAdapter().getSessionManager().onConnectionEstablished(this.connection);
 
         this.connection.sendPacket(new ConnectionCheckSvcPacket());
     }
@@ -55,11 +56,12 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     @Override
     public void handleMicPacket(MicSvcPacket packet) {
-        // TODO: handle mic packet
+        SonusAudio data = new SonusAudio(packet.getData());
+        this.connection.getPlayer().handleAudioInput(data);
     }
 
     @Override
     public void handlePingPacket(PingSvcPacket packet) {
-       // TODO: handle ping packet
+        // TODO: handle ping packet
     }
 }

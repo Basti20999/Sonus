@@ -2,8 +2,8 @@ package dev.minceraft.sonus.agent.paper;
 // Created by booky10 in Sonus (01:39 17.07.2025)
 
 import com.destroystokyo.paper.event.server.ServerTickEndEvent;
+import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.protocol.meta.servicebound.PlayerPositionsMessage;
-import dev.minceraft.sonus.util.WorldVec3d;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;

@@ -1,6 +1,8 @@
 package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
+import dev.minceraft.sonus.service.SonusService;
+import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -11,13 +13,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @NullMarked
 public final class PlayerManager {
 
+    private final SonusService service;
     private final Map<UUID, SonusPlayer> players = new ConcurrentHashMap<>();
 
-    public void registerPlayer(UUID playerId) {
-        SonusPlayer existingPlayer = this.players.putIfAbsent(playerId, new SonusPlayer(playerId));
-        if (existingPlayer != null) {
-            throw new IllegalArgumentException("Player " + playerId + " is already registered");
-        }
+    public PlayerManager(SonusService service) {
+        this.service = service;
     }
 
     public boolean unregisterPlayer(UUID playerId) {
@@ -25,6 +25,15 @@ public final class PlayerManager {
     }
 
     public @Nullable SonusPlayer getPlayer(UUID playerId) {
-        return this.players.get(playerId);
+        SonusPlayer player = this.players.get(playerId);
+        if (player == null) {
+            IPlatformPlayer platform = this.service.getPlatform().getPlayer(playerId);
+            if (platform != null) {
+                player = new SonusPlayer(platform);
+                this.players.put(playerId, player);
+            }
+        }
+
+        return player;
     }
 }

@@ -1,14 +1,16 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
 import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcPlayerCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
-import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
+import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
@@ -18,7 +20,7 @@ import java.util.UUID;
 @NullMarked
 public class SvcConnection {
 
-    private final SvcProtocolAdapter adapter;
+    private final SvcProtocolAdapter protocolAdapter;
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
     private final SvcPlayerCipherCodec cipher = new SvcPlayerCipherCodec(this.secret);
@@ -29,11 +31,11 @@ public class SvcConnection {
     private boolean connected = false;
     private long lastKeepAlive = System.currentTimeMillis();
 
-    public SvcConnection(SvcProtocolAdapter adapter, ISonusPlayer player) {
-        this.adapter = adapter;
+    public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
+        this.protocolAdapter = protocolAdapter;
         this.player = player;
-        this.voiceHandler = new VoiceHandler(this.adapter, this);
-        this.metaHandler = new MetaHandler(this.adapter, this);
+        this.voiceHandler = new VoiceHandler(this.protocolAdapter, this);
+        this.metaHandler = new MetaHandler(this.protocolAdapter, this);
     }
 
     public ISonusPlayer getPlayer() {
@@ -61,14 +63,21 @@ public class SvcConnection {
         WrappedUdpPipelineData payload = new WrappedUdpPipelineData(
                 SvcUdpContext.newInstance(),
                 this.remoteAddress,
-                SvcUdpMagicCodec.INSTANCE,
+                this.protocolAdapter.getSvcCodec(),
                 packet
         );
-        this.adapter.getService().getUdpServer().sendPacket(payload);
+        this.protocolAdapter.getAdapter().getService().getUdpServer().sendPacket(payload);
     }
 
     private void sendTcpPacket(SvcMetaPacket<?> packet) {
-        // TODO: Implement TCP/PM packet sending logic
+        Key channel = packet.getPluginMessageChannel();
+        PmDataHolderBuf data = PmDataHolderBuf.newInstance(channel);
+        try {
+            SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet);
+            this.player.sendPluginMessage(data.getSecond(), data.getFirst());
+        } finally {
+            data.recycle();
+        }
     }
 
     public SvcPlayerCipherCodec getCipher() {

@@ -1,6 +1,6 @@
 package dev.minceraft.sonus.common.protocol.tcp;
 
-public interface IPmListener {
+public interface IPluginMessenger {
 
     void registerCodec(AbstractPluginMessageCodec codec);
 }

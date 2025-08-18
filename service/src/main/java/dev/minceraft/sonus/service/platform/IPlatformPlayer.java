@@ -1,6 +1,5 @@
-package dev.minceraft.sonus.common.data;
+package dev.minceraft.sonus.service.platform;
 
-import dev.minceraft.sonus.common.audio.SonusAudio;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -8,13 +7,11 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public interface ISonusPlayer {
+public interface IPlatformPlayer {
 
     UUID getUniqueId();
 
     String getName();
-
-    void handleAudioInput(SonusAudio audio);
 
     void sendPluginMessage(Key key, ByteBuf data);
 }

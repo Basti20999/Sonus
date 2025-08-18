@@ -8,10 +8,10 @@ import java.util.UUID;
 
 public class SvcSessionManager {
 
-    private final SvcProtocolAdapter adapter;
+    private final SvcAdapter adapter;
     private final Map<UUID, SvcConnection> connection = new HashMap<>();
 
-    public SvcSessionManager(SvcProtocolAdapter adapter) {
+    public SvcSessionManager(SvcAdapter adapter) {
         this.adapter = adapter;
     }
 

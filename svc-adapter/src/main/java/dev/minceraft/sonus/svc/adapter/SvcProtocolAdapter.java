@@ -5,7 +5,6 @@ import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.protocol.udp.UdpBasedContext;
-import dev.minceraft.sonus.svc.adapter.config.SvcConfig;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcFrameCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcHandler;
@@ -18,22 +17,22 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class SvcProtocolAdapter implements VoiceProtocolAdapter {
 
-    private final ISonusService service;
-    private final SvcConfig config;
-    private final SvcSessionManager sessionManager = new SvcSessionManager(this);
+    private final SvcAdapter adapter;
+    private final SvcUdpMagicCodec svcCodec = new SvcUdpMagicCodec(this);
 
-    public SvcProtocolAdapter(ISonusService service) {
-        this.service = service;
+    public SvcProtocolAdapter(SvcAdapter adapter) {
+        this.adapter = adapter;
+        ISonusService service = adapter.getService();
         IUdpServer udpServer = service.getUdpServer();
 
-        udpServer.registerCodec(SvcUdpMagicCodec.INSTANCE);
+        udpServer.registerCodec(this.svcCodec);
         udpServer.registerHandler("svc-player-marker", new SvcPlayerMarkerCodec(this));
         udpServer.registerHandler("svc-frame", SvcFrameCodec.INSTANCE);
         udpServer.registerHandler("svc-cipher", SvcCipherCodec.INSTANCE);
         udpServer.registerHandler("svc-codec", SvcPacketCodec.INSTANCE);
         udpServer.registerHandler("svc-handler", new SvcHandler(service));
 
-        service.getPmListener().registerCodec(new SvcPluginMessageCodec(this));
+        service.getPluginMessenger().registerCodec(new SvcPluginMessageCodec(this));
     }
 
     @Override
@@ -46,15 +45,11 @@ public class SvcProtocolAdapter implements VoiceProtocolAdapter {
         return SvcUdpContext.newInstance();
     }
 
-    public ISonusService getService() {
-        return this.service;
+    public SvcAdapter getAdapter() {
+        return this.adapter;
     }
 
-    public SvcConfig getConfig() {
-        return this.config;
-    }
-
-    public SvcSessionManager getSessionManager() {
-        return this.sessionManager;
+    public SvcUdpMagicCodec getSvcCodec() {
+        return this.svcCodec;
     }
 }

@@ -1,12 +1,12 @@
 package dev.minceraft.sonus.common;
 
+import java.net.InetSocketAddress;
+
 public interface ISonusConfig {
 
-    String getBind();
+    InetSocketAddress getBind();
 
-    int getPort();
-
-    String getHost();
+    InetSocketAddress getHost();
 
     int getMtuSize();
 

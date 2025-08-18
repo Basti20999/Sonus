@@ -33,4 +33,28 @@ public class MicSvcPacket extends SvcVoicePacket<MicSvcPacket> {
     public void handle(IVoiceSvcHandler handler) {
         handler.handleMicPacket(this);
     }
+
+    public byte[] getData() {
+        return this.data;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
+    public boolean isWhispering() {
+        return this.whispering;
+    }
+
+    public void setWhispering(boolean whispering) {
+        this.whispering = whispering;
+    }
+
+    public long getSequenceNumber() {
+        return this.sequenceNumber;
+    }
+
+    public void setSequenceNumber(long sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+    }
 }

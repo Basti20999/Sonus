@@ -1,20 +1,24 @@
 package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
+import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.VoiceAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
-import dev.minceraft.sonus.service.rooms.AbstractRoom;
-import dev.minceraft.sonus.common.IAudioSource;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.service.platform.IPlatformPlayer;
+import dev.minceraft.sonus.service.rooms.AbstractRoom;
+import io.netty.buffer.ByteBuf;
+import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
 @NullMarked
-public final class SonusPlayer implements IAudioSource {
+public final class SonusPlayer implements IAudioSource, ISonusPlayer {
 
-    private final UUID playerId;
+    private final IPlatformPlayer platform;
     private @Nullable WorldVec3d position;
     private @Nullable AbstractRoom voiceRoom;
     private @Nullable VoiceAdapter voiceAdapter;
@@ -22,8 +26,8 @@ public final class SonusPlayer implements IAudioSource {
     private boolean muted;
     private boolean deafened;
 
-    public SonusPlayer(UUID playerId) {
-        this.playerId = playerId;
+    public SonusPlayer(IPlatformPlayer platform) {
+        this.platform = platform;
     }
 
     public void handleAudioInput(SonusAudio audio) {
@@ -49,8 +53,19 @@ public final class SonusPlayer implements IAudioSource {
         }
     }
 
-    public UUID getPlayerId() {
-        return this.playerId;
+    @Override
+    public UUID getUniqueId() {
+        return this.platform.getUniqueId();
+    }
+
+    @Override
+    public String getName() {
+        return this.platform.getName();
+    }
+
+    @Override
+    public void sendPluginMessage(Key key, ByteBuf data) {
+        this.platform.sendPluginMessage(key, data);
     }
 
     @Override
@@ -96,6 +111,6 @@ public final class SonusPlayer implements IAudioSource {
 
     @Override
     public UUID getSenderId() {
-        return this.playerId;
+        return this.getUniqueId();
     }
 }

@@ -21,11 +21,11 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
-    private final SvcProtocolAdapter adapter;
+    private final SvcProtocolAdapter protocolAdapter;
 
-    public SvcPluginMessageCodec(SvcProtocolAdapter adapter) {
+    public SvcPluginMessageCodec(SvcProtocolAdapter protocolAdapter) {
         super(SvcPluginChannels.getPackets());
-        this.adapter = adapter;
+        this.protocolAdapter = protocolAdapter;
     }
 
     @Override
@@ -41,11 +41,12 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
             return;
         }
 
-        SvcConnection connection = this.adapter.getSessionManager().getConnection(player.getUniqueId());
+        SvcSessionManager sessionManager = this.protocolAdapter.getAdapter().getSessionManager();
+        SvcConnection connection = sessionManager.getConnection(player.getUniqueId());
         if (connection == null) {
             if (metaPacket instanceof RequestSecretSvcPacket secret) { // Initial connection
                 connection = this.initConnection(secret, player);
-                this.adapter.getSessionManager().addConnection(connection);
+                sessionManager.addConnection(connection);
             } else {
                 // No connection found for the player, handle accordingly
                 return;
@@ -65,6 +66,6 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
         if (packet.getCompatibilityVersion() != AbstractSvcPacket.COMPATIBILITY_VERSION) {
             return null; // Incompatible version
         }
-        return new SvcConnection(this.adapter, player);
+        return new SvcConnection(this.protocolAdapter, player);
     }
 }

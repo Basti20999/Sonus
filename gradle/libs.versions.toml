@@ -20,6 +20,9 @@ configurate = "4.1.2"
 # paper agent
 paper-api = "1.21.7-R0.1-SNAPSHOT"
 
+# velocity service
+velocity = "3.4.0-SNAPSHOT"
+
 [plugins]
 pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginyml" }
 
@@ -47,6 +50,9 @@ netty-transport-kqueue = { module = "io.netty:netty-transport-native-kqueue", ve
 
 # paper agent
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper-api" }
+
+# velocity service
+velocity = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
 
 [bundles]
 configurate = ["configurate-core", "configurate-yaml"]

@@ -1,15 +1,16 @@
-package dev.minceraft.sonus.service;
+package dev.minceraft.sonus.service.config;
 // Created by booky10 in Sonus (01:08 10.08.2025)
 
 import dev.minceraft.sonus.common.ISonusConfig;
 import org.jspecify.annotations.NullMarked;
 
+import java.net.InetSocketAddress;
+
 @NullMarked
 public class SonusConfig implements ISonusConfig {
 
-    private String bind = "0.0.0.0";
-    private int port = 9982;
-    private String host = "localhost";
+    private InetSocketAddress bind = new InetSocketAddress("0.0.0.0", 9982);
+    private InetSocketAddress host = new InetSocketAddress("127.0.0.1", 9982);
     private int mtuSize = 1412;
     private double voiceChatRange = 32.0;
     private boolean allowRecordings = false;
@@ -19,17 +20,12 @@ public class SonusConfig implements ISonusConfig {
     }
 
     @Override
-    public String getBind() {
+    public InetSocketAddress getBind() {
         return this.bind;
     }
 
     @Override
-    public int getPort() {
-        return this.port;
-    }
-
-    @Override
-    public String getHost() {
+    public InetSocketAddress getHost() {
         return this.host;
     }
 
