@@ -22,14 +22,18 @@ public class SvcConnection {
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
     private final SvcPlayerCipherCodec cipher = new SvcPlayerCipherCodec(this.secret);
-    private final VoiceHandler voiceHandler = new VoiceHandler(this);
-    private final MetaHandler metaHandler = new MetaHandler(this);
+    private final VoiceHandler voiceHandler;
+    private final MetaHandler metaHandler;
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
+    private boolean connected = false;
+    private long lastKeepAlive = System.currentTimeMillis();
 
     public SvcConnection(SvcProtocolAdapter adapter, ISonusPlayer player) {
         this.adapter = adapter;
         this.player = player;
+        this.voiceHandler = new VoiceHandler(this.adapter, this);
+        this.metaHandler = new MetaHandler(this.adapter, this);
     }
 
     public ISonusPlayer getPlayer() {
@@ -85,5 +89,21 @@ public class SvcConnection {
 
     public void setRemoteAddress(InetSocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
+    }
+
+    public boolean isConnected() {
+        return this.connected;
+    }
+
+    public void setConnected(boolean connected) {
+        this.connected = connected;
+    }
+
+    public long getLastKeepAlive() {
+        return this.lastKeepAlive;
+    }
+
+    public void setLastKeepAlive(long lastKeepAlive) {
+        this.lastKeepAlive = lastKeepAlive;
     }
 }

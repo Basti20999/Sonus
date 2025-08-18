@@ -13,4 +13,6 @@ public interface ISonusService {
     ISonusPlayer getPlayer(UUID playerId);
 
     IPmListener getPmListener();
+
+    ISonusConfig getConfig();
 }

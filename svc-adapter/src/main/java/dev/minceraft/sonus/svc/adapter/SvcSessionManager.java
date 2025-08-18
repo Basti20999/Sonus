@@ -22,4 +22,8 @@ public class SvcSessionManager {
     public void addConnection(SvcConnection connection) {
         this.connection.put(connection.getPlayer().getUniqueId(), connection);
     }
+
+    public void onConnectionEstablished(SvcConnection connection) {
+
+    }
 }

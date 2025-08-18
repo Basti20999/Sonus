@@ -1,5 +1,8 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
+import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
+import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.AddCategorySvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.CreateGroupSvcPacket;
@@ -15,11 +18,15 @@ import dev.minceraft.sonus.svc.protocol.meta.RequestSecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.SecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.UpdateStateSvcPacket;
 
+import java.net.InetSocketAddress;
+
 public class MetaHandler implements IMetaSvcHandler {
 
+    private final SvcProtocolAdapter adapter;
     private final SvcConnection connection;
 
-    public MetaHandler(SvcConnection connection) {
+    public MetaHandler(SvcProtocolAdapter adapter, SvcConnection connection) {
+        this.adapter = adapter;
         this.connection = connection;
     }
 
@@ -75,12 +82,25 @@ public class MetaHandler implements IMetaSvcHandler {
 
     @Override
     public void handleRequestSecretPacket(RequestSecretSvcPacket packet) {
-        packet.getCompatibilityVersion()
-    }
+        if (packet.getCompatibilityVersion() != AbstractSvcPacket.COMPATIBILITY_VERSION) {
+            // Incompatible version, do not initialize connection
+            return;
+        }
+        ISonusService service = this.adapter.getService();
+        InetSocketAddress remoteAddress = service.getUdpServer().getRemoteAddress();
 
-    @Override
-    public void handleSecretPacket(SecretSvcPacket packet) {
-        IMetaSvcHandler.super.handleSecretPacket(packet);
+        SecretSvcPacket secretSvcPacket = new SecretSvcPacket();
+        secretSvcPacket.setSecret(this.connection.getSecret());
+        secretSvcPacket.setServerPort(remoteAddress.getPort());
+        secretSvcPacket.setPlayerId(this.connection.getPlayer().getUniqueId());
+        secretSvcPacket.setCodec(this.adapter.getConfig().getCodec());
+        secretSvcPacket.setMtuSize(service.getConfig().getMtuSize());
+        secretSvcPacket.setKeepAlive(service.getConfig().getKeepAliveMs());
+        secretSvcPacket.setGroupsEnabled(true); // Sonus requires groups to be enabled
+        secretSvcPacket.setVoiceHost(remoteAddress.getHostString());
+        secretSvcPacket.setAllowRecording(service.getConfig().allowRecordings());
+
+        this.connection.sendPacket(secretSvcPacket);
     }
 
     @Override

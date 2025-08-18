@@ -1,15 +1,13 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
+import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
+import dev.minceraft.sonus.svc.protocol.voice.AuthenticateAckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckAckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.GroupSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.IVoiceSvcHandler;
 import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.LocationSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.MicSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.PingSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.PlayerSoundSvcPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +15,11 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
+    private final SvcProtocolAdapter adapter;
     private final SvcConnection connection;
 
-    public VoiceHandler(SvcConnection connection) {
+    public VoiceHandler(SvcProtocolAdapter adapter, SvcConnection connection) {
+        this.adapter = adapter;
         this.connection = connection;
     }
 
@@ -33,46 +33,33 @@ public class VoiceHandler implements IVoiceSvcHandler {
                     this.connection.getPlayer().getUniqueId(), packet.getPlayerId());
             return;
         }
-        this.connection.sendPacket(new AuthenticateSvcPacket());
-    }
-
-    @Override
-    public void handleConnectionCheckAck(ConnectionCheckAckSvcPacket packet) {
-        IVoiceSvcHandler.super.handleConnectionCheckAck(packet);
+        this.connection.sendPacket(new AuthenticateAckSvcPacket());
     }
 
     @Override
     public void handleConnectionCheck(ConnectionCheckSvcPacket packet) {
-        IVoiceSvcHandler.super.handleConnectionCheck(packet);
-    }
+        LOGGER.info("Successfully connected {}({}) to Sonus SVC backend",
+                this.connection.getPlayer().getName(), this.connection.getPlayer().getUniqueId());
 
-    @Override
-    public void handleGroupSoundPacket(GroupSoundSvcPacket packet) {
-        IVoiceSvcHandler.super.handleGroupSoundPacket(packet);
+        this.connection.setLastKeepAlive(System.currentTimeMillis());
+        this.connection.setConnected(true);
+        this.adapter.getSessionManager().onConnectionEstablished(this.connection);
+
+        this.connection.sendPacket(new ConnectionCheckSvcPacket());
     }
 
     @Override
     public void handleKeepAlivePacket(KeepAliveSvcPacket packet) {
-        IVoiceSvcHandler.super.handleKeepAlivePacket(packet);
-    }
-
-    @Override
-    public void handleLocationSoundPacket(LocationSoundSvcPacket packet) {
-        IVoiceSvcHandler.super.handleLocationSoundPacket(packet);
+        this.connection.setLastKeepAlive(System.currentTimeMillis());
     }
 
     @Override
     public void handleMicPacket(MicSvcPacket packet) {
-        IVoiceSvcHandler.super.handleMicPacket(packet);
+        // TODO: handle mic packet
     }
 
     @Override
     public void handlePingPacket(PingSvcPacket packet) {
-        IVoiceSvcHandler.super.handlePingPacket(packet);
-    }
-
-    @Override
-    public void handlePlayerSoundPacket(PlayerSoundSvcPacket packet) {
-        IVoiceSvcHandler.super.handlePlayerSoundPacket(packet);
+       // TODO: handle ping packet
     }
 }

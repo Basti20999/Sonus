@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface ISonusPlayer {
 
     UUID getUniqueId();
+
+    String getName();
 }

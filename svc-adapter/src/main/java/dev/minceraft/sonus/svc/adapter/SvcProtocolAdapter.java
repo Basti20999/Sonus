@@ -5,6 +5,7 @@ import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.protocol.udp.UdpBasedContext;
+import dev.minceraft.sonus.svc.adapter.config.SvcConfig;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcFrameCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcHandler;
@@ -18,6 +19,7 @@ import org.jspecify.annotations.NullMarked;
 public class SvcProtocolAdapter implements VoiceProtocolAdapter {
 
     private final ISonusService service;
+    private final SvcConfig config;
     private final SvcSessionManager sessionManager = new SvcSessionManager(this);
 
     public SvcProtocolAdapter(ISonusService service) {
@@ -46,6 +48,10 @@ public class SvcProtocolAdapter implements VoiceProtocolAdapter {
 
     public ISonusService getService() {
         return this.service;
+    }
+
+    public SvcConfig getConfig() {
+        return this.config;
     }
 
     public SvcSessionManager getSessionManager() {
