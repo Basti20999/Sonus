@@ -1,6 +1,8 @@
 [versions]
 # plugins
 pluginyml = "0.6.0"
+gradleup-shadow = "9.0.2"
+runtask = "2.3.1"
 
 # protocol
 leangen = "2.0.1"
@@ -25,6 +27,8 @@ velocity = "3.4.0-SNAPSHOT"
 
 [plugins]
 pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginyml" }
+gradleup-shadow = { id = "com.gradleup.shadow", version.ref = "gradleup-shadow" }
+run-velocity = { id = "xyz.jpenilla.run-velocity", version.ref = "runtask" }
 
 [libraries]
 # protocol

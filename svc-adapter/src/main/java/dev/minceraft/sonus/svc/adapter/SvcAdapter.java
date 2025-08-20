@@ -3,22 +3,30 @@ package dev.minceraft.sonus.svc.adapter;
 
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
-import dev.minceraft.sonus.common.adapter.VoiceAdapter;
+import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
+import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.svc.adapter.config.SvcConfig;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class SvcAdapter implements VoiceAdapter {
+public class SvcAdapter implements SonusAdapter {
 
-    private final ISonusService service;
-    private final SvcConfig config;
     private final SvcSessionManager sessionManager = new SvcSessionManager(this);
-    private final SvcProtocolAdapter protocolAdapter = new SvcProtocolAdapter(this);
+    private final SvcSonusListener serviceListener = new SvcSonusListener(this);
+    private @MonotonicNonNull SvcProtocolAdapter protocolAdapter;
+    private @MonotonicNonNull ISonusService service;
+    private @MonotonicNonNull YamlConfigHolder<SvcConfig> config;
 
-    public SvcAdapter(ISonusService service) {
+    @Override
+    public void init(ISonusService service) {
         this.service = service;
+        this.protocolAdapter = new SvcProtocolAdapter(this);
+        this.config = new YamlConfigHolder<>(SvcConfig.class, this.service.getDataDirectory().resolve("svc-config.yml"));
+
+        this.service.getEventManager().registerListener(this.serviceListener);
     }
 
     @Override
@@ -36,7 +44,7 @@ public class SvcAdapter implements VoiceAdapter {
     }
 
     public SvcConfig getConfig() {
-        return this.config;
+        return this.config.getDelegate();
     }
 
     public SvcSessionManager getSessionManager() {

@@ -4,6 +4,7 @@ import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
+import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,7 +19,8 @@ public class SvcPlayerMarkerCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
 
     private final SvcProtocolAdapter adapter;
 
-    public SvcPlayerMarkerCodec(SvcProtocolAdapter adapter) {
+    public SvcPlayerMarkerCodec(SvcUdpMagicCodec svcCodec, SvcProtocolAdapter adapter) {
+        super(svcCodec);
         this.adapter = adapter;
     }
 
@@ -30,7 +32,7 @@ public class SvcPlayerMarkerCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
         UUID playerId = DataTypeUtil.readUniqueId(msg);
-        SvcConnection connection = this.adapter.getSessionManager().getConnection(playerId);
+        SvcConnection connection = this.adapter.getAdapter().getSessionManager().getConnection(playerId);
         if (connection != null) {
             svcCtx.connection = connection;
             out.add(msg.retainedSlice());

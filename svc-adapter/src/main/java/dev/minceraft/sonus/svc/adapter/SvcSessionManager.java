@@ -26,4 +26,8 @@ public class SvcSessionManager {
     public void onConnectionEstablished(SvcConnection connection) {
 
     }
+
+    public void removeSession(UUID playerId) {
+        this.connection.remove(playerId);
+    }
 }

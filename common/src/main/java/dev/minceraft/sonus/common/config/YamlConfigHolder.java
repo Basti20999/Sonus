@@ -1,6 +1,6 @@
-package dev.minceraft.sonus.service.config;
+package dev.minceraft.sonus.common.config;
 
-import dev.minceraft.sonus.service.config.serializer.AddressSerializer;
+import dev.minceraft.sonus.common.config.serializer.AddressSerializer;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.yaml.NodeStyle;

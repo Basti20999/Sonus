@@ -30,6 +30,8 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
 
     @Override
     public void sendPluginMessage(Key key, ByteBuf data) {
-        this.player.sendPluginMessage(MinecraftChannelIdentifier.from(key), data.array());
+        byte[] array = new byte[data.readableBytes()];
+        data.readBytes(array);
+        this.player.sendPluginMessage(MinecraftChannelIdentifier.from(key), array);
     }
 }

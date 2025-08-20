@@ -1,12 +1,14 @@
-package dev.minceraft.sonus.service.config;
+package dev.minceraft.sonus.service;
 // Created by booky10 in Sonus (01:08 10.08.2025)
 
 import dev.minceraft.sonus.common.ISonusConfig;
 import org.jspecify.annotations.NullMarked;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.net.InetSocketAddress;
 
 @NullMarked
+@ConfigSerializable
 public class SonusConfig implements ISonusConfig {
 
     private InetSocketAddress bind = new InetSocketAddress("0.0.0.0", 9982);

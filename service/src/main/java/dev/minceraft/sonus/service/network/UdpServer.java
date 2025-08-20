@@ -52,7 +52,7 @@ public class UdpServer implements IUdpServer {
                     }
                 })
                 .bind(config.getBind());
-        LOGGER.info("Binding sonus udp server on {}:{}", config.getBind(), config.getBind());
+        LOGGER.info("Binding sonus udp server on {}", config.getBind());
         CompletableFuture.runAsync(() -> {
             future.awaitUninterruptibly();
             this.channel = future.channel();
@@ -85,6 +85,8 @@ public class UdpServer implements IUdpServer {
     public void sendPacket(WrappedUdpPipelineData data) {
         if (this.channel != null) {
             this.channel.writeAndFlush(data);
+        } else {
+            LOGGER.warn("Cannot send packet, UDP server is not bound yet.");
         }
     }
 }

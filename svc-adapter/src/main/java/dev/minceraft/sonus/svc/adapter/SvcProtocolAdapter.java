@@ -26,11 +26,11 @@ public class SvcProtocolAdapter implements VoiceProtocolAdapter {
         IUdpServer udpServer = service.getUdpServer();
 
         udpServer.registerCodec(this.svcCodec);
-        udpServer.registerHandler("svc-player-marker", new SvcPlayerMarkerCodec(this));
-        udpServer.registerHandler("svc-frame", SvcFrameCodec.INSTANCE);
-        udpServer.registerHandler("svc-cipher", SvcCipherCodec.INSTANCE);
-        udpServer.registerHandler("svc-codec", SvcPacketCodec.INSTANCE);
-        udpServer.registerHandler("svc-handler", new SvcHandler(service));
+        udpServer.registerHandler("svc-player-marker", new SvcPlayerMarkerCodec(this.svcCodec, this));
+        udpServer.registerHandler("svc-frame", new SvcFrameCodec(this.svcCodec));
+        udpServer.registerHandler("svc-cipher", new SvcCipherCodec(this.svcCodec));
+        udpServer.registerHandler("svc-codec", new SvcPacketCodec(this.svcCodec));
+        udpServer.registerHandler("svc-handler", new SvcHandler(this.svcCodec));
 
         service.getPluginMessenger().registerCodec(new SvcPluginMessageCodec(this));
     }

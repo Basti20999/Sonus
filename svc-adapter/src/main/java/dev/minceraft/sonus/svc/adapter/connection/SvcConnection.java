@@ -23,7 +23,7 @@ public class SvcConnection {
     private final SvcProtocolAdapter protocolAdapter;
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
-    private final SvcPlayerCipherCodec cipher = new SvcPlayerCipherCodec(this.secret);
+    private final SvcPlayerCipherCodec cipher;
     private final VoiceHandler voiceHandler;
     private final MetaHandler metaHandler;
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
@@ -34,6 +34,7 @@ public class SvcConnection {
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
         this.protocolAdapter = protocolAdapter;
         this.player = player;
+        this.cipher = new SvcPlayerCipherCodec(this.protocolAdapter.getSvcCodec(), this.secret);
         this.voiceHandler = new VoiceHandler(this.protocolAdapter, this);
         this.metaHandler = new MetaHandler(this.protocolAdapter, this);
     }
@@ -61,8 +62,7 @@ public class SvcConnection {
             throw new IllegalStateException("Cannot send UDP packet before remote address is set.");
         }
         WrappedUdpPipelineData payload = new WrappedUdpPipelineData(
-                SvcUdpContext.newInstance(),
-                this.remoteAddress,
+                SvcUdpContext.newInstance(this.remoteAddress, this),
                 this.protocolAdapter.getSvcCodec(),
                 packet
         );

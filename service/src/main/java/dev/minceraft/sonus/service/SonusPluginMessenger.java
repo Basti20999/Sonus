@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @NullMarked
 public class SonusPluginMessenger implements IPluginMessenger {
@@ -26,7 +27,6 @@ public class SonusPluginMessenger implements IPluginMessenger {
 
     @Override
     public void registerCodec(AbstractPluginMessageCodec codec) {
-        LOGGER.info("Registering codec: {}", codec.getClass().getSimpleName());
         for (Key channel : codec.getSupportedChannels()) {
             if (this.codecs.containsKey(channel)) {
                 throw new IllegalArgumentException("Codec for channel " + channel + " already registered");
@@ -34,6 +34,8 @@ public class SonusPluginMessenger implements IPluginMessenger {
             this.service.getPlatform().registerPluginChannel(channel);
             this.codecs.put(channel, codec);
         }
+        LOGGER.info("Registered plugin message codec: {} ({})", codec.getClass().getSimpleName(),
+                codec.getSupportedChannels().stream().map(Key::asString).collect(Collectors.joining(", ")));
     }
 
     public boolean handleMessage(Key channel, ISonusPlayer player, byte[] data) {

@@ -4,19 +4,13 @@ import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import dev.minceraft.sonus.common.protocol.util.TypeUtil;
 import io.leangen.geantyref.TypeToken;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.CompositeByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.socket.DatagramPacket;
-import io.netty.handler.codec.MessageToMessageCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 @ChannelHandler.Sharable
-public abstract class AbstractMagicUdpCodec<T> extends MessageToMessageCodec<DatagramPacket, WrappedUdpPipelineData> {
+public abstract class AbstractMagicUdpCodec<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
@@ -49,32 +43,6 @@ public abstract class AbstractMagicUdpCodec<T> extends MessageToMessageCodec<Dat
             return this.magicByte == other.magicByte && this.packetClass.equals(other.packetClass);
         } else {
             return false;
-        }
-    }
-
-    @Override
-    protected void encode(ChannelHandlerContext ctx, WrappedUdpPipelineData msg, List<Object> out) throws Exception {
-        try {
-            ByteBuf data = msg.unwrapAndRecycle();
-
-            CompositeByteBuf buffer = Unpooled.compositeBuffer(2)
-                    .addComponent(true, this.getMagicByteBuf().retainedSlice())
-                    .addComponent(true, data);
-
-            out.add(new DatagramPacket(buffer, msg.remoteAddress()));
-        } catch (Throwable throwable) {
-            LOGGER.error("Error while encoding packet", throwable);
-        }
-    }
-
-    @Override
-    protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out) throws Exception {
-        short magic = this.readMagicByte(msg.content());
-        if (magic < 0) {
-            return; // Invalid magic byte
-        }
-        if ((this.magicByte & 0xFF) == magic) {
-            out.add(new WrappedUdpPipelineData(this.adapter.newPipelineContext(), msg.sender(), this, msg.content().retainedSlice()));
         }
     }
 

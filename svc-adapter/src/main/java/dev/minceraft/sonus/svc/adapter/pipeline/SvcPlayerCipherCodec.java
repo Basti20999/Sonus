@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.svc.adapter.pipeline;
 
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
+import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -31,7 +32,8 @@ public class SvcPlayerCipherCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
     private final Cipher decodeCipher;
     private byte @Nullable [] lastDecodeIv;
 
-    public SvcPlayerCipherCodec(UUID secret) {
+    public SvcPlayerCipherCodec(SvcUdpMagicCodec svcCodec, UUID secret) {
+        super(svcCodec);
         try {
             this.encodeIv = Unpooled.wrappedBuffer(generateIV());
             this.key = createKeySpec(secret);
@@ -61,17 +63,17 @@ public class SvcPlayerCipherCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
 
     @Override
     public void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) throws Exception {
-        byte[] ciphered;
         try {
             byte[] unciphered = new byte[msg.readableBytes()];
             msg.readBytes(unciphered);
-            ciphered = this.encodeCipher.doFinal(unciphered);
+            byte[] ciphered = this.encodeCipher.doFinal(unciphered);
+
+            out.add(Unpooled.compositeBuffer(2)
+                    .addComponent(true, this.encodeIv.retainedSlice())
+                    .addComponent(true, Unpooled.wrappedBuffer(ciphered)));
         } finally {
             msg.release();
         }
-        out.add(Unpooled.compositeBuffer(2)
-                .addComponent(true, this.encodeIv.retainedSlice())
-                .addComponent(true, Unpooled.wrappedBuffer(ciphered)));
     }
 
     @Override
@@ -84,14 +86,13 @@ public class SvcPlayerCipherCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
             this.lastDecodeIv = iv;
         }
 
-        byte[] unciphered;
         try {
             byte[] ciphered = new byte[msg.readableBytes()];
             msg.readBytes(ciphered);
-            unciphered = this.decodeCipher.doFinal(ciphered);
+            byte[] unciphered = this.decodeCipher.doFinal(ciphered);
+            out.add(Unpooled.wrappedBuffer(unciphered));
         } finally {
             msg.release();
         }
-        out.add(Unpooled.wrappedBuffer(unciphered));
     }
 }

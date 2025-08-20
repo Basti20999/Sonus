@@ -10,7 +10,7 @@ import java.util.UUID;
 @NullMarked
 public interface IServicePlatform {
 
-    Path getConfigPath();
+    Path getDataPath();
 
     @Nullable
     IPlatformPlayer getPlayer(UUID uniqueId);

@@ -3,10 +3,10 @@ package dev.minceraft.sonus.service;
 
 import dev.minceraft.sonus.common.ISonusConfig;
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.config.YamlConfigHolder;
+import dev.minceraft.sonus.common.events.ISonusEventManager;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.service.adapter.AdapterManager;
-import dev.minceraft.sonus.service.config.SonusConfig;
-import dev.minceraft.sonus.service.config.YamlConfigHolder;
 import dev.minceraft.sonus.service.meta.MetaDecoder;
 import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
@@ -14,6 +14,8 @@ import dev.minceraft.sonus.service.player.PlayerManager;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.file.Path;
 
 @NullMarked
 public final class SonusService implements ISonusService {
@@ -24,18 +26,19 @@ public final class SonusService implements ISonusService {
     private final PlayerManager players = new PlayerManager(this);
     private final MetaDecoder metaDecoder = new MetaDecoder(this);
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
-    private final AdapterManager adapters = new AdapterManager();
     private final UdpServer udpServer = new UdpServer(this);
-
+    private final SonusEventManager eventManager = new SonusEventManager();
     private final YamlConfigHolder<SonusConfig> config;
+    private AdapterManager adapters;
 
     public SonusService(IServicePlatform platform) {
         this.platform = platform;
-        this.config = new YamlConfigHolder<>(SonusConfig.class, this.platform.getConfigPath());
+        this.config = new YamlConfigHolder<>(SonusConfig.class, this.platform.getDataPath().resolve("config.yml"));
     }
 
     public void init() {
         LOGGER.info("Initializing Sonus Service...");
+        this.adapters = new AdapterManager(this);
         this.udpServer.bind();
     }
 
@@ -60,12 +63,23 @@ public final class SonusService implements ISonusService {
         return this.adapters;
     }
 
+    @Override
     public ISonusConfig getConfig() {
         return this.config.getDelegate();
     }
 
     @Override
+    public Path getDataDirectory() {
+        return this.platform.getDataPath();
+    }
+
+    @Override
     public IUdpServer getUdpServer() {
         return this.udpServer;
+    }
+
+    @Override
+    public ISonusEventManager getEventManager() {
+        return this.eventManager;
     }
 }

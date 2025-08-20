@@ -19,17 +19,17 @@ import java.util.UUID;
 public class ServicePlatformVelocity implements IServicePlatform {
 
     private final ProxyServer server;
-    private final Path configPath;
+    private final Path dataPath;
 
     @Inject
     public ServicePlatformVelocity(ProxyServer server, @DataDirectory Path dataPath) {
         this.server = server;
-        this.configPath = dataPath.resolve("config.yml");
+        this.dataPath = dataPath;
     }
 
     @Override
-    public Path getConfigPath() {
-        return this.configPath;
+    public Path getDataPath() {
+        return this.dataPath;
     }
 
     @Override

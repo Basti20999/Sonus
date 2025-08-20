@@ -1,4 +1,4 @@
-package dev.minceraft.sonus.service.config.serializer;
+package dev.minceraft.sonus.common.config.serializer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;

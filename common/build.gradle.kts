@@ -9,4 +9,5 @@ dependencies {
     compileOnlyApi(libs.guava)
     compileOnlyApi(libs.gson)
     compileOnlyApi(libs.fastutil)
+    compileOnlyApi(libs.bundles.configurate)
 }

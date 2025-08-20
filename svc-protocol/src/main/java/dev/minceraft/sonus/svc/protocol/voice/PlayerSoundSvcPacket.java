@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.voice;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import io.netty.buffer.ByteBuf;
@@ -51,8 +50,8 @@ public class PlayerSoundSvcPacket extends SoundSvcPacket<PlayerSoundSvcPacket> {
     }
 
     @Override
-    public void handle(ISonusPlayer player, IVoiceSvcHandler handler) {
-        handler.handlePlayerSoundPacket(player, this);
+    public void handle(IVoiceSvcHandler handler) {
+        handler.handlePlayerSoundPacket(this);
     }
 
     public boolean isWhispering() {

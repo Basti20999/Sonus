@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.adapter.pipeline;
 
 import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
+import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
@@ -16,7 +17,9 @@ import java.util.List;
 @ChannelHandler.Sharable
 public final class SvcFrameCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
 
-    public static final SvcFrameCodec INSTANCE = new SvcFrameCodec();
+    public SvcFrameCodec(SvcUdpMagicCodec svcCodec) {
+        super(svcCodec);
+    }
 
     @Override
     public void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {

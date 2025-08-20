@@ -7,12 +7,16 @@ import io.netty.util.Recycler;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.PromiseCombiner;
 import io.netty.util.internal.TypeParameterMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public abstract class AbstractUdpPipelineNode<I, O, C extends UdpBasedContext<C>> extends ChannelDuplexHandler {
+public abstract class AbstractUdpPipelineNode<E, D, C extends UdpBasedContext<C>> extends ChannelDuplexHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private static final Recycler<OutList> OUT_LIST_RECYCLER = new Recycler<OutList>() {
         @Override
@@ -22,29 +26,32 @@ public abstract class AbstractUdpPipelineNode<I, O, C extends UdpBasedContext<C>
     };
 
     protected final AbstractMagicUdpCodec<?> allowedCodec;
-    private final TypeParameterMatcher inputMatcher;
-    private final TypeParameterMatcher outputMatcher;
+    private final TypeParameterMatcher encodedMatcher;
+    private final TypeParameterMatcher decodedMatcher;
 
     protected AbstractUdpPipelineNode(AbstractMagicUdpCodec<?> allowedCodec) {
         this.allowedCodec = allowedCodec;
-        this.inputMatcher = TypeParameterMatcher.find(this, AbstractUdpPipelineNode.class, "I");
-        this.outputMatcher = TypeParameterMatcher.find(this, AbstractUdpPipelineNode.class, "O");
+        this.encodedMatcher = TypeParameterMatcher.find(this, AbstractUdpPipelineNode.class, "E");
+        this.decodedMatcher = TypeParameterMatcher.find(this, AbstractUdpPipelineNode.class, "D");
     }
 
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if (msg instanceof WrappedUdpPipelineData packet
                 && packet.codec().equals(this.allowedCodec)
-                && this.outputMatcher.match(packet.data())
+                && this.decodedMatcher.match(packet.data())
         ) {
             OutList out = OUT_LIST_RECYCLER.get();
             try {
                 @SuppressWarnings("unchecked")
-                O cast = (O) packet.data();
+                D cast = (D) packet.data();
                 @SuppressWarnings("unchecked")
                 C context = (C) packet.context();
                 this.encode(ctx, cast, out.list, context);
+
                 out.write(ctx, promise, packet::withPacket);
+            } catch (Throwable throwable) {
+                LOGGER.error("Failed to encode packet: {}", msg.getClass().getSimpleName(), throwable);
             } finally {
                 ReferenceCountUtil.release(msg);
                 out.list.clear();
@@ -55,18 +62,18 @@ public abstract class AbstractUdpPipelineNode<I, O, C extends UdpBasedContext<C>
         }
     }
 
-    public abstract void encode(ChannelHandlerContext ctx, O msg, List<Object> out, C adapterCtx) throws Exception;
+    public abstract void encode(ChannelHandlerContext ctx, D msg, List<Object> out, C adapterCtx) throws Exception;
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof WrappedUdpPipelineData packet
                 && packet.codec().equals(this.allowedCodec)
-                && this.inputMatcher.match(packet.data())
+                && this.encodedMatcher.match(packet.data())
         ) {
             OutList out = OUT_LIST_RECYCLER.get();
             try {
                 @SuppressWarnings("unchecked")
-                I cast = (I) packet.data();
+                E cast = (E) packet.data();
                 @SuppressWarnings("unchecked")
                 C context = (C) packet.context();
                 this.decode(ctx, cast, out.list, context);
@@ -74,6 +81,8 @@ public abstract class AbstractUdpPipelineNode<I, O, C extends UdpBasedContext<C>
                 for (Object obj : out.list) {
                     ctx.fireChannelRead(packet.withPacket(obj));
                 }
+            } catch (Throwable throwable) {
+                LOGGER.error("Failed to decode packet: {}", msg.getClass().getSimpleName(), throwable);
             } finally {
                 ReferenceCountUtil.release(msg);
                 out.list.clear();
@@ -84,7 +93,7 @@ public abstract class AbstractUdpPipelineNode<I, O, C extends UdpBasedContext<C>
         }
     }
 
-    public abstract void decode(ChannelHandlerContext ctx, I msg, List<Object> out, C adapterCtx) throws Exception;
+    public abstract void decode(ChannelHandlerContext ctx, E msg, List<Object> out, C adapterCtx) throws Exception;
 
     private static final class OutList {
 

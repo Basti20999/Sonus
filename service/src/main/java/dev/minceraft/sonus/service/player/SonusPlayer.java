@@ -2,7 +2,7 @@ package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
 import dev.minceraft.sonus.common.IAudioSource;
-import dev.minceraft.sonus.common.adapter.VoiceAdapter;
+import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.WorldVec3d;
@@ -21,7 +21,7 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
     private final IPlatformPlayer platform;
     private @Nullable WorldVec3d position;
     private @Nullable AbstractRoom voiceRoom;
-    private @Nullable VoiceAdapter voiceAdapter;
+    private @Nullable SonusAdapter sonusAdapter;
 
     private boolean muted;
     private boolean deafened;
@@ -48,8 +48,8 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
     }
 
     public void sendAudio(IAudioSource source, SonusAudio audio) {
-        if (this.voiceAdapter != null && !this.deafened) {
-            this.voiceAdapter.sendAudio(source, audio);
+        if (this.sonusAdapter != null && !this.deafened) {
+            this.sonusAdapter.sendAudio(source, audio);
         }
     }
 
@@ -85,12 +85,12 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
         this.voiceRoom = voiceRoom;
     }
 
-    public @Nullable VoiceAdapter getVoiceAdapter() {
-        return this.voiceAdapter;
+    public @Nullable SonusAdapter getVoiceAdapter() {
+        return this.sonusAdapter;
     }
 
-    public void setVoiceAdapter(@Nullable VoiceAdapter voiceAdapter) {
-        this.voiceAdapter = voiceAdapter;
+    public void setVoiceAdapter(@Nullable SonusAdapter sonusAdapter) {
+        this.sonusAdapter = sonusAdapter;
     }
 
     public boolean isMuted() {

@@ -12,6 +12,10 @@ public final class VarInt {
     private static final int MAXIMUM_VARINT_SIZE = 5;
     private static final int[] VAR_INT_EXACT_BYTE_LENGTHS = new int[33];
 
+    static {
+        initVarIntLengths();
+    }
+
     private VarInt() {
     }
 
@@ -25,7 +29,8 @@ public final class VarInt {
     }
 
     public static ByteBuf buffer(int value) {
-        ByteBuf buf = Unpooled.wrappedBuffer(new byte[size(value)]);
+        int size = size(value);
+        ByteBuf buf = Unpooled.wrappedBuffer(new byte[size]);
         buf.resetWriterIndex();
         write(buf, value);
         return buf;

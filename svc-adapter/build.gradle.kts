@@ -1,5 +1,5 @@
 dependencies {
-    compileOnlyApi(projects.svcProtocol)
+    api(projects.svcProtocol)
 
     compileOnly(libs.bundles.configurate)
 }

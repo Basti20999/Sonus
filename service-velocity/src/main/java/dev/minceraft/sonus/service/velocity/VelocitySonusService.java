@@ -17,16 +17,17 @@ import jakarta.inject.Inject;
 public class VelocitySonusService {
 
     private final SonusService service;
+    private final ProxyServer server;
 
     @Inject
     public VelocitySonusService(ProxyServer server, ServicePlatformVelocity platform) {
         this.service = new SonusService(platform);
-
-        server.getEventManager().register(this, new PluginMessageListener(this.service));
+        this.server = server;
     }
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         this.service.init();
+        server.getEventManager().register(this, new VelocityListener(this.service));
     }
 }

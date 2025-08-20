@@ -1,3 +1,3 @@
 dependencies {
-    compileOnlyApi(projects.common)
+    api(projects.common)
 }

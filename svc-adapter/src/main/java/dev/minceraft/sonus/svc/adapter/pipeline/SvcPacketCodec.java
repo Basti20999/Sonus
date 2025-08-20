@@ -2,6 +2,7 @@ package dev.minceraft.sonus.svc.adapter.pipeline;
 
 
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
+import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import dev.minceraft.sonus.svc.protocol.registries.SvcVoicePacketRegistry;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
 import io.netty.buffer.ByteBuf;
@@ -13,7 +14,9 @@ import java.util.List;
 @ChannelHandler.Sharable
 public class SvcPacketCodec extends SvcUdpPipelineNode<ByteBuf, SvcVoicePacket<?>> {
 
-    public static final SvcPacketCodec INSTANCE = new SvcPacketCodec();
+    public SvcPacketCodec(SvcUdpMagicCodec svcCodec) {
+        super(svcCodec);
+    }
 
     @Override
     public void encode(ChannelHandlerContext ctx, SvcVoicePacket<?> msg, List<Object> out, SvcUdpContext svcCtx) throws Exception {

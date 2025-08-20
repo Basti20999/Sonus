@@ -5,9 +5,9 @@ import dev.minceraft.sonus.common.protocol.udp.AbstractUdpPipelineNode;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 
-public abstract class SvcUdpPipelineNode<I, O> extends AbstractUdpPipelineNode<I, O, SvcUdpContext> {
+public abstract class SvcUdpPipelineNode<E, D> extends AbstractUdpPipelineNode<E, D, SvcUdpContext> {
 
-    protected SvcUdpPipelineNode() {
-        super(SvcUdpMagicCodec.INSTANCE);
+    protected SvcUdpPipelineNode(SvcUdpMagicCodec svcCodec) {
+        super(svcCodec);
     }
 }
