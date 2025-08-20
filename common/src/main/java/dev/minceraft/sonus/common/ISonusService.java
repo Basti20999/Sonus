@@ -1,8 +1,9 @@
 package dev.minceraft.sonus.common;
 
-import dev.minceraft.sonus.common.events.ISonusEventManager;
+import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.protocol.tcp.IPluginMessenger;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
+import dev.minceraft.sonus.common.service.ISonusScheduler;
 
 import java.nio.file.Path;
 
@@ -17,4 +18,6 @@ public interface ISonusService {
     Path getDataDirectory();
 
     ISonusEventManager getEventManager();
+
+    ISonusScheduler getScheduler();
 }

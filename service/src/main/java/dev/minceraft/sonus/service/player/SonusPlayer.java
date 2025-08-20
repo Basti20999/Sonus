@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
+import com.google.common.base.Preconditions;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
@@ -8,19 +9,24 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.rooms.AbstractRoom;
+import dev.minceraft.sonus.service.rooms.GroupRoom;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
 public final class SonusPlayer implements IAudioSource, ISonusPlayer {
 
+    private static final GroupRoom TEST = new GroupRoom();
+
     private final IPlatformPlayer platform;
+    private final Map<UUID, AbstractRoom> voiceRooms = new ConcurrentHashMap<>();
     private @Nullable WorldVec3d position;
-    private @Nullable AbstractRoom voiceRoom;
     private @Nullable SonusAdapter sonusAdapter;
 
     private boolean muted;
@@ -28,29 +34,42 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
 
     public SonusPlayer(IPlatformPlayer platform) {
         this.platform = platform;
+
+        this.joinRoom(TEST);
     }
 
     public void handleAudioInput(SonusAudio audio) {
         if (this.muted) {
             return;
         }
-
-        AbstractRoom room = this.voiceRoom;
-        if (room != null) {
-            // send audio input in voice room
+        for (AbstractRoom room : this.voiceRooms.values()) {
             room.sendAudio(this, audio);
-
-            if (room.isIsolatedSpeaking()) {
-                return; // we're done processing
-            }
         }
         // TODO broadcast to nearby players wo can view this player
     }
 
     public void sendAudio(IAudioSource source, SonusAudio audio) {
         if (this.sonusAdapter != null && !this.deafened) {
-            this.sonusAdapter.sendAudio(source, audio);
+            this.sonusAdapter.sendAudio(this, source, audio);
         }
+    }
+
+    public void joinRoom(AbstractRoom room) {
+        Preconditions.checkNotNull(room, "Room cannot be null");
+        if (this.voiceRooms.containsKey(room.getSenderId())) {
+            return; // Already in the room
+        }
+        this.voiceRooms.put(room.getSenderId(), room);
+        room.addMember(this);
+    }
+
+    public void leaveRoom(AbstractRoom room) {
+        Preconditions.checkNotNull(room, "Room cannot be null");
+        if (!this.voiceRooms.containsKey(room.getSenderId())) {
+            return; // Not in the room
+        }
+        this.voiceRooms.remove(room.getSenderId());
+        room.removeMember(this);
     }
 
     @Override
@@ -61,6 +80,17 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
     @Override
     public String getName() {
         return this.platform.getName();
+    }
+
+    @Override
+    @Nullable
+    public SonusAdapter getAdapter() {
+        return this.sonusAdapter;
+    }
+
+    @Override
+    public void setAdapter(@Nullable SonusAdapter adapter) {
+        this.sonusAdapter = adapter;
     }
 
     @Override
@@ -77,12 +107,8 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
         this.position = position;
     }
 
-    public @Nullable AbstractRoom getVoiceRoom() {
-        return this.voiceRoom;
-    }
-
-    public void setVoiceRoom(@Nullable AbstractRoom voiceRoom) {
-        this.voiceRoom = voiceRoom;
+    public Map<UUID, AbstractRoom> getVoiceRooms() {
+        return this.voiceRooms;
     }
 
     public @Nullable SonusAdapter getVoiceAdapter() {
@@ -93,18 +119,22 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
         this.sonusAdapter = sonusAdapter;
     }
 
+    @Override
     public boolean isMuted() {
         return this.muted;
     }
 
+    @Override
     public void setMuted(boolean muted) {
         this.muted = muted;
     }
 
+    @Override
     public boolean isDeafened() {
         return this.deafened;
     }
 
+    @Override
     public void setDeafened(boolean deafened) {
         this.deafened = deafened;
     }

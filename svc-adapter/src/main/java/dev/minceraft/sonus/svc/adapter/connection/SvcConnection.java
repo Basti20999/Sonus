@@ -39,6 +39,7 @@ public class SvcConnection {
         this.cipher = new SvcPlayerCipherCodec(this.protocolAdapter.getSvcCodec(), this.secret);
         this.voiceHandler = new VoiceHandler(this.protocolAdapter, this);
         this.metaHandler = new MetaHandler(this.protocolAdapter, this);
+        this.player.setAdapter(protocolAdapter.getAdapter());
     }
 
     public ISonusPlayer getPlayer() {

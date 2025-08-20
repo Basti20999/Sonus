@@ -1,7 +1,7 @@
 package dev.minceraft.sonus.service;
 
-import dev.minceraft.sonus.common.events.IServiceEvents;
-import dev.minceraft.sonus.common.events.ISonusEventManager;
+import dev.minceraft.sonus.common.service.ISonusServiceEvents;
+import dev.minceraft.sonus.common.service.ISonusEventManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,16 +13,16 @@ public class SonusEventManager implements ISonusEventManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
-    private final Set<IServiceEvents> listeners = new HashSet<>();
+    private final Set<ISonusServiceEvents> listeners = new HashSet<>();
 
     @Override
-    public void registerListener(IServiceEvents events) {
+    public void registerListener(ISonusServiceEvents events) {
         this.listeners.add(events);
     }
 
     @Override
     public void onPlayerSwitchBackend(UUID playerId) {
-        for (IServiceEvents listener : this.listeners) {
+        for (ISonusServiceEvents listener : this.listeners) {
             try {
                 listener.onPlayerSwitchBackend(playerId);
             } catch (Exception exception) {

@@ -4,6 +4,7 @@ package dev.minceraft.sonus.common.adapter;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.audio.SonusAudio;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
@@ -11,7 +12,7 @@ public interface SonusAdapter {
 
     void init(ISonusService service);
 
-    void sendAudio(IAudioSource source, SonusAudio audio);
+    void sendAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio);
 
     VoiceProtocolAdapter getProtocolAdapter();
 }

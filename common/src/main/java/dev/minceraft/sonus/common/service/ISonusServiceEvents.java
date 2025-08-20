@@ -1,8 +1,8 @@
-package dev.minceraft.sonus.common.events;
+package dev.minceraft.sonus.common.service;
 
 import java.util.UUID;
 
-public interface IServiceEvents {
+public interface ISonusServiceEvents {
 
     default void onPlayerSwitchBackend(UUID playerId) {
     }

@@ -3,10 +3,12 @@ package dev.minceraft.sonus.svc.adapter;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class SvcSessionManager {
 
@@ -15,6 +17,11 @@ public class SvcSessionManager {
 
     public SvcSessionManager(SvcAdapter adapter) {
         this.adapter = adapter;
+
+        this.adapter.getService().getScheduler().schedule(this::tickKeepAlive,
+                0,
+                this.adapter.getService().getConfig().getKeepAliveMs(),
+                TimeUnit.MILLISECONDS);
     }
 
     public SvcConnection getConnection(UUID playerId) {
@@ -30,6 +37,10 @@ public class SvcSessionManager {
         packet.setState(connection.buildState());
 
         this.broadcastPacket(packet);
+    }
+
+    public void tickKeepAlive() {
+        broadcastPacket(new KeepAliveSvcPacket());
     }
 
     public void broadcastPacket(AbstractSvcPacket<?> packet) {

@@ -23,7 +23,6 @@ public class SvcCipherCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
             msg.release();
             throw new IllegalStateException("Try to encrypt a message without a connection set in the context!");
         }
-        System.out.println("Message length: " + msg.readableBytes());
         connection.getCipher().encode(ctx, msg, out, adapterCtx);
     }
 

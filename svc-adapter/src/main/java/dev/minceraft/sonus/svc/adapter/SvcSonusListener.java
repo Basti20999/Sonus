@@ -1,10 +1,10 @@
 package dev.minceraft.sonus.svc.adapter;
 
-import dev.minceraft.sonus.common.events.IServiceEvents;
+import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 
 import java.util.UUID;
 
-public class SvcSonusListener implements IServiceEvents {
+public class SvcSonusListener implements ISonusServiceEvents {
 
     private final SvcAdapter adapter;
 

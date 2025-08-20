@@ -4,8 +4,9 @@ package dev.minceraft.sonus.service;
 import dev.minceraft.sonus.common.ISonusConfig;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
-import dev.minceraft.sonus.common.events.ISonusEventManager;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
+import dev.minceraft.sonus.common.service.ISonusEventManager;
+import dev.minceraft.sonus.common.service.ISonusScheduler;
 import dev.minceraft.sonus.service.adapter.AdapterManager;
 import dev.minceraft.sonus.service.meta.MetaDecoder;
 import dev.minceraft.sonus.service.network.UdpServer;
@@ -28,6 +29,7 @@ public final class SonusService implements ISonusService {
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
     private final UdpServer udpServer = new UdpServer(this);
     private final SonusEventManager eventManager = new SonusEventManager();
+    private final SonusScheduler scheduler = new SonusScheduler();
     private final YamlConfigHolder<SonusConfig> config;
     private AdapterManager adapters;
 
@@ -81,5 +83,10 @@ public final class SonusService implements ISonusService {
     @Override
     public ISonusEventManager getEventManager() {
         return this.eventManager;
+    }
+
+    @Override
+    public ISonusScheduler getScheduler() {
+        return this.scheduler;
     }
 }
