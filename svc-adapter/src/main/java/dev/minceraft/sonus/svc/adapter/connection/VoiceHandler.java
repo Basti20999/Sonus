@@ -4,6 +4,7 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateAckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckAckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.IVoiceSvcHandler;
 import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
@@ -46,7 +47,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
         this.connection.setConnected(true);
         this.protocolAdapter.getAdapter().getSessionManager().onConnectionEstablished(this.connection);
 
-        this.connection.sendPacket(new ConnectionCheckSvcPacket());
+        this.connection.sendPacket(new ConnectionCheckAckSvcPacket());
     }
 
     @Override

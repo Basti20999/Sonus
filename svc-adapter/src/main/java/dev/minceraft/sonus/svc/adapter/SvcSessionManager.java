@@ -1,6 +1,8 @@
 package dev.minceraft.sonus.svc.adapter;
 
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
+import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,7 +26,16 @@ public class SvcSessionManager {
     }
 
     public void onConnectionEstablished(SvcConnection connection) {
+        PlayerStateSvcPacket packet = new PlayerStateSvcPacket();
+        packet.setState(connection.buildState());
 
+        this.broadcastPacket(packet);
+    }
+
+    public void broadcastPacket(AbstractSvcPacket<?> packet) {
+        for (SvcConnection conn : this.connection.values()) {
+            conn.sendPacket(packet);
+        }
     }
 
     public void removeSession(UUID playerId) {

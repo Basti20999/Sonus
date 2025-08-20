@@ -7,6 +7,7 @@ import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcPlayerCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
+import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
@@ -29,6 +30,7 @@ public class SvcConnection {
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
     private boolean connected = false;
+    private boolean disabled = false;
     private long lastKeepAlive = System.currentTimeMillis();
 
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
@@ -80,6 +82,16 @@ public class SvcConnection {
         }
     }
 
+    public SonusPlayerState buildState() {
+        return new SonusPlayerState(
+                this.player.getUniqueId(),
+                this.player.getName(),
+                this.isDisabled(),
+                !this.isConnected(),
+                null // TODO: Support groups
+        );
+    }
+
     public SvcPlayerCipherCodec getCipher() {
         return this.cipher;
     }
@@ -106,6 +118,14 @@ public class SvcConnection {
 
     public void setConnected(boolean connected) {
         this.connected = connected;
+    }
+
+    public boolean isDisabled() {
+        return this.disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
     }
 
     public long getLastKeepAlive() {
