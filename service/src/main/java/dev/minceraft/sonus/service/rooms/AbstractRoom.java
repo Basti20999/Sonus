@@ -12,20 +12,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @NullMarked
 public abstract class AbstractRoom implements IAudioSource {
 
     protected final UUID roomId = UUID.randomUUID();
     protected final Map<UUID, SonusPlayer> members = new ConcurrentHashMap<>();
-    protected final AtomicLong sequenceNumber = new AtomicLong(0);
     protected boolean isolatedHearing = true;
     protected boolean isolatedSpeaking = true;
 
     public final void sendAudio(@Nullable IAudioSource source, SonusAudio audio) {
         IAudioSource realSource = Objects.requireNonNullElse(source, this);
-        this.sendAudio0(realSource, audio.withSequenceNumber(this.sequenceNumber.getAndIncrement()));
+        this.sendAudio0(realSource, audio);
     }
 
     @ApiStatus.OverrideOnly
