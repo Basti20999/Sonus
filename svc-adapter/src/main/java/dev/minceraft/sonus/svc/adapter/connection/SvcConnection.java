@@ -30,7 +30,6 @@ public class SvcConnection {
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
     private boolean connected = false;
-    private boolean disabled = false;
     private long lastKeepAlive = System.currentTimeMillis();
 
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
@@ -122,11 +121,18 @@ public class SvcConnection {
     }
 
     public boolean isDisabled() {
-        return this.disabled;
+        return this.player.isDeafened();
     }
 
-    public void setDisabled(boolean disabled) {
-        this.disabled = disabled;
+    /**
+     * @return true if the state was changed, false if it was the same as before
+     */
+    public boolean setDisabled(boolean disabled) {
+        if (this.player.isDeafened() == disabled) {
+            return false;
+        }
+        this.player.setDeafened(disabled);
+        return true;
     }
 
     public long getLastKeepAlive() {

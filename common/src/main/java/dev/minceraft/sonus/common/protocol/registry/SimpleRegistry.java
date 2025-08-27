@@ -44,9 +44,13 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> {
     }
 
     public void write(D data, T packet) {
-        int packetId = this.packetIds.get(packet.getClass());
-        this.idCodec.encoder.accept(data, packetId);
-        this.codec.encoder.accept(data, packet);
+        try {
+            int packetId = this.packetIds.get(packet.getClass());
+            this.idCodec.encoder.accept(data, packetId);
+            this.codec.encoder.accept(data, packet);
+        } catch (NullPointerException exception) {
+            throw new IllegalArgumentException("The given packet is not registered: " + packet.getClass(), exception);
+        }
     }
 
     public static final class Builder<D, T extends ProtocolMessage<?>> {

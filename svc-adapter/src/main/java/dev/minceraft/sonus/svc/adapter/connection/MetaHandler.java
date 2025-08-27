@@ -101,6 +101,9 @@ public class MetaHandler implements IMetaSvcHandler {
 
     @Override
     public void handleUpdateStatePacket(UpdateStateSvcPacket packet) {
-        IMetaSvcHandler.super.handleUpdateStatePacket(packet);
+        if (!this.connection.setDisabled(packet.isDisabled())) {
+            return;
+        }
+        this.protocolAdapter.getAdapter().getSessionManager().broadcastState(this.connection);
     }
 }

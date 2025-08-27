@@ -9,6 +9,7 @@ import dev.minceraft.sonus.svc.protocol.meta.CreateGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.JoinedGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.LeaveGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.PlayerStatesSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.RemoveCategorySvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.RemoveGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.RequestSecretSvcPacket;
@@ -40,7 +41,7 @@ public final class SvcMetaPacketRegistry {
                     .register(JoinedGroupSvcPacket.class, JoinedGroupSvcPacket::new)
                     .register(LeaveGroupSvcPacket.class, LeaveGroupSvcPacket::new)
                     .register(PlayerStateSvcPacket.class, PlayerStateSvcPacket::new)
-                    .register(PlayerStateSvcPacket.class, PlayerStateSvcPacket::new)
+                    .register(PlayerStatesSvcPacket.class, PlayerStatesSvcPacket::new)
                     .register(RemoveCategorySvcPacket.class, RemoveCategorySvcPacket::new)
                     .register(RemoveGroupSvcPacket.class, RemoveGroupSvcPacket::new)
                     .register(RequestSecretSvcPacket.class, RequestSecretSvcPacket::new)

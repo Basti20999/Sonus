@@ -2,7 +2,9 @@ package dev.minceraft.sonus.svc.adapter;
 
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
+import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.PlayerStatesSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
 
 import java.util.HashMap;
@@ -13,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class SvcSessionManager {
 
     private final SvcAdapter adapter;
-    private final Map<UUID, SvcConnection> connection = new HashMap<>();
+    private final Map<UUID, SvcConnection> connections = new HashMap<>();
 
     public SvcSessionManager(SvcAdapter adapter) {
         this.adapter = adapter;
@@ -25,18 +27,19 @@ public class SvcSessionManager {
     }
 
     public SvcConnection getConnection(UUID playerId) {
-        return this.connection.get(playerId);
+        return this.connections.get(playerId);
     }
 
     public void addConnection(SvcConnection connection) {
-        this.connection.put(connection.getPlayer().getUniqueId(), connection);
+        this.connections.put(connection.getPlayer().getUniqueId(), connection);
     }
 
     public void onConnectionEstablished(SvcConnection connection) {
-        PlayerStateSvcPacket packet = new PlayerStateSvcPacket();
-        packet.setState(connection.buildState());
+        this.broadcastState(connection);
 
-        this.broadcastPacket(packet);
+        PlayerStatesSvcPacket statesPacket = new PlayerStatesSvcPacket();
+        statesPacket.setStates(this.getPlayerStates());
+        connection.sendPacket(statesPacket);
     }
 
     public void tickKeepAlive() {
@@ -44,12 +47,29 @@ public class SvcSessionManager {
     }
 
     public void broadcastPacket(AbstractSvcPacket<?> packet) {
-        for (SvcConnection conn : this.connection.values()) {
+        for (SvcConnection conn : this.connections.values()) {
+            if (!conn.isConnected()) {
+                continue;
+            }
             conn.sendPacket(packet);
         }
     }
 
+    public Map<UUID, SonusPlayerState> getPlayerStates() {
+        Map<UUID, SonusPlayerState> states = new HashMap<>(this.connections.size());
+        for (SvcConnection conn : this.connections.values()) {
+            states.put(conn.getPlayer().getUniqueId(), conn.buildState());
+        }
+        return states;
+    }
+
     public void removeSession(UUID playerId) {
-        this.connection.remove(playerId);
+        this.connections.remove(playerId);
+    }
+
+    public void broadcastState(SvcConnection connection) {
+        PlayerStateSvcPacket statePacket = new PlayerStateSvcPacket();
+        statePacket.setState(connection.buildState());
+        this.broadcastPacket(statePacket);
     }
 }
