@@ -3,7 +3,7 @@ package dev.minceraft.sonus.service.rooms;
 
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
-import dev.minceraft.sonus.service.player.SonusPlayer;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
@@ -11,7 +11,7 @@ public class GroupRoom extends AbstractRoom {
 
     @Override
     protected void sendAudio0(IAudioSource source, SonusAudio audio) {
-        for (SonusPlayer member : this.members.values()) {
+        for (ISonusPlayer member : this.members.values()) {
             if (member.getSenderId().equals(source.getSenderId())) {
                 continue;
             }

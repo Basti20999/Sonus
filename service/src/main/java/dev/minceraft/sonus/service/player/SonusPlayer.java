@@ -7,8 +7,8 @@ import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
-import dev.minceraft.sonus.service.rooms.AbstractRoom;
 import dev.minceraft.sonus.service.rooms.GroupRoom;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
@@ -20,12 +20,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
-public final class SonusPlayer implements IAudioSource, ISonusPlayer {
+public final class SonusPlayer implements ISonusPlayer {
 
     private static final GroupRoom TEST = new GroupRoom();
 
     private final IPlatformPlayer platform;
-    private final Map<UUID, AbstractRoom> voiceRooms = new ConcurrentHashMap<>();
+    private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
+    private @Nullable IRoom customRoom;
     private @Nullable WorldVec3d position;
     private @Nullable SonusAdapter sonusAdapter;
 
@@ -35,26 +36,29 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
     public SonusPlayer(IPlatformPlayer platform) {
         this.platform = platform;
 
-        this.joinRoom(TEST);
+        //this.joinRoom(TEST);
     }
 
+    @Override
     public void handleAudioInput(SonusAudio audio) {
         if (this.muted) {
             return;
         }
-        for (AbstractRoom room : this.voiceRooms.values()) {
+        for (IRoom room : this.voiceRooms.values()) {
             room.sendAudio(this, audio);
         }
         // TODO broadcast to nearby players wo can view this player
     }
 
+    @Override
     public void sendAudio(IAudioSource source, SonusAudio audio) {
         if (this.sonusAdapter != null && !this.deafened) {
             this.sonusAdapter.sendAudio(this, source, audio);
         }
     }
 
-    public void joinRoom(AbstractRoom room) {
+    @Override
+    public void joinRoom(IRoom room) {
         Preconditions.checkNotNull(room, "Room cannot be null");
         if (this.voiceRooms.containsKey(room.getSenderId())) {
             return; // Already in the room
@@ -63,13 +67,24 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
         room.addMember(this);
     }
 
-    public void leaveRoom(AbstractRoom room) {
+    @Override
+    public void leaveRoom(IRoom room) {
         Preconditions.checkNotNull(room, "Room cannot be null");
         if (!this.voiceRooms.containsKey(room.getSenderId())) {
             return; // Not in the room
         }
         this.voiceRooms.remove(room.getSenderId());
         room.removeMember(this);
+    }
+
+    @Override
+    public @Nullable IRoom getCustomRoom() {
+        return this.customRoom;
+    }
+
+    @Override
+    public void setCustomRoom(@Nullable IRoom room) {
+        this.customRoom = room;
     }
 
     @Override
@@ -107,7 +122,7 @@ public final class SonusPlayer implements IAudioSource, ISonusPlayer {
         this.position = position;
     }
 
-    public Map<UUID, AbstractRoom> getVoiceRooms() {
+    public Map<UUID, IRoom> getVoiceRooms() {
         return this.voiceRooms;
     }
 

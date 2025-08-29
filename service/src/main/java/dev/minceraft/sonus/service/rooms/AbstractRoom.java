@@ -3,24 +3,29 @@ package dev.minceraft.sonus.service.rooms;
 
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
-import dev.minceraft.sonus.service.player.SonusPlayer;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.common.rooms.RoomType;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
-public abstract class AbstractRoom implements IAudioSource {
+public abstract class AbstractRoom implements IRoom {
 
     protected final UUID roomId = UUID.randomUUID();
-    protected final Map<UUID, SonusPlayer> members = new ConcurrentHashMap<>();
-    protected boolean isolatedHearing = true;
-    protected boolean isolatedSpeaking = true;
+    protected final Map<UUID, ISonusPlayer> members = new ConcurrentHashMap<>();
+    protected RoomType roomType = RoomType.OPEN;
+    protected String name = "Room-" + this.roomId.toString().substring(0, 5);
+    protected @Nullable String password;
 
+    @Override
     public final void sendAudio(@Nullable IAudioSource source, SonusAudio audio) {
         IAudioSource realSource = Objects.requireNonNullElse(source, this);
         this.sendAudio0(realSource, audio);
@@ -29,32 +34,67 @@ public abstract class AbstractRoom implements IAudioSource {
     @ApiStatus.OverrideOnly
     protected abstract void sendAudio0(IAudioSource source, SonusAudio audio);
 
-    public void addMember(SonusPlayer player) {
+    @Override
+    public boolean addMember(ISonusPlayer player) {
+        if (this.members.containsKey(player.getUniqueId())) {
+            return false; // Already in the room
+        }
         this.members.put(player.getUniqueId(), player);
-    }
-
-    public void removeMember(SonusPlayer player) {
-        this.members.remove(player.getUniqueId());
+        return true;
     }
 
     @Override
-    public UUID getSenderId() {
+    public boolean removeMember(ISonusPlayer player) {
+        if (!this.members.containsKey(player.getUniqueId())) {
+            return false; // Not in the room
+        }
+        this.members.remove(player.getUniqueId());
+        return true;
+    }
+
+    @Override
+    public UUID getId() {
         return this.roomId;
     }
 
-    public boolean isIsolatedHearing() {
-        return this.isolatedHearing;
+    @Override
+    public String getName() {
+        return this.name;
     }
 
-    public void setIsolatedHearing(boolean isolatedHearing) {
-        this.isolatedHearing = isolatedHearing;
+    @Override
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public boolean isIsolatedSpeaking() {
-        return this.isolatedSpeaking;
+    @Override
+    @Nullable
+    public String getPassword() {
+        return this.password;
     }
 
-    public void setIsolatedSpeaking(boolean isolatedSpeaking) {
-        this.isolatedSpeaking = isolatedSpeaking;
+    @Override
+    public void setPassword(@Nullable String password) {
+        this.password = password;
+    }
+
+    @Override
+    public RoomType getRoomType() {
+        return this.roomType;
+    }
+
+    @Override
+    public void setRoomType(RoomType type) {
+        this.roomType = Objects.requireNonNull(type);
+    }
+
+    @Override
+    public Set<ISonusPlayer> getMembers() {
+        return Set.copyOf(this.members.values());
+    }
+
+    @Override
+    public boolean isMember(ISonusPlayer player) {
+        return this.members.containsKey(player.getUniqueId());
     }
 }

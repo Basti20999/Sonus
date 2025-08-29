@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.common;
 
+import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.protocol.tcp.IPluginMessenger;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
@@ -20,4 +21,6 @@ public interface ISonusService {
     ISonusEventManager getEventManager();
 
     ISonusScheduler getScheduler();
+
+    ISonusRoomManager getRoomManager();
 }

@@ -6,6 +6,7 @@ import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderJsonObject;
 import dev.minceraft.sonus.svc.protocol.meta.AddCategorySvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.CreateGroupSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.JoinGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.JoinedGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.LeaveGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
@@ -37,7 +38,7 @@ public final class SvcMetaPacketRegistry {
                     .register(AddCategorySvcPacket.class, AddCategorySvcPacket::new)
                     .register(AddGroupSvcPacket.class, AddGroupSvcPacket::new)
                     .register(CreateGroupSvcPacket.class, CreateGroupSvcPacket::new)
-                    .register(JoinedGroupSvcPacket.class, JoinedGroupSvcPacket::new)
+                    .register(JoinGroupSvcPacket.class, JoinGroupSvcPacket::new)
                     .register(JoinedGroupSvcPacket.class, JoinedGroupSvcPacket::new)
                     .register(LeaveGroupSvcPacket.class, LeaveGroupSvcPacket::new)
                     .register(PlayerStateSvcPacket.class, PlayerStateSvcPacket::new)
@@ -59,7 +60,7 @@ public final class SvcMetaPacketRegistry {
                     .register(AddCategorySvcPacket.class, AddCategorySvcPacket::new)
                     .register(AddGroupSvcPacket.class, AddGroupSvcPacket::new)
                     .register(CreateGroupSvcPacket.class, CreateGroupSvcPacket::new)
-                    .register(JoinedGroupSvcPacket.class, JoinedGroupSvcPacket::new)
+                    .register(JoinGroupSvcPacket.class, JoinGroupSvcPacket::new)
                     .register(JoinedGroupSvcPacket.class, JoinedGroupSvcPacket::new)
                     .register(LeaveGroupSvcPacket.class, LeaveGroupSvcPacket::new)
                     .register(PlayerStateSvcPacket.class, PlayerStateSvcPacket::new)

@@ -1,10 +1,14 @@
 package dev.minceraft.sonus.svc.adapter;
 
+import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
+import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
 import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
+import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStatesSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.RemoveGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
 
 import java.util.HashMap;
@@ -71,5 +75,18 @@ public class SvcSessionManager {
         PlayerStateSvcPacket statePacket = new PlayerStateSvcPacket();
         statePacket.setState(connection.buildState());
         this.broadcastPacket(statePacket);
+    }
+
+    public void broadcastNewGroup(IRoom room) {
+        AddGroupSvcPacket packet = new AddGroupSvcPacket();
+        SonusClientGroup group = new SonusClientGroup(room);
+        packet.setGroup(group);
+        this.broadcastPacket(packet);
+    }
+
+    public void broadcastRemoveGroup(IRoom room) {
+        RemoveGroupSvcPacket packet = new RemoveGroupSvcPacket();
+        packet.setGroupId(room.getId());
+        this.broadcastPacket(packet);
     }
 }

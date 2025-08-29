@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.data;
 
+import dev.minceraft.sonus.common.rooms.RoomType;
 import net.kyori.adventure.util.Index;
 
 public enum SonusGroupType {
@@ -19,5 +20,21 @@ public enum SonusGroupType {
 
     public String getId() {
         return id;
+    }
+
+    public RoomType toSonus() {
+        return switch (this) {
+            case OPEN -> RoomType.OPEN;
+            case ISOLATED -> RoomType.ISOLATED;
+            case NORMAL -> RoomType.NORMAL;
+        };
+    }
+
+    public static SonusGroupType fromSonus(RoomType type) {
+        return switch (type) {
+            case OPEN -> OPEN;
+            case ISOLATED -> ISOLATED;
+            case NORMAL -> NORMAL;
+        };
     }
 }

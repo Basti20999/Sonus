@@ -88,7 +88,7 @@ public class SvcConnection {
                 this.player.getName(),
                 this.isDisabled(),
                 !this.isConnected(),
-                null // TODO: Support groups
+                this.player.getCustomRoom() == null ? null : this.player.getCustomRoom().getId()
         );
     }
 

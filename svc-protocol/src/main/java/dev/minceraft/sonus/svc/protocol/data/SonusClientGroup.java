@@ -2,6 +2,7 @@ package dev.minceraft.sonus.svc.protocol.data;
 
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.common.rooms.IRoom;
 import io.netty.buffer.ByteBuf;
 
 import java.util.UUID;
@@ -22,6 +23,15 @@ public class SonusClientGroup {
         this.persistent = persistent;
         this.hidden = hidden;
         this.type = type;
+    }
+
+    public SonusClientGroup(IRoom room) {
+        this.name = room.getName();
+        this.groupId = room.getId();
+        this.password = room.getPassword() != null;
+        this.persistent = false;
+        this.hidden = false;
+        this.type = SonusGroupType.fromSonus(room.getRoomType());
     }
 
     public SonusClientGroup(ByteBuf buf) {
