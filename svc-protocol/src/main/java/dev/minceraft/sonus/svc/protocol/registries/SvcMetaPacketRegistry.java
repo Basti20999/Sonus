@@ -32,7 +32,7 @@ public final class SvcMetaPacketRegistry {
             new SimpleRegistry.Builder<PmDataHolderBuf, SvcMetaPacket<?>>()
                     .codec((data, packet) -> packet.decode(data.getFirst()),
                             (data, packet) -> packet.encode(data.getFirst()))
-                    .idCodec(holder -> PACKET_IDS.get(((PmDataHolderBuf) holder).getSecond()), (id, packet) -> {
+                    .idCodec(holder -> PACKET_IDS.get(holder.getSecond()), (id, packet) -> {
                     })
                     .idMapper((id, sample) -> PACKET_IDS.put(sample.getPluginMessageChannel(), id))
                     .register(AddCategorySvcPacket.class, AddCategorySvcPacket::new)
@@ -54,7 +54,7 @@ public final class SvcMetaPacketRegistry {
             new SimpleRegistry.Builder<PmDataHolderJsonObject, SvcMetaPacket<?>>()
                     .codec((data, packet) -> packet.decode(data.getFirst()),
                             (data, packet) -> packet.encode(data.getFirst()))
-                    .idCodec(holder -> PACKET_IDS.get(((PmDataHolderBuf) holder).getSecond()), (id, packet) -> {
+                    .idCodec(holder -> PACKET_IDS.get((holder).getSecond()), (id, packet) -> {
                     })
                     .idMapper((id, sample) -> PACKET_IDS.put(sample.getPluginMessageChannel(), id))
                     .register(AddCategorySvcPacket.class, AddCategorySvcPacket::new)

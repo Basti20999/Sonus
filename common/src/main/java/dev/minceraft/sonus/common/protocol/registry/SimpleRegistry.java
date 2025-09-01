@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.common.protocol.registry;
 // Created by booky10 in Sonus (01:46 17.07.2025)
 
-import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -84,7 +83,7 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> {
             return this;
         }
 
-        public Builder<D, T> idCodec(Object2IntFunction<D> reader, ObjIntConsumer<D> writer) {
+        public Builder<D, T> idCodec(ToIntFunction<D> reader, ObjIntConsumer<D> writer) {
             this.idCodec = new IdCodec<>(reader, writer);
             return this;
         }

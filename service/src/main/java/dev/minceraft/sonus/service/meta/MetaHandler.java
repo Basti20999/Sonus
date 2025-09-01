@@ -5,7 +5,7 @@ import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.player.SonusPlayer;
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
-import dev.minceraft.sonus.protocol.meta.servicebound.PlayerPositionsMessage;
+import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import org.jspecify.annotations.NullMarked;
 
@@ -22,7 +22,7 @@ public class MetaHandler implements IMetaHandler {
     }
 
     @Override
-    public void handle(PlayerPositionsMessage message) {
+    public void handle(BackendTickMessage message) {
         PlayerManager players = this.service.getPlayers();
         for (Map.Entry<UUID, WorldVec3d> entry : message.getPositions().entrySet()) {
             SonusPlayer player = players.getPlayer(entry.getKey());

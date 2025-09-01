@@ -1,11 +1,14 @@
 package dev.minceraft.sonus.common.protocol.util;
 // Created by booky10 in Sonus (01:19 17.07.2025)
 
+import com.google.common.collect.Multimap;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -13,6 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @NullMarked
 public class DataTypeUtil {
@@ -58,11 +62,44 @@ public class DataTypeUtil {
         return map;
     }
 
+    public static <M extends Multimap<K, V>, K, V> M readMultiMap(
+            ByteBuf buf,
+            BufReader<K> keyReader,
+            BufReader<V> valueReader,
+            Supplier<M> mapSupplier
+    ) {
+        Map<K, Collection<V>> read = readMap(buf, keyReader, b -> readCollection(b, valueReader, ArrayList::new), HashMap::new);
+        M map = mapSupplier.get();
+        read.forEach(map::putAll);
+        return map;
+    }
+
     public static <K, V> void writeMap(ByteBuf buf, Map<K, V> map, BufWriter<K> keyWriter, BufWriter<V> valueWriter) {
         VarInt.write(buf, map.size());
         for (Map.Entry<K, V> entry : map.entrySet()) {
             keyWriter.write(buf, entry.getKey());
             valueWriter.write(buf, entry.getValue());
+        }
+    }
+
+    public static <K, V> void writeMultiMap(ByteBuf buf, Multimap<K, V> map, BufWriter<K> keyWriter, BufWriter<V> valueWriter) {
+        writeMap(buf, map.asMap(), keyWriter, (b, col) -> writeCollection(b, col, valueWriter));
+    }
+
+    public static <C extends Collection<T>, T> C readCollection(ByteBuf buf, BufReader<T> reader, IntFunction<C> collectionSupplier) {
+        int size = VarInt.read(buf);
+        C collection = collectionSupplier.apply(size);
+        for (int i = 0; i < size; i++) {
+            T item = reader.read(buf);
+            collection.add(item);
+        }
+        return collection;
+    }
+
+    public static <T> void writeCollection(ByteBuf buf, Collection<T> collection, BufWriter<T> writer) {
+        VarInt.write(buf, collection.size());
+        for (T item : collection) {
+            writer.write(buf, item);
         }
     }
 
