@@ -18,5 +18,5 @@ public abstract class AbstractPluginMessageCodec {
         return this.supportedChannels;
     }
 
-    public abstract void handle(ByteBuf packet, Key channel, ISonusPlayer player);
+    public abstract void handle(ByteBuf packet, Key channel, MessageSource source, ISonusPlayer player);
 }

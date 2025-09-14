@@ -23,7 +23,7 @@ public class MetaHandler implements IMetaHandler {
 
     @Override
     public void handle(BackendTickMessage message) {
-        PlayerManager players = this.service.getPlayers();
+        PlayerManager players = this.service.getPlayerManager();
         for (Map.Entry<UUID, WorldVec3d> entry : message.getPositions().entrySet()) {
             SonusPlayer player = players.getPlayer(entry.getKey());
             if (player != null) {

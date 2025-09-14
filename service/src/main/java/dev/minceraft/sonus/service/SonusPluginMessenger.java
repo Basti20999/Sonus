@@ -3,6 +3,7 @@ package dev.minceraft.sonus.service;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
 import dev.minceraft.sonus.common.protocol.tcp.IPluginMessenger;
+import dev.minceraft.sonus.common.protocol.tcp.MessageSource;
 import io.netty.buffer.Unpooled;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -38,12 +39,12 @@ public class SonusPluginMessenger implements IPluginMessenger {
                 codec.getSupportedChannels().stream().map(Key::asString).collect(Collectors.joining(", ")));
     }
 
-    public boolean handleMessage(Key channel, ISonusPlayer player, byte[] data) {
+    public boolean handleMessage(Key channel, MessageSource source, ISonusPlayer player, byte[] data) {
         AbstractPluginMessageCodec codec = this.codecs.get(channel);
         if (codec == null) {
             return false; // Ignore
         }
-        codec.handle(Unpooled.wrappedBuffer(data), channel, player);
+        codec.handle(Unpooled.wrappedBuffer(data), channel, source, player);
         return true;
     }
 }

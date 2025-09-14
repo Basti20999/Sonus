@@ -2,6 +2,7 @@ package dev.minceraft.sonus.svc.adapter;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
+import dev.minceraft.sonus.common.protocol.tcp.MessageSource;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
@@ -29,7 +30,12 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
     }
 
     @Override
-    public void handle(ByteBuf packet, Key channel, ISonusPlayer player) {
+    public void handle(ByteBuf packet, Key channel, MessageSource source, ISonusPlayer player) {
+        if (source == MessageSource.SERVER) {
+            LOGGER.warn("{} was sent a packet from the server", player.getName());
+            return;
+        }
+
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(packet, channel);
         SvcMetaPacket<? extends SvcMetaPacket<?>> metaPacket;
         try {

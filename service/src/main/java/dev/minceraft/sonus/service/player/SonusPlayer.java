@@ -6,6 +6,7 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
@@ -15,6 +16,8 @@ import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,6 +29,7 @@ public final class SonusPlayer implements ISonusPlayer {
 
     private final IPlatformPlayer platform;
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
+    private final Map<UUID, SonusPlayerState> perPlayerStates = new HashMap<>();
     private @Nullable IRoom customRoom;
     private @Nullable WorldVec3d position;
     private @Nullable SonusAdapter sonusAdapter;
@@ -157,5 +161,16 @@ public final class SonusPlayer implements ISonusPlayer {
     @Override
     public UUID getSenderId() {
         return this.getUniqueId();
+    }
+
+    public void setStates(Collection<SonusPlayerState> value) {
+        this.perPlayerStates.clear();
+        for (SonusPlayerState state : value) {
+            this.perPlayerStates.put(state.playerId(), state);
+        }
+    }
+
+    public Map<UUID, SonusPlayerState> getPerPlayerStates() {
+        return this.perPlayerStates;
     }
 }

@@ -6,7 +6,7 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public final class SonusConstants {
 
-    public static final String PLUGIN_MESSAGE_CHANNEL = "sonus";
+    public static final String PLUGIN_MESSAGE_CHANNEL = "sonus:agent";
     public static final int CURRENT_VERSION = 0;
 
     private SonusConstants() {

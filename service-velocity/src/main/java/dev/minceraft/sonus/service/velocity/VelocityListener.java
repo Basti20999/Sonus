@@ -6,6 +6,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import dev.minceraft.sonus.common.protocol.tcp.MessageSource;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.player.SonusPlayer;
 import net.kyori.adventure.key.Key;
@@ -36,20 +37,23 @@ public class VelocityListener {
     public void onPluginMessageReceived(PluginMessageEvent event) {
         Key channel = ((MinecraftChannelIdentifier) event.getIdentifier()).asKey();
         Player target;
+        MessageSource source;
         if (event.getSource() instanceof Player player) {
             target = player;
+            source = MessageSource.PLAYER;
         } else if (event.getTarget() instanceof Player player) {
             target = player;
+            source = MessageSource.SERVER;
         } else {
             throw new IllegalStateException("Plugin message event source or target is not a player");
         }
-        SonusPlayer player = this.service.getPlayers().getPlayer(target.getUniqueId());
+        SonusPlayer player = this.service.getPlayerManager().getPlayer(target.getUniqueId());
         if (player == null) {
             LOGGER.info("Received plugin message for player {}({}) but they can't be registered in Sonus", target.getUsername(), target.getUniqueId());
             return;
         }
 
-        if (this.service.getPluginMessenger().handleMessage(channel, player, event.getData())) {
+        if (this.service.getPluginMessenger().handleMessage(channel, source, player, event.getData())) {
             event.setResult(PluginMessageEvent.ForwardResult.handled());
         }
     }

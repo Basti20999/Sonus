@@ -29,6 +29,7 @@ velocity = "3.4.0-SNAPSHOT"
 pluginyml-bukkit = { id = "net.minecrell.plugin-yml.bukkit", version.ref = "pluginyml" }
 gradleup-shadow = { id = "com.gradleup.shadow", version.ref = "gradleup-shadow" }
 run-velocity = { id = "xyz.jpenilla.run-velocity", version.ref = "runtask" }
+run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "runtask" }
 
 [libraries]
 # protocol

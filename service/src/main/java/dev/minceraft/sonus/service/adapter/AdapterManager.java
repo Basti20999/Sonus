@@ -13,10 +13,15 @@ import java.util.Set;
 @NullMarked
 public final class AdapterManager {
 
+    private final SonusService service;
     private final Set<SonusAdapter> adapters = Services.services(SonusAdapter.class);
     private final @Nullable VoiceProtocolAdapter[] adaptersByMagic = new VoiceProtocolAdapter[0xFF + 1];
 
     public AdapterManager(SonusService service) {
+        this.service = service;
+    }
+
+    public void init() {
         for (SonusAdapter adapter : this.adapters) {
             adapter.init(service);
             VoiceProtocolAdapter proto = adapter.getProtocolAdapter();

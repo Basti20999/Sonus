@@ -25,7 +25,7 @@ public class BackendTickMessage implements IMetaMessage {
     }
 
     @Override
-    public void decode(ByteBuf buf, int version) {
+    public void decode(ByteBuf buf) {
         this.positions = DataTypeUtil.readIf(buf, buffer ->
                 DataTypeUtil.readMap(buffer, DataTypeUtil::readUniqueId, WorldVec3d::read));
         this.perPlayerStates = DataTypeUtil.readIf(buf, buffer ->
@@ -33,7 +33,7 @@ public class BackendTickMessage implements IMetaMessage {
     }
 
     @Override
-    public void encode(ByteBuf buf, int version) {
+    public void encode(ByteBuf buf) {
         DataTypeUtil.writeNullable(buf, this.positions, (buffer, positions) ->
                 DataTypeUtil.writeMap(buffer, positions, DataTypeUtil::writeUniqueId, WorldVec3d::write));
         DataTypeUtil.writeNullable(buf, this.perPlayerStates, (buffer, states) ->

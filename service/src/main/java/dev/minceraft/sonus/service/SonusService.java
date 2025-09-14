@@ -9,6 +9,7 @@ import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.common.service.ISonusScheduler;
 import dev.minceraft.sonus.service.adapter.AdapterManager;
+import dev.minceraft.sonus.service.agent.AgentManager;
 import dev.minceraft.sonus.service.meta.MetaDecoder;
 import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
@@ -33,8 +34,9 @@ public final class SonusService implements ISonusService {
     private final SonusEventManager eventManager = new SonusEventManager();
     private final SonusScheduler scheduler = new SonusScheduler();
     private final SonusRoomManager roomManager = new SonusRoomManager();
+    private final AdapterManager adapters = new AdapterManager(this);
+    private final AgentManager agentManager = new AgentManager(this);
     private final YamlConfigHolder<SonusConfig> config;
-    private AdapterManager adapters;
 
     public SonusService(IServicePlatform platform) {
         this.platform = platform;
@@ -43,7 +45,17 @@ public final class SonusService implements ISonusService {
 
     public void init() {
         LOGGER.info("Initializing Sonus Service...");
-        this.adapters = new AdapterManager(this);
+
+        LOGGER.info("Reloading configuration...");
+        this.config.reloadConfig();
+
+        LOGGER.info("Initializing Adapters...");
+        this.adapters.init();
+
+        LOGGER.info("Initializing agent handlers...");
+        this.agentManager.init();
+
+        LOGGER.info("Initializing udp server...");
         this.udpServer.bind();
     }
 
@@ -51,7 +63,7 @@ public final class SonusService implements ISonusService {
         return this.platform;
     }
 
-    public PlayerManager getPlayers() {
+    public PlayerManager getPlayerManager() {
         return this.players;
     }
 
