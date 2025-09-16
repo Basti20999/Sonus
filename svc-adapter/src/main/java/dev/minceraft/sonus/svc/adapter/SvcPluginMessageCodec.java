@@ -5,11 +5,11 @@ import dev.minceraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
 import dev.minceraft.sonus.common.protocol.tcp.MessageSource;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
-import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.RequestSecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
+import dev.minceraft.sonus.svc.protocol.version.VersionManager;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -69,7 +69,7 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
 
     @Nullable
     private SvcConnection initConnection(RequestSecretSvcPacket packet, ISonusPlayer player) {
-        if (packet.getCompatibilityVersion() != AbstractSvcPacket.COMPATIBILITY_VERSION) {
+        if (!VersionManager.SUPPORTED_VERSIONS.contains(packet.getCompatibilityVersion())) {
             return null; // Incompatible version
         }
         return new SvcConnection(this.protocolAdapter, player);

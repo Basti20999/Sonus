@@ -7,8 +7,6 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public abstract class AbstractSvcPacket<H> implements IBufCodec<H> {
 
-    public static final int COMPATIBILITY_VERSION = 18;
-
     protected AbstractSvcPacket() {
     }
 }

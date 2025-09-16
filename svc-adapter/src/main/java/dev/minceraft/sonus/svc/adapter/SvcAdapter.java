@@ -8,8 +8,12 @@ import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.svc.adapter.config.SvcConfig;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
+import dev.minceraft.sonus.svc.protocol.version.VersionManager;
+import dev.minceraft.sonus.svc.protocol.voice.GroupSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.LocationSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.PlayerSoundSvcPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -32,10 +36,40 @@ public class SvcAdapter implements SonusAdapter {
         this.config = new YamlConfigHolder<>(SvcConfig.class, this.service.getDataDirectory().resolve("svc-config.yml"));
 
         this.service.getEventManager().registerListener(this.serviceListener);
+
+        VersionManager.logSupportedVersions();
     }
 
     @Override
-    public void sendAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
+    public void sendStaticAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
+        SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
+
+        GroupSoundSvcPacket packet = new GroupSoundSvcPacket();
+        packet.setChannelId(source.getSenderId());
+        packet.setSender(source.getSenderId());
+        packet.setData(audio.data());
+        packet.setSequenceNumber(audio.sequenceNumber());
+
+        connection.sendPacket(packet);
+    }
+
+    @Override
+    public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio, Vec3d pos) {
+        SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
+
+        LocationSoundSvcPacket packet = new LocationSoundSvcPacket();
+        packet.setChannelId(source.getSenderId());
+        packet.setSender(source.getSenderId());
+        packet.setData(audio.data());
+        packet.setSequenceNumber(audio.sequenceNumber());
+        packet.setLocation(pos);
+        packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
+
+        connection.sendPacket(packet);
+    }
+
+    @Override
+    public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
         SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
 
         PlayerSoundSvcPacket packet = new PlayerSoundSvcPacket();
@@ -43,8 +77,6 @@ public class SvcAdapter implements SonusAdapter {
         packet.setSender(source.getSenderId());
         packet.setData(audio.data());
         packet.setSequenceNumber(audio.sequenceNumber());
-
-        packet.setDistance(32);
 
         connection.sendPacket(packet);
     }

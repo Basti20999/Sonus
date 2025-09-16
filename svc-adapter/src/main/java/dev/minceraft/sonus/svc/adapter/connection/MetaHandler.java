@@ -82,6 +82,8 @@ public class MetaHandler implements IMetaSvcHandler {
     @Override
     public void handleRequestSecretPacket(RequestSecretSvcPacket packet) {
         // Version check is done in the handler
+        this.connection.setVersion(packet.getCompatibilityVersion());
+
         ISonusService service = this.protocolAdapter.getAdapter().getService();
         InetSocketAddress remoteAddress = service.getUdpServer().getRemoteAddress();
 
@@ -89,13 +91,14 @@ public class MetaHandler implements IMetaSvcHandler {
         secretSvcPacket.setSecret(this.connection.getSecret());
         secretSvcPacket.setServerPort(remoteAddress.getPort());
         secretSvcPacket.setPlayerId(this.connection.getPlayer().getUniqueId());
-        secretSvcPacket.setCodec(this.protocolAdapter.getAdapter().getConfig().getCodec());
+        secretSvcPacket.setCodec(this.protocolAdapter.getAdapter().getConfig().codec);
         secretSvcPacket.setMtuSize(service.getConfig().getMtuSize());
         secretSvcPacket.setKeepAlive(service.getConfig().getKeepAliveMs());
         secretSvcPacket.setGroupsEnabled(true); // Sonus requires groups to be enabled
         secretSvcPacket.setVoiceHost(remoteAddress.getHostString());
         secretSvcPacket.setAllowRecording(service.getConfig().allowRecordings());
 
+        System.out.println("Send secret");
         this.connection.sendPacket(secretSvcPacket);
     }
 

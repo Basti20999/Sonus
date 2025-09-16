@@ -31,7 +31,7 @@ public final class SonusService implements ISonusService {
     private final MetaDecoder metaDecoder = new MetaDecoder(this);
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
     private final UdpServer udpServer = new UdpServer(this);
-    private final SonusEventManager eventManager = new SonusEventManager();
+    private final SonusEventManager eventManager = new SonusEventManager(this);
     private final SonusScheduler scheduler = new SonusScheduler();
     private final SonusRoomManager roomManager = new SonusRoomManager();
     private final AdapterManager adapters = new AdapterManager(this);
@@ -83,6 +83,10 @@ public final class SonusService implements ISonusService {
     @Override
     public ISonusConfig getConfig() {
         return this.config.getDelegate();
+    }
+
+    public YamlConfigHolder<SonusConfig> getConfigHolder() {
+        return this.config;
     }
 
     @Override

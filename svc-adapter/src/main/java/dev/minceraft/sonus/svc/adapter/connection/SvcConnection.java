@@ -14,6 +14,7 @@ import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
@@ -24,18 +25,18 @@ public class SvcConnection {
     private final SvcProtocolAdapter protocolAdapter;
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
-    private final SvcPlayerCipherCodec cipher;
     private final VoiceHandler voiceHandler;
     private final MetaHandler metaHandler;
+    private @Nullable SvcPlayerCipherCodec cipher;
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
     private boolean connected = false;
     private long lastKeepAlive = System.currentTimeMillis();
+    private int version = -1;
 
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
         this.protocolAdapter = protocolAdapter;
         this.player = player;
-        this.cipher = new SvcPlayerCipherCodec(this.protocolAdapter.getSvcCodec(), this.secret);
         this.voiceHandler = new VoiceHandler(this.protocolAdapter, this);
         this.metaHandler = new MetaHandler(this.protocolAdapter, this);
         this.player.setAdapter(protocolAdapter.getAdapter());
@@ -93,6 +94,9 @@ public class SvcConnection {
     }
 
     public SvcPlayerCipherCodec getCipher() {
+        if (this.cipher == null) {
+            throw new IllegalStateException("Cipher not initialized yet. Make sure to set the protocol version first.");
+        }
         return this.cipher;
     }
 
@@ -141,5 +145,15 @@ public class SvcConnection {
 
     public void setLastKeepAlive(long lastKeepAlive) {
         this.lastKeepAlive = lastKeepAlive;
+    }
+
+    public int getVersion() {
+        return this.version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+        // Cipher depends on the version, so we need to recreate it
+        this.cipher = new SvcPlayerCipherCodec(this, this.protocolAdapter.getSvcCodec(), this.secret);
     }
 }

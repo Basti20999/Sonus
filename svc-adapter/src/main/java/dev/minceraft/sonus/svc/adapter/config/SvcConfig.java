@@ -6,9 +6,5 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 @ConfigSerializable
 public class SvcConfig {
 
-    private Codec codec = Codec.VOIP;
-
-    public Codec getCodec() {
-        return this.codec;
-    }
+    public Codec codec = Codec.VOIP;
 }

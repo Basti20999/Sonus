@@ -15,7 +15,7 @@ public class GroupRoom extends AbstractRoom {
             if (member.getSenderId().equals(source.getSenderId())) {
                 continue;
             }
-            member.sendAudio(source, audio);
+            member.sendStaticAudio(source, audio);
         }
     }
 }

@@ -9,6 +9,7 @@ import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Map;
 import java.util.UUID;
 
 @NullMarked
@@ -18,12 +19,18 @@ public interface ISonusPlayer extends IAudioSource {
 
     String getName();
 
+    Map<UUID, SonusPlayerState> getPerPlayerStates();
+
     @Nullable
     SonusAdapter getAdapter();
 
     void setAdapter(@Nullable SonusAdapter adapter);
 
-    void sendAudio(IAudioSource source, SonusAudio audio);
+    void sendStaticAudio(IAudioSource source, SonusAudio audio);
+
+    void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position);
+
+    void sendSpatialAudio(IAudioSource source, SonusAudio audio);
 
     void joinRoom(IRoom room);
 

@@ -13,7 +13,12 @@ public class SonusEventManager implements ISonusEventManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
+    private final SonusService service;
     private final Set<ISonusServiceEvents> listeners = new HashSet<>();
+
+    public SonusEventManager(SonusService service) {
+        this.service = service;
+    }
 
     @Override
     public void registerListener(ISonusServiceEvents events) {
@@ -29,5 +34,17 @@ public class SonusEventManager implements ISonusEventManager {
                 LOGGER.error("Error in onPlayerSwitchBackend for listener {}", listener.getClass().getSimpleName(), exception);
             }
         }
+    }
+
+    @Override
+    public void onPlayerQuit(UUID playerId) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onPlayerQuit(playerId);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onPlayerQuit for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+        this.service.getPlayerManager().unregisterPlayer(playerId);
     }
 }

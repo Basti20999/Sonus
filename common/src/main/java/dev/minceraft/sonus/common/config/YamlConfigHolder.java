@@ -34,6 +34,7 @@ public class YamlConfigHolder<T> {
                 .defaultOptions(opts -> opts.serializers(builder -> builder
                         .register(InetSocketAddress.class, AddressSerializer.INSTANCE)))
                 .build();
+        this.config = this.reloadConfig();
     }
 
     public void addReloadHook(Consumer<T> consumer) {

@@ -49,6 +49,21 @@ public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacke
         this.category = hasFlag(flag, HAS_CATEGORY_MASK) ? Utf8String.read(buf, 16) : null;
     }
 
+    public Vec3d getLocation() {
+        return this.location;
+    }
+
+    public void setLocation(Vec3d location) {
+        this.location = location;
+    }
+
+    public float getDistance() {
+        return this.distance;
+    }
+
+    public void setDistance(float distance) {
+        this.distance = distance;
+    }
 
     @Override
     public void handle(IVoiceSvcHandler handler) {

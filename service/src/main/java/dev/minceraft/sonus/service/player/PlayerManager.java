@@ -21,7 +21,13 @@ public final class PlayerManager {
     }
 
     public boolean unregisterPlayer(UUID playerId) {
-        return this.players.remove(playerId) != null;
+        SonusPlayer removed = this.players.remove(playerId);
+        if (removed == null){
+            return false;
+        }
+        removed.handleQuit();
+
+        return true;
     }
 
     public @Nullable SonusPlayer getPlayer(UUID playerId) {

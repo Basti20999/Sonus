@@ -7,6 +7,7 @@ import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
+import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
@@ -51,13 +52,26 @@ public final class SonusPlayer implements ISonusPlayer {
         for (IRoom room : this.voiceRooms.values()) {
             room.sendAudio(this, audio);
         }
-        // TODO broadcast to nearby players wo can view this player
     }
 
     @Override
-    public void sendAudio(IAudioSource source, SonusAudio audio) {
+    public void sendStaticAudio(IAudioSource source, SonusAudio audio) {
         if (this.sonusAdapter != null && !this.deafened) {
-            this.sonusAdapter.sendAudio(this, source, audio);
+            this.sonusAdapter.sendStaticAudio(this, source, audio);
+        }
+    }
+
+    @Override
+    public void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position) {
+        if (this.sonusAdapter != null && !this.deafened) {
+            this.sonusAdapter.sendSpatialAudio(this, source, audio, position);
+        }
+    }
+
+    @Override
+    public void sendSpatialAudio(IAudioSource source, SonusAudio audio) {
+        if (this.sonusAdapter != null && !this.deafened) {
+            this.sonusAdapter.sendSpatialAudio(this, source, audio);
         }
     }
 
@@ -163,6 +177,11 @@ public final class SonusPlayer implements ISonusPlayer {
         return this.getUniqueId();
     }
 
+    @Override
+    public Map<UUID, SonusPlayerState> getPerPlayerStates() {
+        return this.perPlayerStates;
+    }
+
     public void setStates(Collection<SonusPlayerState> value) {
         this.perPlayerStates.clear();
         for (SonusPlayerState state : value) {
@@ -170,7 +189,13 @@ public final class SonusPlayer implements ISonusPlayer {
         }
     }
 
-    public Map<UUID, SonusPlayerState> getPerPlayerStates() {
-        return this.perPlayerStates;
+    public void handleQuit() {
+        if (this.customRoom != null) {
+            this.customRoom.removeMember(this);
+            this.setCustomRoom(null);
+        }
+        for (IRoom room : this.voiceRooms.values()) {
+            this.leaveRoom(room);
+        }
     }
 }
