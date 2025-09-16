@@ -4,7 +4,7 @@ package dev.minceraft.sonus.svc.protocol.meta;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
+import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -17,7 +17,7 @@ import java.util.UUID;
 @NullMarked
 public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> {
 
-    private @MonotonicNonNull Map<UUID, SonusPlayerState> states;
+    private @MonotonicNonNull Map<UUID, SvcPlayerState> states;
 
     public PlayerStatesSvcPacket() {
         super(SvcPluginChannels.PLAYER_STATES);
@@ -26,7 +26,7 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
     @Override
     public void encode(ByteBuf buf) {
         buf.writeInt(this.states.size());
-        for (SonusPlayerState value : this.states.values()) {
+        for (SvcPlayerState value : this.states.values()) {
             value.encode(buf);
         }
     }
@@ -36,7 +36,7 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
         int size = buf.readInt();
         this.states = new HashMap<>(size);
         for (int i = 0; i < size; i++) {
-            SonusPlayerState state = new SonusPlayerState(buf);
+            SvcPlayerState state = new SvcPlayerState(buf);
             this.states.put(state.getPlayerId(), state);
         }
     }
@@ -44,7 +44,7 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
     @Override
     public void encode(JsonObject json) {
         JsonArray array = new JsonArray(this.states.size());
-        for (SonusPlayerState value : this.states.values()) {
+        for (SvcPlayerState value : this.states.values()) {
             JsonObject object = new JsonObject();
             value.encode(object);
             array.add(object);
@@ -57,7 +57,7 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
         JsonArray array = json.getAsJsonArray("states");
         this.states = new HashMap<>(array.size());
         for (JsonElement jsonElement : array) {
-            SonusPlayerState state = new SonusPlayerState(jsonElement.getAsJsonObject());
+            SvcPlayerState state = new SvcPlayerState(jsonElement.getAsJsonObject());
             this.states.put(state.getPlayerId(), state);
         }
     }
@@ -67,11 +67,11 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
         handler.handlePlayerStatesPacket(this);
     }
 
-    public Map<UUID, SonusPlayerState> getStates() {
+    public Map<UUID, SvcPlayerState> getStates() {
         return this.states;
     }
 
-    public void setStates(Map<UUID, SonusPlayerState> states) {
+    public void setStates(Map<UUID, SvcPlayerState> states) {
         this.states = states;
     }
 }

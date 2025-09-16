@@ -98,7 +98,6 @@ public class MetaHandler implements IMetaSvcHandler {
         secretSvcPacket.setVoiceHost(remoteAddress.getHostString());
         secretSvcPacket.setAllowRecording(service.getConfig().allowRecordings());
 
-        System.out.println("Send secret");
         this.connection.sendPacket(secretSvcPacket);
     }
 

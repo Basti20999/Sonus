@@ -1,7 +1,7 @@
 package dev.minceraft.sonus.svc.protocol.meta;
 
 import com.google.gson.JsonObject;
-import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
+import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -10,7 +10,7 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> {
 
-    private @MonotonicNonNull SonusPlayerState state;
+    private @MonotonicNonNull SvcPlayerState state;
 
     public PlayerStateSvcPacket() {
         super(SvcPluginChannels.PLAYER_STATE);
@@ -23,7 +23,7 @@ public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> {
 
     @Override
     public void decode(ByteBuf buf) {
-        this.state = new SonusPlayerState(buf);
+        this.state = new SvcPlayerState(buf);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> {
 
     @Override
     public void decode(JsonObject json) {
-        this.state = new SonusPlayerState(json);
+        this.state = new SvcPlayerState(json);
     }
 
     @Override
@@ -41,11 +41,11 @@ public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> {
         handler.handlePlayerStatePacket(this);
     }
 
-    public SonusPlayerState getState() {
+    public SvcPlayerState getState() {
         return this.state;
     }
 
-    public void setState(SonusPlayerState state) {
+    public void setState(SvcPlayerState state) {
         this.state = state;
     }
 

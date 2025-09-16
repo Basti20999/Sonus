@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.UUID;
 
-public class SonusPlayerState {
+public class SvcPlayerState {
 
     private final UUID playerId;
     private final String name;
@@ -17,7 +17,7 @@ public class SonusPlayerState {
     @Nullable
     private final UUID groupId;
 
-    public SonusPlayerState(UUID playerId, String name, boolean disabled, boolean disconnected, @Nullable UUID groupId) {
+    public SvcPlayerState(UUID playerId, String name, boolean disabled, boolean disconnected, @Nullable UUID groupId) {
         this.playerId = playerId;
         this.name = name;
         this.disabled = disabled;
@@ -25,7 +25,7 @@ public class SonusPlayerState {
         this.groupId = groupId;
     }
 
-    public SonusPlayerState(ByteBuf buf) {
+    public SvcPlayerState(ByteBuf buf) {
         this.disabled = buf.readBoolean();
         this.disconnected = buf.readBoolean();
         this.playerId = new UUID(buf.readLong(), buf.readLong());
@@ -33,7 +33,7 @@ public class SonusPlayerState {
         this.groupId = DataTypeUtil.readIf(buf, DataTypeUtil::readUniqueId);
     }
 
-    public SonusPlayerState(JsonObject json) {
+    public SvcPlayerState(JsonObject json) {
         this.playerId = UUID.fromString(json.get("playerId").getAsString());
         this.name = json.get("name").getAsString();
         this.disabled = json.get("disabled").getAsBoolean();

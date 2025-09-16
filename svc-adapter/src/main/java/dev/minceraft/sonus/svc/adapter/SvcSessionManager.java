@@ -4,7 +4,7 @@ import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
-import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
+import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStatesSvcPacket;
@@ -59,8 +59,8 @@ public class SvcSessionManager {
         }
     }
 
-    public Map<UUID, SonusPlayerState> getPlayerStates() {
-        Map<UUID, SonusPlayerState> states = new HashMap<>(this.connections.size());
+    public Map<UUID, SvcPlayerState> getPlayerStates() {
+        Map<UUID, SvcPlayerState> states = new HashMap<>(this.connections.size());
         for (SvcConnection conn : this.connections.values()) {
             states.put(conn.getPlayer().getUniqueId(), conn.buildState());
         }

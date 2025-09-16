@@ -102,6 +102,9 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void setCustomRoom(@Nullable IRoom room) {
+        if (this.customRoom != null) {
+            this.customRoom.removeMember(this);
+        }
         this.customRoom = room;
     }
 

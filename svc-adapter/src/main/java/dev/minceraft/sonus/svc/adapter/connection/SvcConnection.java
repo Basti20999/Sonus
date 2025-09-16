@@ -7,7 +7,7 @@ import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcPlayerCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
-import dev.minceraft.sonus.svc.protocol.data.SonusPlayerState;
+import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
@@ -83,8 +83,8 @@ public class SvcConnection {
         }
     }
 
-    public SonusPlayerState buildState() {
-        return new SonusPlayerState(
+    public SvcPlayerState buildState() {
+        return new SvcPlayerState(
                 this.player.getUniqueId(),
                 this.player.getName(),
                 this.isDisabled(),
