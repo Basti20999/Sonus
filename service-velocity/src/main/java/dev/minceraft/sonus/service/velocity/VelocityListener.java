@@ -29,8 +29,8 @@ public class VelocityListener {
     }
 
     @Subscribe
-    public void onPlayerSwitch(DisconnectEvent event) {
-        this.service.getEventManager().onPlayerSwitchBackend(event.getPlayer().getUniqueId());
+    public void onQuit(DisconnectEvent event) {
+        this.service.getEventManager().onPlayerQuit(event.getPlayer().getUniqueId());
     }
 
     @Subscribe

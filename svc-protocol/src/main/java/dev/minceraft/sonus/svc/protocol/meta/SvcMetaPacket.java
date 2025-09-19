@@ -2,6 +2,7 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 
 import dev.minceraft.sonus.common.protocol.codec.IJsonCodec;
+import dev.minceraft.sonus.common.version.Versioned;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -10,13 +11,17 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public abstract class SvcMetaPacket<T extends SvcMetaPacket<?>> extends AbstractSvcPacket<IMetaSvcHandler> implements IJsonCodec<IMetaSvcHandler> {
 
-    protected final Key pluginMessageChannel;
+    protected final Versioned<Key> pluginMessageChannel;
 
     protected SvcMetaPacket(Key pluginMessageChannel) {
-        this.pluginMessageChannel = pluginMessageChannel;
+        this.pluginMessageChannel = Versioned.createSingle(pluginMessageChannel);
     }
 
-    public Key getPluginMessageChannel() {
+    protected SvcMetaPacket(Versioned<Key> pluginMessageChannels) {
+        this.pluginMessageChannel = pluginMessageChannels;
+    }
+
+    public Versioned<Key> getPluginMessageChannel() {
         return this.pluginMessageChannel;
     }
 }

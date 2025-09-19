@@ -1,8 +1,8 @@
 package dev.minceraft.sonus.svc.protocol.registries;
 
-import dev.minceraft.sonus.common.protocol.registry.SimpleRegistry;
+import dev.minceraft.sonus.common.protocol.registry.ContextedRegistry;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
-import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderJsonObject;
+import dev.minceraft.sonus.common.version.Versioned;
 import dev.minceraft.sonus.svc.protocol.meta.AddCategorySvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.CreateGroupSvcPacket;
@@ -28,13 +28,18 @@ public final class SvcMetaPacketRegistry {
 
     private static final Map<Key, Integer> PACKET_IDS = new HashMap<>();
 
-    public static final SimpleRegistry<PmDataHolderBuf, SvcMetaPacket<?>> BUF_REGISTRY =
-            new SimpleRegistry.Builder<PmDataHolderBuf, SvcMetaPacket<?>>()
-                    .codec((data, packet) -> packet.decode(data.getFirst()),
-                            (data, packet) -> packet.encode(data.getFirst()))
-                    .idCodec(holder -> PACKET_IDS.get(holder.getSecond()), (id, packet) -> {
+    public static final ContextedRegistry<PmDataHolderBuf, SvcMetaPacket<?>, SvcMetaContext> BUF_REGISTRY =
+            ContextedRegistry.Builder.<PmDataHolderBuf, SvcMetaPacket<?>, SvcMetaContext>createContext()
+                    .codec((data, packet, ctx) -> packet.decode(data.getFirst()),
+                            (data, packet, ctx) -> packet.encode(data.getFirst()))
+                    .idCodec((holder, ctx) -> PACKET_IDS.get(holder.getSecond()),
+                            (id, packet, ctx) -> {
+                            })
+                    .idMapper((id, sample) -> {
+                        for (Versioned.VersionedKeyEntry<Key> entry : sample.getPluginMessageChannel().versionedKeys()) {
+                            PACKET_IDS.put(entry.key(), id);
+                        }
                     })
-                    .idMapper((id, sample) -> PACKET_IDS.put(sample.getPluginMessageChannel(), id))
                     .register(AddCategorySvcPacket.class, AddCategorySvcPacket::new)
                     .register(AddGroupSvcPacket.class, AddGroupSvcPacket::new)
                     .register(CreateGroupSvcPacket.class, CreateGroupSvcPacket::new)
@@ -50,8 +55,12 @@ public final class SvcMetaPacketRegistry {
                     .register(UpdateStateSvcPacket.class, UpdateStateSvcPacket::new)
                     .build();
 
-    public static final SimpleRegistry<PmDataHolderJsonObject, SvcMetaPacket<?>> JSON_REGISTRY =
-            new SimpleRegistry.Builder<PmDataHolderJsonObject, SvcMetaPacket<?>>()
+    public record SvcMetaContext(int version) {
+
+    }
+
+/*    public static final ContextedRegistry<PmDataHolderJsonObject, SvcMetaPacket<?>> JSON_REGISTRY =
+            new ContextedRegistry.Builder<PmDataHolderJsonObject, SvcMetaPacket<?>>()
                     .codec((data, packet) -> packet.decode(data.getFirst()),
                             (data, packet) -> packet.encode(data.getFirst()))
                     .idCodec(holder -> PACKET_IDS.get((holder).getSecond()), (id, packet) -> {
@@ -70,5 +79,5 @@ public final class SvcMetaPacketRegistry {
                     .register(RequestSecretSvcPacket.class, RequestSecretSvcPacket::new)
                     .register(SecretSvcPacket.class, SecretSvcPacket::new)
                     .register(UpdateStateSvcPacket.class, UpdateStateSvcPacket::new)
-                    .build();
+                    .build();*/
 }

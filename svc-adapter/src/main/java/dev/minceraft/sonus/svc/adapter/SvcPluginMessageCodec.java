@@ -25,7 +25,7 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
     private final SvcProtocolAdapter protocolAdapter;
 
     public SvcPluginMessageCodec(SvcProtocolAdapter protocolAdapter) {
-        super(SvcPluginChannels.getPackets());
+        super(SvcPluginChannels.getChannels());
         this.protocolAdapter = protocolAdapter;
     }
 
@@ -36,10 +36,20 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
             return;
         }
 
+        SvcSessionManager sessionManager = this.protocolAdapter.getAdapter().getSessionManager();
+        SvcConnection connection = sessionManager.getConnection(player.getUniqueId());
+
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(packet, channel);
         SvcMetaPacket<? extends SvcMetaPacket<?>> metaPacket;
         try {
-            metaPacket = SvcMetaPacketRegistry.BUF_REGISTRY.read(data);
+            int version;
+            if (connection == null) {
+                version = VersionManager.OLDEST_VERSION;
+            } else {
+                version = connection.getVersion();
+            }
+
+            metaPacket = SvcMetaPacketRegistry.BUF_REGISTRY.read(data, new SvcMetaPacketRegistry.SvcMetaContext(version));
         } finally {
             data.recycle();
         }
@@ -47,8 +57,6 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
             return;
         }
 
-        SvcSessionManager sessionManager = this.protocolAdapter.getAdapter().getSessionManager();
-        SvcConnection connection = sessionManager.getConnection(player.getUniqueId());
         if (connection == null) {
             if (metaPacket instanceof RequestSecretSvcPacket secret) { // Initial connection
                 connection = this.initConnection(secret, player);

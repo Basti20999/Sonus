@@ -36,11 +36,11 @@ public class MetaHandler implements IMetaSvcHandler {
 
         this.protocolAdapter.getAdapter().getSessionManager().broadcastNewGroup(room);
 
+        this.protocolAdapter.getAdapter().getSessionManager().broadcastState(this.connection);
+
         JoinedGroupSvcPacket response = new JoinedGroupSvcPacket();
         response.setGroupId(room.getId());
         this.connection.sendPacket(response);
-
-        this.protocolAdapter.getAdapter().getSessionManager().broadcastState(this.connection);
     }
 
     @Override

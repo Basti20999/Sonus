@@ -21,9 +21,9 @@ import org.jspecify.annotations.NullMarked;
 public final class SvcVoicePacketRegistry {
 
     public static final SimpleRegistry<ByteBuf, SvcVoicePacket<?>> REGISTRY =
-            new SimpleRegistry.Builder<ByteBuf, SvcVoicePacket<?>>()
+            SimpleRegistry.Builder.<ByteBuf, SvcVoicePacket<?>>createSimple()
                     .codec((buf, packet) -> packet.decode(buf), (buf, packet) -> packet.encode(buf))
-                    .idCodec(buf -> VarInt.read(buf) - 1, (buf, id) -> VarInt.write( buf, id + 1)) // Svc index starts at 1
+                    .idCodec(buf -> VarInt.read(buf) - 1, (buf, id) -> VarInt.write(buf, id + 1)) // Svc index starts at 1
                     .register(MicSvcPacket.class, MicSvcPacket::new)
                     .register(PlayerSoundSvcPacket.class, PlayerSoundSvcPacket::new)
                     .register(GroupSoundSvcPacket.class, GroupSoundSvcPacket::new)

@@ -12,7 +12,7 @@ import org.jspecify.annotations.NullMarked;
 public final class MetaRegistry {
 
     public static final SimpleRegistry<ByteBuf, IMetaMessage> REGISTRY =
-            new SimpleRegistry.Builder<ByteBuf, IMetaMessage>()
+            SimpleRegistry.Builder.<ByteBuf, IMetaMessage>createSimple()
                     .codec((buf, packet) -> packet.decode(buf), (buf, packet) -> packet.encode(buf))
                     .idCodec(VarInt::read, VarInt::write)
                     .register(BackendTickMessage.class, BackendTickMessage::new)

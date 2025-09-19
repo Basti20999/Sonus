@@ -73,10 +73,11 @@ public class SvcConnection {
     }
 
     private void sendTcpPacket(SvcMetaPacket<?> packet) {
-        Key channel = packet.getPluginMessageChannel();
+        Key channel = packet.getPluginMessageChannel().getForVersion(this.version);
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(channel);
         try {
-            SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet);
+            SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet, new SvcMetaPacketRegistry.SvcMetaContext(this.version));
+
             this.player.sendPluginMessage(data.getSecond(), data.getFirst());
         } finally {
             data.recycle();

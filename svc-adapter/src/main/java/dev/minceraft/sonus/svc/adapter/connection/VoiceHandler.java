@@ -40,8 +40,8 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     @Override
     public void handleConnectionCheck(ConnectionCheckSvcPacket packet) {
-        LOGGER.info("Successfully connected {}({}) to Sonus SVC backend",
-                this.connection.getPlayer().getName(), this.connection.getPlayer().getUniqueId());
+        LOGGER.info("Successfully connected {}({}) to Sonus SVC backend - version {}",
+                this.connection.getPlayer().getName(), this.connection.getPlayer().getUniqueId(), this.connection.getVersion());
 
         this.connection.setLastKeepAlive(System.currentTimeMillis());
         this.connection.setConnected(true);

@@ -1,102 +1,56 @@
 package dev.minceraft.sonus.common.protocol.registry;
-// Created by booky10 in Sonus (01:46 17.07.2025)
 
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.ObjIntConsumer;
-import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 
 @NullMarked
-public class SimpleRegistry<D, T extends ProtocolMessage<?>> {
+public class SimpleRegistry<D, T extends ProtocolMessage<?>> extends ContextedRegistry<D, T, Void> {
 
-    private final Codec<D, T> codec;
-    private final IdCodec<D> idCodec;
 
-    private final List<Supplier<? extends T>> constructors;
-    private final Map<Class<? extends T>, Integer> packetIds;
-
-    private SimpleRegistry(Codec<D, T> codec, IdCodec<D> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idMapper) {
-        this.codec = codec;
-        this.idCodec = idCodec;
-        this.constructors = packets.stream().<Supplier<? extends T>>map(Entry::ctor).toList();
-        this.packetIds = new IdentityHashMap<>(packets.size());
-        for (int i = 0; i < packets.size(); i++) {
-            this.packetIds.put(packets.get(i).clazz(), i);
-            idMapper.accept(i, packets.get(i).ctor().get());
-        }
+    protected SimpleRegistry(Codec<D, T, Void> codec, IdCodec<D, Void> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idMapper) {
+        super(codec, idCodec, packets, idMapper);
     }
 
     @Nullable
     public T read(D data) {
-        int packetId = this.idCodec.decoder.applyAsInt(data);
-        T packet = this.constructors.get(packetId).get();
-        this.codec.decoder.accept(data, packet);
-        return packet;
+        return this.read(data, null); // Pass null as context
     }
 
     public void write(D data, T packet) {
-        try {
-            int packetId = this.packetIds.get(packet.getClass());
-            this.idCodec.encoder.accept(data, packetId);
-            this.codec.encoder.accept(data, packet);
-        } catch (NullPointerException exception) {
-            throw new IllegalArgumentException("The given packet is not registered: " + packet.getClass(), exception);
-        }
+        this.write(data, packet, null); // Pass null as context
     }
 
-    public static final class Builder<D, T extends ProtocolMessage<?>> {
+    public static final class Builder<D, T extends ProtocolMessage<?>, S extends Builder<D, T, S>> extends ContextedRegistry.Builder<D, T, Void, S> {
 
-        private final List<Entry<? extends T>> packets = new ArrayList<>();
-        private @MonotonicNonNull Codec<D, T> codec;
-        private @MonotonicNonNull IdCodec<D> idCodec;
-        private BiConsumer<Integer, T> idMapper = (id, packet) -> {
-        };
-
-        public Builder() {
+        private Builder() {
         }
 
+        public static <D, T extends ProtocolMessage<?>> Builder<D, T, ?> createSimple() {
+            return new Builder<>();
+        }
+
+        @Override
         public SimpleRegistry<D, T> build() {
-            if (this.codec == null) {
-                throw new IllegalStateException("Codec must be set before building the registry.");
-            }
-            if (this.idCodec == null) {
-                throw new IllegalStateException("IdCodec must be set before building the registry.");
-            }
-            return new SimpleRegistry<>(this.codec, this.idCodec, this.packets, this.idMapper);
+            if (this.codec == null)
+                throw new IllegalStateException("Codec is not set");
+            if (this.idCodec == null)
+                throw new IllegalStateException("IdCodec is not set");
+            return new SimpleRegistry<>(this.codec, this.idCodec, List.copyOf(this.packets), this.idMapper);
         }
 
-        public <Z extends T> Builder<D, T> register(Class<Z> clazz, Supplier<Z> ctor) {
-            this.packets.add(new Entry<>(clazz, ctor));
-            return this;
+        public S codec(BiConsumer<D, T> decoder, BiConsumer<D, T> encoder) {
+            this.codec = new Codec<>((d, t, c) -> decoder.accept(d, t), (d, t, c) -> encoder.accept(d, t));
+            return this.getThis();
         }
 
-        public Builder<D, T> codec(BiConsumer<D, T> decoder, BiConsumer<D, T> encoder) {
-            this.codec = new Codec<>(decoder, encoder);
-            return this;
-        }
-
-        public Builder<D, T> idCodec(ToIntFunction<D> reader, ObjIntConsumer<D> writer) {
-            this.idCodec = new IdCodec<>(reader, writer);
-            return this;
-        }
-
-        public Builder<D, T> idMapper(BiConsumer<Integer, T> idMapper) {
-            this.idMapper = idMapper;
-            return this;
+        public S idCodec(ToIntFunction<D> reader, ObjIntConsumer<D> writer) {
+            this.idCodec = new IdCodec<>((d, c) -> reader.applyAsInt(d), (d, id, c) -> writer.accept(d, id));
+            return this.getThis();
         }
     }
-
-    private record Entry<T extends ProtocolMessage<?>>(Class<T> clazz, Supplier<T> ctor) {}
-
-    private record IdCodec<D>(ToIntFunction<D> decoder, ObjIntConsumer<D> encoder) {}
-
-    private record Codec<D, T>(BiConsumer<D, T> decoder, BiConsumer<D, T> encoder) {}
 }
