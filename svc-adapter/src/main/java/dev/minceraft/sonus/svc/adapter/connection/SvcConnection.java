@@ -123,6 +123,7 @@ public class SvcConnection {
 
     public void setConnected(boolean connected) {
         this.connected = connected;
+        this.player.handleConnect();
     }
 
     public boolean isDisabled() {

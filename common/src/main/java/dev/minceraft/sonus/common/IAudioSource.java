@@ -12,6 +12,11 @@ public interface IAudioSource {
 
     UUID getSenderId();
 
+    @Nullable
+    default UUID getServerId() {
+        return null;
+    }
+
     default @Nullable WorldVec3d getPosition() {
         return null;
     }

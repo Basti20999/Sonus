@@ -22,7 +22,7 @@ public final class PlayerManager {
 
     public boolean unregisterPlayer(UUID playerId) {
         SonusPlayer removed = this.players.remove(playerId);
-        if (removed == null){
+        if (removed == null) {
             return false;
         }
         removed.handleQuit();
@@ -35,7 +35,7 @@ public final class PlayerManager {
         if (player == null) {
             IPlatformPlayer platform = this.service.getPlatform().getPlayer(playerId);
             if (platform != null) {
-                player = new SonusPlayer(platform);
+                player = new SonusPlayer(this.service, platform);
                 this.players.put(playerId, player);
             }
         }

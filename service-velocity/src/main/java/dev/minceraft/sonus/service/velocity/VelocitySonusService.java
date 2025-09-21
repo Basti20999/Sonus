@@ -18,9 +18,11 @@ public class VelocitySonusService {
 
     private final SonusService service;
     private final ProxyServer server;
+    private final ServicePlatformVelocity platform;
 
     @Inject
     public VelocitySonusService(ProxyServer server, ServicePlatformVelocity platform) {
+        this.platform = platform.connectPlugin(this);
         this.service = new SonusService(platform);
         this.server = server;
     }
@@ -28,6 +30,10 @@ public class VelocitySonusService {
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         this.service.init();
-        server.getEventManager().register(this, new VelocityListener(this.service));
+        this.server.getEventManager().register(this, new VelocityListener(this.service));
+    }
+
+    public SonusService getService() {
+        return this.service;
     }
 }

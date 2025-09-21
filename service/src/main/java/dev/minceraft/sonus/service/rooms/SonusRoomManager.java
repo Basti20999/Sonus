@@ -3,16 +3,53 @@ package dev.minceraft.sonus.service.rooms;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
+import dev.minceraft.sonus.service.SonusService;
+import dev.minceraft.sonus.service.platform.IServer;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class SonusRoomManager implements ISonusRoomManager {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
+
+    public final SonusService service;
     private final Map<UUID, IRoom> rooms = new HashMap<>();
+
+    public SonusRoomManager(SonusService service) {
+        this.service = service;
+    }
+
+    public void init() {
+        this.service.getPlatform().executeAsync(this::tick, 1, TimeUnit.SECONDS);
+    }
+
+    private void tick() {
+        synchronized (this.rooms) {
+            Set<IServer> servers = this.service.getPlatform().getServers();
+            for (IServer server : servers) {
+                if (this.rooms.containsKey(server.getUniqueId())) {
+                    continue;
+                }
+                LOGGER.info("Creating room for server {} ({})", server.getName(), server.getUniqueId());
+                AbstractRoom room = this.service.getPlatform().provideRoom(server);
+                this.rooms.put(room.getId(), room);
+            }
+            Set<UUID> currentServers = new HashSet<>(servers.size());
+            for (IServer server : servers) {
+                currentServers.add(server.getUniqueId());
+            }
+            this.rooms.keySet().removeIf(id -> !currentServers.contains(id));
+        }
+    }
 
     @Override
     public IRoom getRoom(UUID uniqueId) {
@@ -21,7 +58,10 @@ public class SonusRoomManager implements ISonusRoomManager {
 
     @Override
     public boolean joinRoom(ISonusPlayer player, UUID roomId, @Nullable String password) {
-        IRoom room = this.rooms.get(roomId);
+        IRoom room;
+        synchronized (this.rooms) {
+            room = this.rooms.get(roomId);
+        }
         if (room == null) {
             return false;
         }
@@ -39,12 +79,16 @@ public class SonusRoomManager implements ISonusRoomManager {
         room.setName(name);
         room.setPassword(password);
 
-        this.rooms.put(room.getId(), room);
+        synchronized (this.rooms) {
+            this.rooms.put(room.getId(), room);
+        }
         return room;
     }
 
     @Override
     public void removeRoom(IRoom room) {
-        this.rooms.remove(room.getId());
+        synchronized (this.rooms) {
+            this.rooms.remove(room.getId());
+        }
     }
 }

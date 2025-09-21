@@ -6,6 +6,7 @@ import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -21,6 +22,13 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     @Override
     public UUID getUniqueId() {
         return this.player.getUniqueId();
+    }
+
+    @Override
+    @Nullable
+    public UUID getServerId() {
+        return this.player.getCurrentServer().map(server ->
+                new VelocityServer(server.getServerInfo()).getUniqueId()).orElse(null);
     }
 
     @Override

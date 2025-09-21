@@ -3,6 +3,7 @@ package dev.minceraft.sonus.service.player;
 
 import com.google.common.base.Preconditions;
 import dev.minceraft.sonus.common.IAudioSource;
+import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
@@ -28,9 +29,11 @@ public final class SonusPlayer implements ISonusPlayer {
 
     private static final GroupRoom TEST = new GroupRoom();
 
+    private final ISonusService service;
     private final IPlatformPlayer platform;
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
     private final Map<UUID, SonusPlayerState> perPlayerStates = new HashMap<>();
+    private @Nullable IRoom serverRoom;
     private @Nullable IRoom customRoom;
     private @Nullable WorldVec3d position;
     private @Nullable SonusAdapter sonusAdapter;
@@ -38,7 +41,8 @@ public final class SonusPlayer implements ISonusPlayer {
     private boolean muted;
     private boolean deafened;
 
-    public SonusPlayer(IPlatformPlayer platform) {
+    public SonusPlayer(ISonusService service, IPlatformPlayer platform) {
+        this.service = service;
         this.platform = platform;
 
         //this.joinRoom(TEST);
@@ -96,6 +100,19 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     @Override
+    public @Nullable IRoom getServerRoom() {
+        return this.serverRoom;
+    }
+
+    @Override
+    public void setServerRoom(@Nullable IRoom room) {
+        if (this.serverRoom != null) {
+            this.serverRoom.removeMember(this);
+        }
+        this.serverRoom = room;
+    }
+
+    @Override
     public @Nullable IRoom getCustomRoom() {
         return this.customRoom;
     }
@@ -111,6 +128,11 @@ public final class SonusPlayer implements ISonusPlayer {
     @Override
     public UUID getUniqueId() {
         return this.platform.getUniqueId();
+    }
+
+    @Override
+    public @Nullable UUID getServerId() {
+        return this.platform.getServerId();
     }
 
     @Override
@@ -183,6 +205,22 @@ public final class SonusPlayer implements ISonusPlayer {
     @Override
     public Map<UUID, SonusPlayerState> getPerPlayerStates() {
         return this.perPlayerStates;
+    }
+
+    @Override
+    public void handleConnect() {
+        this.setServerRoom(null);
+
+        UUID serverId = this.getServerId();
+        if (serverId == null) {
+            return;
+        }
+        IRoom room = this.service.getRoomManager().getRoom(serverId);
+        if (room == null) {
+            return;
+        }
+        this.setServerRoom(room);
+        this.joinRoom(room);
     }
 
     public void setStates(Collection<SonusPlayerState> value) {

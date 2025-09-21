@@ -37,6 +37,11 @@ public interface ISonusPlayer extends IAudioSource {
     void leaveRoom(IRoom room);
 
     @Nullable
+    IRoom getServerRoom();
+
+    void setServerRoom(@Nullable IRoom room);
+
+    @Nullable
     IRoom getCustomRoom();
 
     void setCustomRoom(@Nullable IRoom room);
@@ -52,4 +57,6 @@ public interface ISonusPlayer extends IAudioSource {
     void handleAudioInput(SonusAudio audio);
 
     void sendPluginMessage(Key key, ByteBuf data);
+
+    void handleConnect();
 }

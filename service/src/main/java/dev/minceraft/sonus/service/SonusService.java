@@ -33,7 +33,7 @@ public final class SonusService implements ISonusService {
     private final UdpServer udpServer = new UdpServer(this);
     private final SonusEventManager eventManager = new SonusEventManager(this);
     private final SonusScheduler scheduler = new SonusScheduler();
-    private final SonusRoomManager roomManager = new SonusRoomManager();
+    private final SonusRoomManager roomManager = new SonusRoomManager(this);
     private final AdapterManager adapters = new AdapterManager(this);
     private final AgentManager agentManager = new AgentManager(this);
     private final YamlConfigHolder<SonusConfig> config;
@@ -51,6 +51,9 @@ public final class SonusService implements ISonusService {
 
         LOGGER.info("Initializing Adapters...");
         this.adapters.init();
+
+        LOGGER.info("Initializing Room Manager...");
+        this.roomManager.init();
 
         LOGGER.info("Initializing agent handlers...");
         this.agentManager.init();

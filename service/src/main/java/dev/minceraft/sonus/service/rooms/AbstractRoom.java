@@ -19,11 +19,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @NullMarked
 public abstract class AbstractRoom implements IRoom {
 
-    protected final UUID roomId = UUID.randomUUID();
+    protected final UUID roomId;
     protected final Map<UUID, ISonusPlayer> members = new ConcurrentHashMap<>();
     protected RoomType roomType = RoomType.OPEN;
-    protected String name = "Room-" + this.roomId.toString().substring(0, 5);
+    protected String name;
     protected @Nullable String password;
+
+    public AbstractRoom() {
+        this(UUID.randomUUID());
+    }
+
+    public AbstractRoom(UUID roomId) {
+        this.roomId = Objects.requireNonNull(roomId);
+        this.name = "Room-" + this.roomId.toString().substring(0, 5);
+    }
 
     @Override
     public final void sendAudio(@Nullable IAudioSource source, SonusAudio audio) {
