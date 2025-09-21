@@ -17,6 +17,7 @@ public class SonusConfig implements ISonusConfig {
     private double voiceChatRange = 32.0;
     private boolean allowRecordings = false;
     private int keepAliveMs = 1000;
+    private boolean autoGainControl = true;
 
     private SonusConfig() {
     }
@@ -49,5 +50,10 @@ public class SonusConfig implements ISonusConfig {
     @Override
     public int getKeepAliveMs() {
         return this.keepAliveMs;
+    }
+
+    @Override
+    public boolean agcEnabled() {
+        return this.autoGainControl;
     }
 }

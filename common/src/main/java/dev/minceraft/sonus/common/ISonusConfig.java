@@ -15,4 +15,6 @@ public interface ISonusConfig {
     boolean allowRecordings();
 
     int getKeepAliveMs();
+
+    boolean agcEnabled();
 }

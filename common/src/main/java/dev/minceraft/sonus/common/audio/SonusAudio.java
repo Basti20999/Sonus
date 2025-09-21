@@ -14,4 +14,8 @@ public record SonusAudio(byte[] data, long sequenceNumber) {
         return new SonusAudio(this.data, sequenceNumber);
     }
 
+    public SonusAudio withData(byte[] data) {
+        return new SonusAudio(data, this.sequenceNumber);
+    }
+
 }

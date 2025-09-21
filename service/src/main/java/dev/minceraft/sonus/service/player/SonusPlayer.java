@@ -3,7 +3,6 @@ package dev.minceraft.sonus.service.player;
 
 import com.google.common.base.Preconditions;
 import dev.minceraft.sonus.common.IAudioSource;
-import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
@@ -12,7 +11,10 @@ import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.rooms.RoomAudioType;
+import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
+import dev.minceraft.sonus.service.processing.AudioProcessor;
+import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -27,23 +29,24 @@ import java.util.concurrent.ConcurrentHashMap;
 @NullMarked
 public final class SonusPlayer implements ISonusPlayer {
 
-    private final ISonusService service;
+    private final SonusService service;
     private final IPlatformPlayer platform;
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
     private final Map<UUID, SonusPlayerState> perPlayerStates = new HashMap<>();
+    private final AudioProcessor processor;
+    private final AgcNode agcNode = new AgcNode();
     private @Nullable IRoom serverRoom;
     private @Nullable IRoom customRoom;
     private @Nullable WorldVec3d position;
     private @Nullable SonusAdapter sonusAdapter;
-
     private boolean muted;
     private boolean deafened;
 
-    public SonusPlayer(ISonusService service, IPlatformPlayer platform) {
+    public SonusPlayer(SonusService service, IPlatformPlayer platform) {
         this.service = service;
         this.platform = platform;
 
-        //this.joinRoom(TEST);
+        this.processor = new AudioProcessor(service);
     }
 
     @Override
@@ -51,6 +54,12 @@ public final class SonusPlayer implements ISonusPlayer {
         if (this.muted) {
             return;
         }
+
+        if (this.service.getConfig().agcEnabled()) {
+            byte[] process = this.processor.process(audio.data(), this.agcNode);
+            audio = audio.withData(process);
+        }
+
         IRoom customRoom = this.getCustomRoom();
         if (customRoom != null) {
             if (customRoom.getRoomAudioType() != RoomAudioType.OPEN) {
