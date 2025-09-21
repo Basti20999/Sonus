@@ -11,8 +11,8 @@ import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.common.rooms.RoomAudioType;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
-import dev.minceraft.sonus.service.rooms.GroupRoom;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -26,8 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
 public final class SonusPlayer implements ISonusPlayer {
-
-    private static final GroupRoom TEST = new GroupRoom();
 
     private final ISonusService service;
     private final IPlatformPlayer platform;
@@ -53,28 +51,48 @@ public final class SonusPlayer implements ISonusPlayer {
         if (this.muted) {
             return;
         }
+        IRoom customRoom = this.getCustomRoom();
+        if (customRoom != null) {
+            if (customRoom.getRoomAudioType() != RoomAudioType.OPEN) {
+                customRoom.sendAudio(this, audio);
+                return;
+            }
+        }
         for (IRoom room : this.voiceRooms.values()) {
             room.sendAudio(this, audio);
         }
     }
 
+    private boolean canHear(IAudioSource source) {
+        if (this.deafened) {
+            return false;
+        }
+        IRoom customRoom = this.getCustomRoom();
+        if (customRoom != null) {
+            if (customRoom.getRoomAudioType() == RoomAudioType.ISOLATED && source instanceof ISonusPlayer other) {
+                return other.getCustomRoom() == customRoom;
+            }
+        }
+        return true;
+    }
+
     @Override
     public void sendStaticAudio(IAudioSource source, SonusAudio audio) {
-        if (this.sonusAdapter != null && !this.deafened) {
+        if (this.sonusAdapter != null && this.canHear(source)) {
             this.sonusAdapter.sendStaticAudio(this, source, audio);
         }
     }
 
     @Override
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position) {
-        if (this.sonusAdapter != null && !this.deafened) {
+        if (this.sonusAdapter != null && this.canHear(source)) {
             this.sonusAdapter.sendSpatialAudio(this, source, audio, position);
         }
     }
 
     @Override
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio) {
-        if (this.sonusAdapter != null && !this.deafened) {
+        if (this.sonusAdapter != null && this.canHear(source)) {
             this.sonusAdapter.sendSpatialAudio(this, source, audio);
         }
     }

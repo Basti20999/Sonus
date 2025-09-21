@@ -4,10 +4,15 @@ package dev.minceraft.sonus.service.rooms;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.rooms.RoomType;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class GroupRoom extends AbstractRoom {
+public class StaticRoom extends AbstractRoom {
+
+    public StaticRoom(RoomType type) {
+        super(type);
+    }
 
     @Override
     protected void sendAudio0(IAudioSource source, SonusAudio audio) {

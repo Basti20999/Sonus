@@ -5,6 +5,7 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.common.rooms.RoomAudioType;
 import dev.minceraft.sonus.common.rooms.RoomType;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
@@ -21,16 +22,18 @@ public abstract class AbstractRoom implements IRoom {
 
     protected final UUID roomId;
     protected final Map<UUID, ISonusPlayer> members = new ConcurrentHashMap<>();
-    protected RoomType roomType = RoomType.OPEN;
+    protected final RoomType roomType;
+    protected RoomAudioType roomAudioType = RoomAudioType.OPEN;
     protected String name;
     protected @Nullable String password;
 
-    public AbstractRoom() {
-        this(UUID.randomUUID());
+    public AbstractRoom(RoomType roomType) {
+        this(UUID.randomUUID(), roomType);
     }
 
-    public AbstractRoom(UUID roomId) {
+    public AbstractRoom(UUID roomId, RoomType roomType) {
         this.roomId = Objects.requireNonNull(roomId);
+        this.roomType = roomType;
         this.name = "Room-" + this.roomId.toString().substring(0, 5);
     }
 
@@ -93,8 +96,13 @@ public abstract class AbstractRoom implements IRoom {
     }
 
     @Override
-    public void setRoomType(RoomType type) {
-        this.roomType = Objects.requireNonNull(type);
+    public RoomAudioType getRoomAudioType() {
+        return this.roomAudioType;
+    }
+
+    @Override
+    public void setRoomType(RoomAudioType type) {
+        this.roomAudioType = Objects.requireNonNull(type);
     }
 
     @Override

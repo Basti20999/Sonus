@@ -12,7 +12,7 @@ public interface ISonusRoomManager {
 
     boolean joinRoom(ISonusPlayer player, UUID roomId, @Nullable String password);
 
-    IRoom createGroupRoom(String name, @Nullable String password);
+    IRoom createStaticRoom(String name, @Nullable String password);
 
     void removeRoom(IRoom room);
 }

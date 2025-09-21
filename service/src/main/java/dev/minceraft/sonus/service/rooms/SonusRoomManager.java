@@ -2,6 +2,7 @@ package dev.minceraft.sonus.service.rooms;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.common.rooms.RoomType;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IServer;
@@ -29,7 +30,7 @@ public class SonusRoomManager implements ISonusRoomManager {
     }
 
     public void init() {
-        this.service.getPlatform().executeAsync(this::tick, 1, TimeUnit.SECONDS);
+        this.service.getScheduler().schedule(this::tick, 0, 1, TimeUnit.SECONDS);
     }
 
     private void tick() {
@@ -47,7 +48,9 @@ public class SonusRoomManager implements ISonusRoomManager {
             for (IServer server : servers) {
                 currentServers.add(server.getUniqueId());
             }
-            this.rooms.keySet().removeIf(id -> !currentServers.contains(id));
+            this.rooms.values().removeIf(server ->
+                    server.getRoomType() == RoomType.SPECIAL_SERVER_OWNED &&
+                            !currentServers.contains(server.getId()));
         }
     }
 
@@ -62,10 +65,15 @@ public class SonusRoomManager implements ISonusRoomManager {
         synchronized (this.rooms) {
             room = this.rooms.get(roomId);
         }
+        System.out.println("Attempting to join room " + roomId + " with password " + password);
+        System.out.println("Available rooms: " + this.rooms.keySet());
         if (room == null) {
+            System.out.println("Room not found: " + roomId);
+            ;
             return false;
         }
         if (!Objects.equals(room.getPassword(), password)) {
+            System.out.println("Password mismatch: expected " + room.getPassword() + ", got " + password);
             return false;
         }
         player.joinRoom(room);
@@ -74,8 +82,8 @@ public class SonusRoomManager implements ISonusRoomManager {
     }
 
     @Override
-    public IRoom createGroupRoom(String name, @Nullable String password) {
-        GroupRoom room = new GroupRoom();
+    public IRoom createStaticRoom(String name, @Nullable String password) {
+        StaticRoom room = new StaticRoom(RoomType.PLAYER_OWNED);
         room.setName(name);
         room.setPassword(password);
 

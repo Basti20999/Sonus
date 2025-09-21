@@ -28,7 +28,7 @@ public class MetaHandler implements IMetaSvcHandler {
     @Override
     public void handleCreateGroupPacket(CreateGroupSvcPacket packet) {
         IRoom room = this.protocolAdapter.getAdapter().getService().getRoomManager()
-                .createGroupRoom(packet.getName(), packet.getPassword());
+                .createStaticRoom(packet.getName(), packet.getPassword());
         room.setRoomType(packet.getType().toSonus());
 
         this.connection.getPlayer().joinRoom(room);
@@ -37,6 +37,8 @@ public class MetaHandler implements IMetaSvcHandler {
         this.protocolAdapter.getAdapter().getSessionManager().broadcastNewGroup(room);
 
         this.protocolAdapter.getAdapter().getSessionManager().broadcastState(this.connection);
+
+        System.out.println("Create room " + room.getId() + " of type " + room.getRoomAudioType());
 
         JoinedGroupSvcPacket response = new JoinedGroupSvcPacket();
         response.setGroupId(room.getId());
@@ -49,7 +51,7 @@ public class MetaHandler implements IMetaSvcHandler {
         boolean success = roomManager.joinRoom(this.connection.getPlayer(), packet.getGroupId(), packet.getPassword());
 
         JoinedGroupSvcPacket response = new JoinedGroupSvcPacket();
-        response.setGroupId(packet.getGroupId());
+        response.setGroupId(success ? packet.getGroupId() : null);
         response.setWrongPassword(!success);
         this.connection.sendPacket(response);
         if (success) {

@@ -4,11 +4,10 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import com.velocitypowered.api.scheduler.ScheduledTask;
+import dev.minceraft.sonus.common.rooms.RoomType;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
-import dev.minceraft.sonus.service.platform.ITask;
 import dev.minceraft.sonus.service.rooms.AbstractRoom;
 import dev.minceraft.sonus.service.rooms.SpatialRoom;
 import jakarta.inject.Inject;
@@ -23,7 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Singleton
 @NullMarked
@@ -57,14 +55,6 @@ public class ServicePlatformVelocity implements IServicePlatform {
     }
 
     @Override
-    public ITask executeAsync(Runnable runnable, long period, TimeUnit unit) {
-        ScheduledTask schedule = this.server.getScheduler().buildTask(this.velocityPlugin, runnable)
-                .repeat(period, unit)
-                .schedule();
-        return schedule::cancel;
-    }
-
-    @Override
     public Set<IServer> getServers() {
         Collection<RegisteredServer> registered = this.server.getAllServers();
         Set<IServer> result = new HashSet<>(registered.size());
@@ -77,7 +67,7 @@ public class ServicePlatformVelocity implements IServicePlatform {
 
     @Override
     public AbstractRoom provideRoom(IServer server) {
-        return new SpatialRoom(server.getUniqueId(), this.velocityPlugin.getService());
+        return new SpatialRoom(server.getUniqueId(), RoomType.SPECIAL_SERVER_OWNED, this.velocityPlugin.getService());
     }
 
     public ServicePlatformVelocity connectPlugin(VelocitySonusService velocityPlugin) {

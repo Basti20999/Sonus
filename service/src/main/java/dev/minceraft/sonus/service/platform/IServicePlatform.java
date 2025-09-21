@@ -8,7 +8,6 @@ import org.jspecify.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @NullMarked
 public interface IServicePlatform {
@@ -19,8 +18,6 @@ public interface IServicePlatform {
     IPlatformPlayer getPlayer(UUID uniqueId);
 
     void registerPluginChannel(Key channel);
-
-    ITask executeAsync(Runnable runnable, long period, TimeUnit unit);
 
     Set<IServer> getServers();
 

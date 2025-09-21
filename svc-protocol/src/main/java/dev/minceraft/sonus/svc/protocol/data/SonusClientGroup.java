@@ -31,7 +31,7 @@ public class SonusClientGroup {
         this.password = room.getPassword() != null;
         this.persistent = false;
         this.hidden = false;
-        this.type = SonusGroupType.fromSonus(room.getRoomType());
+        this.type = SonusGroupType.fromSonus(room.getRoomAudioType());
     }
 
     public SonusClientGroup(ByteBuf buf) {

@@ -31,9 +31,11 @@ public interface IRoom extends IAudioSource {
 
     boolean isMember(ISonusPlayer player);
 
+    RoomAudioType getRoomAudioType();
+
     RoomType getRoomType();
 
-    void setRoomType(RoomType type);
+    void setRoomType(RoomAudioType type);
 
     void sendAudio(@Nullable IAudioSource source, SonusAudio audio);
 
