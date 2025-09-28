@@ -4,11 +4,14 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.UUID;
 
 public interface ISonusRoomManager {
 
     IRoom getRoom(UUID uniqueId);
+
+    Collection<IRoom> getRooms();
 
     boolean joinRoom(ISonusPlayer player, UUID roomId, @Nullable String password);
 

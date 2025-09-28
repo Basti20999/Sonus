@@ -44,6 +44,12 @@ public class SvcSessionManager {
         PlayerStatesSvcPacket statesPacket = new PlayerStatesSvcPacket();
         statesPacket.setStates(this.getPlayerStates());
         connection.sendPacket(statesPacket);
+
+        for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
+            AddGroupSvcPacket packet = new AddGroupSvcPacket();
+            packet.setGroup(new SonusClientGroup(room));
+            connection.sendPacket(packet);
+        }
     }
 
     public void tickKeepAlive() {

@@ -10,6 +10,7 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -60,20 +61,20 @@ public class SonusRoomManager implements ISonusRoomManager {
     }
 
     @Override
+    public Collection<IRoom> getRooms() {
+        return this.rooms.values();
+    }
+
+    @Override
     public boolean joinRoom(ISonusPlayer player, UUID roomId, @Nullable String password) {
         IRoom room;
         synchronized (this.rooms) {
             room = this.rooms.get(roomId);
         }
-        System.out.println("Attempting to join room " + roomId + " with password " + password);
-        System.out.println("Available rooms: " + this.rooms.keySet());
         if (room == null) {
-            System.out.println("Room not found: " + roomId);
-            ;
             return false;
         }
         if (!Objects.equals(room.getPassword(), password)) {
-            System.out.println("Password mismatch: expected " + room.getPassword() + ", got " + password);
             return false;
         }
         player.joinRoom(room);

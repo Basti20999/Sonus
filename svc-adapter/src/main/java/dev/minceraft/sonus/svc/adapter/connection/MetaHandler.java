@@ -38,8 +38,6 @@ public class MetaHandler implements IMetaSvcHandler {
 
         this.protocolAdapter.getAdapter().getSessionManager().broadcastState(this.connection);
 
-        System.out.println("Create room " + room.getId() + " of type " + room.getRoomAudioType());
-
         JoinedGroupSvcPacket response = new JoinedGroupSvcPacket();
         response.setGroupId(room.getId());
         this.connection.sendPacket(response);

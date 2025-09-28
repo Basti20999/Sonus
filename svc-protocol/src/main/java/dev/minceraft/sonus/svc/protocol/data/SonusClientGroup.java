@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.protocol.data;
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.common.rooms.RoomType;
 import io.netty.buffer.ByteBuf;
 
 import java.util.UUID;
@@ -29,8 +30,8 @@ public class SonusClientGroup {
         this.name = room.getName();
         this.groupId = room.getId();
         this.password = room.getPassword() != null;
-        this.persistent = false;
-        this.hidden = false;
+        this.persistent = room.getRoomType() == RoomType.SPECIAL_SERVER_OWNED;
+        this.hidden = room.getRoomType() == RoomType.SPECIAL_SERVER_OWNED;
         this.type = SonusGroupType.fromSonus(room.getRoomAudioType());
     }
 
