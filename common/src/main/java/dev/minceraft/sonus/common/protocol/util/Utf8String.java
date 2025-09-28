@@ -39,6 +39,16 @@ public class Utf8String {
         return read(buf, cap, length);
     }
 
+    public static String readUnsignedShort(ByteBuf buf) {
+        int length = buf.readUnsignedShort();
+        return read(buf, length, 32767);
+    }
+
+    public static String readUnsignedShort(ByteBuf buf, int limit) {
+        int length = buf.readUnsignedShort();
+        return read(buf, length, limit);
+    }
+
     private static String read(ByteBuf buf, int cap, int length) {
         checkFrame(length >= 0, "Got a negative-length string (%s)", length);
         // `cap` is interpreted as a UTF-8 character length. To cover the full Unicode plane, we must
@@ -63,6 +73,15 @@ public class Utf8String {
     public static void write(ByteBuf buf, CharSequence str) {
         int size = ByteBufUtil.utf8Bytes(str);
         VarInt.write(buf, size);
+        buf.writeCharSequence(str, StandardCharsets.UTF_8);
+    }
+
+    public static void writeUnsignedShort(ByteBuf buf, String str) {
+        int size = ByteBufUtil.utf8Bytes(str);
+        if (size > 65535) {
+            throw new IllegalArgumentException("String is too long to fit in an unsigned short: " + size);
+        }
+        buf.writeShort(size);
         buf.writeCharSequence(str, StandardCharsets.UTF_8);
     }
 }

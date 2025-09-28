@@ -2,6 +2,7 @@ package dev.minceraft.sonus.common.protocol.util;
 // Created by booky10 in Sonus (01:19 17.07.2025)
 
 import com.google.common.collect.Multimap;
+import dev.minceraft.sonus.common.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -10,9 +11,11 @@ import org.jspecify.annotations.NullMarked;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
@@ -110,6 +113,17 @@ public class DataTypeUtil {
         return null;
     }
 
+    public static <T> T readIfOrElse(ByteBuf buf, Function<ByteBuf, T> reader, Supplier<T> defaultValue) {
+        return buf.readBoolean() ? reader.apply(buf) : defaultValue.get();
+    }
+
+    public static void writeIf(ByteBuf buf, boolean condition, Consumer<ByteBuf> writer) {
+        buf.writeBoolean(condition);
+        if (condition) {
+            writer.accept(buf);
+        }
+    }
+
     public static <T> void writeNullable(ByteBuf buf, @Nullable T groupId, BiConsumer<ByteBuf, T> writer) {
         if (groupId != null) {
             buf.writeBoolean(true);
@@ -145,5 +159,44 @@ public class DataTypeUtil {
         byte[] data = new byte[length];
         buf.readBytes(data);
         return data;
+    }
+
+    public static byte[] readIntFramedByteArray(ByteBuf buf) {
+        int read = buf.readInt();
+        byte[] data = new byte[read];
+        buf.readBytes(data);
+        return data;
+    }
+
+    public static void writeIntFramedByteArray(ByteBuf buf, byte[] data) {
+        buf.writeInt(data.length);
+        buf.writeBytes(data);
+    }
+
+
+    public static GameProfile readGameProfile(ByteBuf buf, Function<ByteBuf, String> stringReader) {
+        UUID id = readUniqueId(buf);
+        String name = stringReader.apply(buf);
+        List<GameProfile.Property> properties = readCollection(buf, b -> readGameProfileProperty(b, stringReader), ArrayList::new);
+        return new GameProfile(id, name, properties);
+    }
+
+    public static void writeGameProfile(ByteBuf buf, GameProfile profile, BiConsumer<ByteBuf, String> stringWriter) {
+        writeUniqueId(buf, profile.uniqueId());
+        stringWriter.accept(buf, profile.name());
+        writeCollection(buf, profile.properties(), (b, property) -> writeGameProfileProperty(b, property, stringWriter));
+    }
+
+    public static GameProfile.Property readGameProfileProperty(ByteBuf buf, Function<ByteBuf, String> stringReader) {
+        String name = stringReader.apply(buf);
+        String value = stringReader.apply(buf);
+        String signature = stringReader.apply(buf);
+        return new GameProfile.Property(name, value, signature);
+    }
+
+    public static void writeGameProfileProperty(ByteBuf buf, GameProfile.Property property, BiConsumer<ByteBuf, String> stringWriter) {
+        stringWriter.accept(buf, property.name());
+        stringWriter.accept(buf, property.value());
+        stringWriter.accept(buf, property.signature());
     }
 }

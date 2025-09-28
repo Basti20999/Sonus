@@ -46,10 +46,6 @@ public abstract class AbstractMagicUdpCodec<T> {
         }
     }
 
-    public short readMagicByte(ByteBuf buf) {
-        return buf.readUnsignedByte();
-    }
-
     public void clearRestMagicByte(ByteBuf buf) {
         // Default does nothing
     }

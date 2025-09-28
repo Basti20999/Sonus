@@ -1,0 +1,67 @@
+package dev.minceraft.sonus.plasmo.protocol.tcp.data.source;
+
+
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.CodecInfo;
+import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.UUID;
+
+public abstract class SourceInfo {
+
+    protected final SourceType sourceType;
+    protected final String addonId;
+    protected final UUID id;
+    protected final UUID voiceLineId;
+    protected final @Nullable String name;
+    protected final byte state;
+    protected final @Nullable CodecInfo codecInfo;
+    protected final boolean stereo;
+    protected final boolean iconVisible;
+    protected final int angle;
+
+    protected SourceInfo(SourceType sourceType, String addonId, UUID id, UUID voiceLineId, @Nullable String name,
+                         byte state, @Nullable CodecInfo codecInfo, boolean stereo, boolean iconVisible, int angle) {
+        this.sourceType = sourceType;
+        this.addonId = addonId;
+        this.id = id;
+        this.voiceLineId = voiceLineId;
+        this.name = name;
+        this.state = state;
+        this.codecInfo = codecInfo;
+        this.stereo = stereo;
+        this.iconVisible = iconVisible;
+        this.angle = angle;
+    }
+
+    protected SourceInfo(ByteBuf buf, SourceType sourceType) {
+        this.sourceType = sourceType;
+        this.addonId = Utf8String.readUnsignedShort(buf);
+        this.id = DataTypeUtil.readUniqueId(buf);
+        this.name = DataTypeUtil.readIf(buf, Utf8String::readUnsignedShort);
+        this.state = buf.readByte();
+        this.codecInfo = DataTypeUtil.readIf(buf, CodecInfo::new);
+        this.stereo = buf.readBoolean();
+        this.voiceLineId = DataTypeUtil.readUniqueId(buf);
+        this.iconVisible = buf.readBoolean();
+        this.angle = buf.readInt();
+    }
+
+    public void write(ByteBuf buf) {
+        Utf8String.writeUnsignedShort(buf, this.addonId);
+        DataTypeUtil.writeUniqueId(buf, this.id);
+        DataTypeUtil.writeNullable(buf, this.name, Utf8String::writeUnsignedShort);
+        buf.writeByte(this.state);
+        DataTypeUtil.writeNullable(buf, this.codecInfo, (b, c) -> c.write(b));
+        buf.writeBoolean(this.stereo);
+        DataTypeUtil.writeUniqueId(buf, this.voiceLineId);
+        buf.writeBoolean(this.iconVisible);
+        buf.writeInt(this.angle);
+    }
+
+    public SourceType getSourceType() {
+        return this.sourceType;
+    }
+}
