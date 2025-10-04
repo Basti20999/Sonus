@@ -11,7 +11,6 @@ import java.util.function.ToIntFunction;
 @NullMarked
 public class SimpleRegistry<D, T extends ProtocolMessage<?>> extends ContextedRegistry<D, T, Void> {
 
-
     protected SimpleRegistry(Codec<D, T, Void> codec, IdCodec<D, Void> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idMapper) {
         super(codec, idCodec, packets, idMapper);
     }
@@ -40,7 +39,7 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> extends ContextedRe
                 throw new IllegalStateException("Codec is not set");
             if (this.idCodec == null)
                 throw new IllegalStateException("IdCodec is not set");
-            return new SimpleRegistry<>(this.codec, this.idCodec, List.copyOf(this.packets), this.idMapper);
+            return new SimpleRegistry<>(this.codec, this.idCodec, List.copyOf(this.packets), this.idConsumer);
         }
 
         public S codec(BiConsumer<D, T> decoder, BiConsumer<D, T> encoder) {

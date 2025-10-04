@@ -6,6 +6,8 @@ import dev.minceraft.sonus.common.protocol.util.TriConsumer;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -18,20 +20,23 @@ import java.util.function.ToIntBiFunction;
 @NullMarked
 public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
+
     private final Codec<D, T, C> codec;
     private final IdCodec<D, C> idCodec;
 
     private final List<Supplier<? extends T>> constructors;
     private final Map<Class<? extends T>, Integer> packetIds;
 
-    protected ContextedRegistry(Codec<D, T, C> codec, IdCodec<D, C> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idMapper) {
+    protected ContextedRegistry(Codec<D, T, C> codec, IdCodec<D, C> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idConsumer) {
         this.codec = codec;
         this.idCodec = idCodec;
         this.constructors = packets.stream().<Supplier<? extends T>>map(Entry::ctor).toList();
         this.packetIds = new IdentityHashMap<>(packets.size());
-        for (int i = 0; i < packets.size(); i++) {
-            this.packetIds.put(packets.get(i).clazz(), i);
-            idMapper.accept(i, packets.get(i).ctor().get());
+
+        for (Entry<? extends T> packet : packets) {
+            this.packetIds.put(packet.clazz(), packet.id());
+            idConsumer.accept(packet.id(), packet.ctor().get());
         }
     }
 
@@ -58,8 +63,9 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         protected final List<Entry<? extends T>> packets = new ArrayList<>();
         protected @MonotonicNonNull Codec<D, T, C> codec;
         protected @MonotonicNonNull IdCodec<D, C> idCodec;
-        protected BiConsumer<Integer, T> idMapper = (id, packet) -> {
+        protected BiConsumer<Integer, T> idConsumer = (id, packet) -> {
         };
+        protected int nextId = 0;
 
         protected Builder() {
         }
@@ -75,7 +81,7 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
             if (this.idCodec == null) {
                 throw new IllegalStateException("IdCodec must be set before building the registry.");
             }
-            return new ContextedRegistry<>(this.codec, this.idCodec, this.packets, this.idMapper);
+            return new ContextedRegistry<>(this.codec, this.idCodec, this.packets, this.idConsumer);
         }
 
         @SuppressWarnings("unchecked")
@@ -84,7 +90,15 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         }
 
         public <Z extends T> S register(Class<Z> clazz, Supplier<Z> ctor) {
-            this.packets.add(new Entry<>(clazz, ctor));
+            this.packets.add(new Entry<>(this.nextId++, clazz, ctor));
+            return this.getThis();
+        }
+
+        public <Z extends T> S register(int id, Class<Z> clazz, Supplier<Z> ctor) {
+            if (this.nextId != 0) {
+                LOGGER.warn("Registering packet with explicit id after packets have been registered with implicit ids is not recommended.");
+            }
+            this.packets.add(new Entry<>(id, clazz, ctor));
             return this.getThis();
         }
 
@@ -98,13 +112,13 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
             return this.getThis();
         }
 
-        public S idMapper(BiConsumer<Integer, T> idMapper) {
-            this.idMapper = idMapper;
+        public S idConsumer(BiConsumer<Integer, T> idMapper) {
+            this.idConsumer = idMapper;
             return this.getThis();
         }
     }
 
-    protected record Entry<T extends ProtocolMessage<?>>(Class<T> clazz, Supplier<T> ctor) {}
+    protected record Entry<T extends ProtocolMessage<?>>(int id, Class<T> clazz, Supplier<T> ctor) {}
 
     protected record IdCodec<D, C>(ToIntBiFunction<D, C> decoder, ObjIntObjectConsumer<D, C> encoder) {}
 

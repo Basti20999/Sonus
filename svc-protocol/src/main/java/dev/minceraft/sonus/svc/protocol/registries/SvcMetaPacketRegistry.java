@@ -35,7 +35,7 @@ public final class SvcMetaPacketRegistry {
                     .idCodec((holder, ctx) -> PACKET_IDS.get(holder.getSecond()),
                             (id, packet, ctx) -> {
                             })
-                    .idMapper((id, sample) -> {
+                    .idConsumer((id, sample) -> {
                         for (Versioned.VersionedKeyEntry<Key> entry : sample.getPluginMessageChannel().versionedKeys()) {
                             PACKET_IDS.put(entry.key(), id);
                         }
