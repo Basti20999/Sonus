@@ -32,6 +32,7 @@ tasks {
     }
     shadowJar {
         mergeServiceFiles()
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
         archiveBaseName = rootProject.name
     }
 }
