@@ -1,6 +1,8 @@
 package dev.minceraft.sonus.plasmo.protocol.udp.clientbound;
 
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.plasmo.protocol.cipher.ICipher;
+import dev.minceraft.sonus.plasmo.protocol.cipher.IEncryptable;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpHandler;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpPlasmoPacket;
 import io.netty.buffer.ByteBuf;
@@ -10,7 +12,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class SelfAudioInfoPlasmoPacket extends UdpPlasmoPacket<SelfAudioInfoPlasmoPacket> {
+public class SelfAudioInfoPlasmoPacket extends UdpPlasmoPacket<SelfAudioInfoPlasmoPacket> implements IEncryptable {
 
     private @MonotonicNonNull UUID sourceId;
     private long sequenceNumber;
@@ -34,6 +36,16 @@ public class SelfAudioInfoPlasmoPacket extends UdpPlasmoPacket<SelfAudioInfoPlas
         this.sequenceNumber = buf.readLong();
         this.audioData = DataTypeUtil.readIntFramedByteArray(buf);
         this.distance = buf.readShort();
+    }
+
+    @Override
+    public void encrypt(ICipher cipher) {
+        this.audioData = cipher.encrypt(this.audioData);
+    }
+
+    @Override
+    public void decrypt(ICipher cipher) {
+        this.audioData = cipher.decrypt(this.audioData);
     }
 
     @Override

@@ -34,7 +34,7 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public final class TcpPacketRegistry {
 
-    public static SimpleRegistry<ByteBuf, TcpPlasmoPacket<?>> REGISTRY =
+    public static final SimpleRegistry<ByteBuf, TcpPlasmoPacket<?>> REGISTRY =
             SimpleRegistry.Builder.<ByteBuf, TcpPlasmoPacket<?>>createSimple()
                     .codec((buf, packet) -> packet.decode(buf), (buf, packet) -> packet.encode(buf))
                     .idCodec(ByteBuf::readByte, ByteBuf::writeByte) // Plasmo index starts at 0

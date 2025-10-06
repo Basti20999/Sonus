@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.plasmo.protocol.udp;
 
 import dev.minceraft.sonus.common.protocol.registry.SimpleRegistry;
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.CustomPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.clientbound.SelfAudioInfoPlasmoPacket;
@@ -12,9 +13,18 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class UdpPlasmoRegistry {
 
-    public static SimpleRegistry<ByteBuf, UdpPlasmoPacket<?>> REGISTRY =
+    public static final SimpleRegistry<ByteBuf, UdpPlasmoPacket<?>> REGISTRY =
             SimpleRegistry.Builder.<ByteBuf, UdpPlasmoPacket<?>>createSimple()
-                    .codec((buf, packet) -> packet.decode(buf), (buf, packet) -> packet.encode(buf))
+                    .codec((buf, packet) -> {
+                        packet.setSecret(DataTypeUtil.readUniqueId(buf));
+                        packet.setTimestamp(buf.readLong());
+
+                        packet.decode(buf);
+                    }, (buf, packet) -> {
+                        DataTypeUtil.writeUniqueId(buf, packet.getSecret());
+                        buf.writeLong(packet.getTimestamp());
+                        packet.encode(buf);
+                    })
                     .idCodec(ByteBuf::readByte, ByteBuf::writeByte)
                     .register(0x01, PingPlasmoPacket.class, PingPlasmoPacket::new)
                     .register(0x02, PlayerAudioPlasmoPacket.class, PlayerAudioPlasmoPacket::new)

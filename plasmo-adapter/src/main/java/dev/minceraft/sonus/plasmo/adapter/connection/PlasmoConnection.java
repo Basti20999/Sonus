@@ -1,0 +1,71 @@
+package dev.minceraft.sonus.plasmo.adapter.connection;
+
+import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
+import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
+import dev.minceraft.sonus.plasmo.adapter.pipeline.PlasmoUdpContext;
+import dev.minceraft.sonus.plasmo.protocol.AbstractPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.PlasmoPmChannels;
+import dev.minceraft.sonus.plasmo.protocol.cipher.ICipher;
+import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPacketRegistry;
+import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.udp.UdpPlasmoPacket;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
+import java.net.InetSocketAddress;
+import java.util.UUID;
+
+public class PlasmoConnection {
+
+    private final PlasmoAdapter adapter;
+    private final ISonusPlayer player;
+    private final UUID secret = UUID.randomUUID();
+    private ICipher cipher;
+    private InetSocketAddress remoteAddress;
+
+    public PlasmoConnection(PlasmoAdapter adapter, ISonusPlayer player) {
+        this.adapter = adapter;
+        this.player = player;
+    }
+
+    public ICipher getCipher() {
+        return this.cipher;
+    }
+
+    public void sendPacket(AbstractPlasmoPacket<?> packet) {
+        if (packet instanceof UdpPlasmoPacket<?> voicePacket) {
+            sendUdpPacket(voicePacket);
+        } else if (packet instanceof TcpPlasmoPacket<?> metaPacket) {
+            sendTcpPacket(metaPacket);
+        } else {
+            throw new IllegalArgumentException("Unsupported packet type: " + packet.getClass().getName());
+        }
+    }
+
+    private void sendUdpPacket(UdpPlasmoPacket<?> packet) {
+        if (this.remoteAddress == null) {
+            throw new IllegalStateException("Cannot send UDP packet before remote address is set.");
+        }
+        WrappedUdpPipelineData payload = new WrappedUdpPipelineData(
+                PlasmoUdpContext.newInstance(this.remoteAddress, this),
+                this.adapter.getProtocolAdapter().getPlasmoCodec(),
+                packet
+        );
+        this.adapter.getService().getUdpServer().sendPacket(payload);
+    }
+
+    private void sendTcpPacket(TcpPlasmoPacket<?> packet) {
+        ByteBuf buffer = Unpooled.buffer();
+        try {
+            TcpPacketRegistry.REGISTRY.write(buffer, packet);
+            this.player.sendPluginMessage(PlasmoPmChannels.CHANNEL, buffer);
+        } finally {
+            buffer.release();
+        }
+    }
+
+    public UUID getSecret() {
+        return this.secret;
+    }
+}

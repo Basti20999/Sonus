@@ -23,4 +23,6 @@ public interface ISonusService {
     ISonusScheduler getScheduler();
 
     ISonusRoomManager getRoomManager();
+
+    IPlayerManager getPlayerManager();
 }

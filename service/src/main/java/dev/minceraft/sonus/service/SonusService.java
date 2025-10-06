@@ -66,10 +66,6 @@ public final class SonusService implements ISonusService {
         return this.platform;
     }
 
-    public PlayerManager getPlayerManager() {
-        return this.players;
-    }
-
     public MetaDecoder getMetaDecoder() {
         return this.metaDecoder;
     }
@@ -115,5 +111,10 @@ public final class SonusService implements ISonusService {
     @Override
     public ISonusRoomManager getRoomManager() {
         return this.roomManager;
+    }
+
+    @Override
+    public PlayerManager getPlayerManager() {
+        return this.players;
     }
 }
