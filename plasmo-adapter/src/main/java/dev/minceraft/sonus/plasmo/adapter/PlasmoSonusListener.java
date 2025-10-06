@@ -22,7 +22,7 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
     public void onPlayerSwitchBackend(UUID playerId) {
         PlasmoConnection connection = this.adapter.getSessionManager().createConnection(playerId);
         if (connection == null) {
-            LOGGER.warn("Player '{}' switched Server, but this player is not kown!", playerId);
+            LOGGER.warn("Player '{}' switched Server, but this player is not known!", playerId);
             return;
         }
         PlayerInfoRequestPacket packet = new PlayerInfoRequestPacket();

@@ -1,3 +1,6 @@
+plugins {
+    alias(libs.plugins.gradleup.shadow)
+}
 dependencies {
     api(projects.protocol)
     api(libs.speex4j)
@@ -19,5 +22,16 @@ dependencies {
         runtimeOnly(variantOf(it) { classifier("osx-aarch_64") })
     }
 
-    api(projects.svcAdapter)
+    implementation(projects.svcAdapter)
+    implementation(projects.plasmoAdapter)
+}
+
+tasks {
+    assemble {
+        dependsOn(shadowJar)
+    }
+    shadowJar {
+        mergeServiceFiles()
+        archiveBaseName = rootProject.name
+    }
 }

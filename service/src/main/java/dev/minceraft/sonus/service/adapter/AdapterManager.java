@@ -7,11 +7,15 @@ import dev.minceraft.sonus.service.SonusService;
 import net.kyori.adventure.util.Services;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
 @NullMarked
 public final class AdapterManager {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private final SonusService service;
     private final Set<SonusAdapter> adapters = Services.services(SonusAdapter.class);
@@ -22,10 +26,16 @@ public final class AdapterManager {
     }
 
     public void init() {
+        LOGGER.info("Try to init {} adapters", this.adapters.size());
         for (SonusAdapter adapter : this.adapters) {
-            adapter.init(service);
-            VoiceProtocolAdapter proto = adapter.getProtocolAdapter();
-            this.adaptersByMagic[proto.getMagicByte() & 0xFF] = proto;
+            try {
+                LOGGER.info("Init {}", adapter.getClass().getSimpleName());
+                adapter.init(this.service);
+                VoiceProtocolAdapter proto = adapter.getProtocolAdapter();
+                this.adaptersByMagic[proto.getMagicByte() & 0xFF] = proto;
+            } catch (Throwable throwable) {
+                LOGGER.warn("Failed to initialize {}", adapter.getClass().getSimpleName(), throwable);
+            }
         }
     }
 
