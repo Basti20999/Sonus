@@ -22,15 +22,19 @@ public abstract class AbstractMagicUdpCodec<T> {
     public AbstractMagicUdpCodec(VoiceProtocolAdapter adapter, byte magicByte, Class<T> packetClass) {
         this.adapter = adapter;
         this.magicByte = magicByte;
-        this.magicByteBuf = Unpooled.wrappedBuffer(new byte[]{magicByte});
+        this.magicByteBuf = this.allocateMagicBuffer();
         this.packetClass = packetClass;
     }
 
     public AbstractMagicUdpCodec(VoiceProtocolAdapter adapter, byte magicByte, TypeToken<T> packetTypeToken) {
         this.adapter = adapter;
         this.magicByte = magicByte;
-        this.magicByteBuf = Unpooled.wrappedBuffer(new byte[]{magicByte});
+        this.magicByteBuf = this.allocateMagicBuffer();
         this.packetClass = TypeUtil.resolveType(packetTypeToken);
+    }
+
+    protected ByteBuf allocateMagicBuffer() {
+        return Unpooled.wrappedBuffer(new byte[]{this.magicByte});
     }
 
     @Override

@@ -26,7 +26,7 @@ public class PlayerInfoPacket extends PlayerStatePacket<PlayerInfoPacket> {
         super.encode(buf);
         Utf8String.writeUnsignedShort(buf, this.minecraftVersion);
         Utf8String.writeUnsignedShort(buf, this.plasmoVersion);
-        DataTypeUtil.writeIntFramedByteArray(buf, this.publicKey);
+        DataTypeUtil.INT.writeByteArray(buf, this.publicKey);
     }
 
     @Override
@@ -34,7 +34,7 @@ public class PlayerInfoPacket extends PlayerStatePacket<PlayerInfoPacket> {
         super.decode(buf);
         this.minecraftVersion = Utf8String.readUnsignedShort(buf);
         this.plasmoVersion = Utf8String.readUnsignedShort(buf);
-        this.publicKey = DataTypeUtil.readIntFramedByteArray(buf);
+        this.publicKey = DataTypeUtil.INT.readByteArray(buf);
     }
 
     @Override

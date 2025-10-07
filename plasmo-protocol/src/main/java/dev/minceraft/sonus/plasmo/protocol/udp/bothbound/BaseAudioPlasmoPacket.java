@@ -21,13 +21,13 @@ public abstract class BaseAudioPlasmoPacket<T extends BaseAudioPlasmoPacket<T>> 
     @Override
     public void encode(ByteBuf buf) {
         buf.writeLong(this.sequenceNumber);
-        DataTypeUtil.writeIntFramedByteArray(buf, this.audioData);
+        DataTypeUtil.INT.writeByteArray(buf, this.audioData);
     }
 
     @Override
     public void decode(ByteBuf buf) {
         this.sequenceNumber = buf.readLong();
-        this.audioData = DataTypeUtil.readIntFramedByteArray(buf);
+        this.audioData = DataTypeUtil.INT.readByteArray(buf);
     }
 
     @Override

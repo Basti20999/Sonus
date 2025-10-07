@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class PlasmoSonusListener implements ISonusServiceEvents {
 
@@ -25,8 +26,11 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
             LOGGER.warn("Player '{}' switched Server, but this player is not known!", playerId);
             return;
         }
-        PlayerInfoRequestPacket packet = new PlayerInfoRequestPacket();
-        connection.sendPacket(packet);
+
+        this.adapter.getService().getScheduler().schedule(() -> { // TODO: Remove this delay
+            PlayerInfoRequestPacket packet = new PlayerInfoRequestPacket();
+            connection.sendPacket(packet);
+        }, 1, TimeUnit.SECONDS);
     }
 
     @Override

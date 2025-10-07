@@ -40,13 +40,12 @@ public class Utf8String {
     }
 
     public static String readUnsignedShort(ByteBuf buf) {
-        int length = buf.readUnsignedShort();
-        return read(buf, length, 32767);
+        return readUnsignedShort(buf, DEFAULT_MAX_STRING_SIZE);
     }
 
     public static String readUnsignedShort(ByteBuf buf, int limit) {
         int length = buf.readUnsignedShort();
-        return read(buf, length, limit);
+        return read(buf, limit, length);
     }
 
     private static String read(ByteBuf buf, int cap, int length) {

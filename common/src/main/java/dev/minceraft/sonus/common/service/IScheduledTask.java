@@ -9,4 +9,6 @@ public interface IScheduledTask {
     boolean cancel(boolean mayInterruptIfRunning);
 
     boolean isCancelled();
+
+    boolean isDone();
 }

@@ -22,10 +22,10 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @NullMarked
-public class DataTypeUtil {
+public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<ByteBuf, Integer> sizeWriter) {
 
-    private DataTypeUtil() {
-    }
+    public static final DataTypeUtil VAR_INT = new DataTypeUtil(VarInt::read, VarInt::write);
+    public static final DataTypeUtil INT = new DataTypeUtil(ByteBuf::readInt, ByteBuf::writeInt);
 
     public static UUID readUniqueId(ByteBuf buf) {
         return new UUID(buf.readLong(), buf.readLong());
@@ -43,74 +43,6 @@ public class DataTypeUtil {
 
     public static void writeKey(ByteBuf buf, Key key) {
         Utf8String.write(buf, key.asMinimalString());
-    }
-
-    public static <K, V> Map<K, V> readMap(ByteBuf buf, BufReader<K> keyReader, BufReader<V> valueReader) {
-        return readMap(buf, keyReader, valueReader, HashMap::new);
-    }
-
-    public static <M extends Map<K, V>, K, V> M readMap(
-            ByteBuf buf,
-            BufReader<K> keyReader,
-            BufReader<V> valueReader,
-            IntFunction<M> mapSupplier
-    ) {
-        int size = VarInt.read(buf);
-        M map = mapSupplier.apply(size);
-        for (int i = 0; i < size; i++) {
-            K key = keyReader.read(buf);
-            V value = valueReader.read(buf);
-            map.put(key, value);
-        }
-        return map;
-    }
-
-    public static <M extends Multimap<K, V>, K, V> M readMultiMap(
-            ByteBuf buf,
-            BufReader<K> keyReader,
-            BufReader<V> valueReader,
-            Supplier<M> mapSupplier
-    ) {
-        Map<K, Collection<V>> read = readMap(buf, keyReader, b -> readCollection(b, valueReader, ArrayList::new), HashMap::new);
-        M map = mapSupplier.get();
-        read.forEach(map::putAll);
-        return map;
-    }
-
-    public static <K, V> void writeMap(ByteBuf buf, Map<K, V> map, BufWriter<K> keyWriter, BufWriter<V> valueWriter) {
-        VarInt.write(buf, map.size());
-        for (Map.Entry<K, V> entry : map.entrySet()) {
-            keyWriter.write(buf, entry.getKey());
-            valueWriter.write(buf, entry.getValue());
-        }
-    }
-
-    public static <K, V> void writeMultiMap(ByteBuf buf, Multimap<K, V> map, BufWriter<K> keyWriter, BufWriter<V> valueWriter) {
-        writeMap(buf, map.asMap(), keyWriter, (b, col) -> writeCollection(b, col, valueWriter));
-    }
-
-    public static <C extends Collection<T>, T> C readCollection(ByteBuf buf, BufReader<T> reader, IntFunction<C> collectionSupplier) {
-        int size = VarInt.read(buf);
-        C collection = collectionSupplier.apply(size);
-        for (int i = 0; i < size; i++) {
-            T item = reader.read(buf);
-            collection.add(item);
-        }
-        return collection;
-    }
-
-    public static <T> void writeCollection(ByteBuf buf, Collection<T> collection, BufWriter<T> writer) {
-        VarInt.write(buf, collection.size());
-        for (T item : collection) {
-            writer.write(buf, item);
-        }
-    }
-
-    public static <T> @Nullable T readIf(ByteBuf buf, Function<ByteBuf, T> reader) {
-        if (buf.readBoolean()) {
-            return reader.apply(buf);
-        }
-        return null;
     }
 
     public static <T> T readIfOrElse(ByteBuf buf, Function<ByteBuf, T> reader, Supplier<T> defaultValue) {
@@ -142,17 +74,83 @@ public class DataTypeUtil {
         }
     }
 
-    public static void writeByteArray(ByteBuf buf, byte[] data) {
-        if (data.length == 0) {
-            VarInt.write(buf, 0);
-        } else {
-            VarInt.write(buf, data.length);
+    public static <T> @Nullable T readIf(ByteBuf buf, Function<ByteBuf, T> reader) {
+        if (buf.readBoolean()) {
+            return reader.apply(buf);
+        }
+        return null;
+    }
+
+    public <K, V> Map<K, V> readMap(ByteBuf buf, BufReader<K> keyReader, BufReader<V> valueReader) {
+        return this.readMap(buf, keyReader, valueReader, HashMap::new);
+    }
+
+    public <M extends Map<K, V>, K, V> M readMap(
+            ByteBuf buf,
+            BufReader<K> keyReader,
+            BufReader<V> valueReader,
+            IntFunction<M> mapSupplier
+    ) {
+        int size = this.sizeReader.apply(buf);
+        M map = mapSupplier.apply(size);
+        for (int i = 0; i < size; i++) {
+            K key = keyReader.read(buf);
+            V value = valueReader.read(buf);
+            map.put(key, value);
+        }
+        return map;
+    }
+
+    public <M extends Multimap<K, V>, K, V> M readMultiMap(
+            ByteBuf buf,
+            BufReader<K> keyReader,
+            BufReader<V> valueReader,
+            Supplier<M> mapSupplier
+    ) {
+        Map<K, Collection<V>> read = this.readMap(buf, keyReader, b -> this.readCollection(b, valueReader, ArrayList::new), HashMap::new);
+        M map = mapSupplier.get();
+        read.forEach(map::putAll);
+        return map;
+    }
+
+    public <K, V> void writeMap(ByteBuf buf, Map<K, V> map, BufWriter<K> keyWriter, BufWriter<V> valueWriter) {
+        this.sizeWriter.accept(buf, map.size());
+        for (Map.Entry<K, V> entry : map.entrySet()) {
+            keyWriter.write(buf, entry.getKey());
+            valueWriter.write(buf, entry.getValue());
+        }
+    }
+
+    public <K, V> void writeMultiMap(ByteBuf buf, Multimap<K, V> map, BufWriter<K> keyWriter, BufWriter<V> valueWriter) {
+        this.writeMap(buf, map.asMap(), keyWriter, (b, col) -> this.writeCollection(b, col, valueWriter));
+    }
+
+    public <C extends Collection<T>, T> C readCollection(ByteBuf buf, BufReader<T> reader, IntFunction<C> collectionSupplier) {
+        int size = this.sizeReader.apply(buf);
+        C collection = collectionSupplier.apply(size);
+        for (int i = 0; i < size; i++) {
+            T item = reader.read(buf);
+            collection.add(item);
+        }
+        return collection;
+    }
+
+    public <T> void writeCollection(ByteBuf buf, Collection<T> collection, BufWriter<T> writer) {
+        this.sizeWriter.accept(buf, collection.size());
+        for (T item : collection) {
+            writer.write(buf, item);
+        }
+    }
+
+    public void writeByteArray(ByteBuf buf, byte[] data) {
+        this.sizeWriter.accept(buf, data.length);
+        if (data.length > 0) {
             buf.writeBytes(data);
         }
     }
 
-    public static byte[] readByteArray(ByteBuf buf) {
-        int length = VarInt.read(buf);
+    public byte[] readByteArray(ByteBuf buf) {
+        int length = this.sizeReader.apply(buf);
         if (length == 0) {
             return new byte[0];
         }
@@ -161,40 +159,27 @@ public class DataTypeUtil {
         return data;
     }
 
-    public static byte[] readIntFramedByteArray(ByteBuf buf) {
-        int read = buf.readInt();
-        byte[] data = new byte[read];
-        buf.readBytes(data);
-        return data;
-    }
-
-    public static void writeIntFramedByteArray(ByteBuf buf, byte[] data) {
-        buf.writeInt(data.length);
-        buf.writeBytes(data);
-    }
-
-
-    public static GameProfile readGameProfile(ByteBuf buf, Function<ByteBuf, String> stringReader) {
+    public GameProfile readGameProfile(ByteBuf buf, Function<ByteBuf, String> stringReader) {
         UUID id = readUniqueId(buf);
         String name = stringReader.apply(buf);
-        List<GameProfile.Property> properties = readCollection(buf, b -> readGameProfileProperty(b, stringReader), ArrayList::new);
+        List<GameProfile.Property> properties = this.readCollection(buf, b -> this.readGameProfileProperty(b, stringReader), ArrayList::new);
         return new GameProfile(id, name, properties);
     }
 
-    public static void writeGameProfile(ByteBuf buf, GameProfile profile, BiConsumer<ByteBuf, String> stringWriter) {
+    public void writeGameProfile(ByteBuf buf, GameProfile profile, BiConsumer<ByteBuf, String> stringWriter) {
         writeUniqueId(buf, profile.uniqueId());
         stringWriter.accept(buf, profile.name());
-        writeCollection(buf, profile.properties(), (b, property) -> writeGameProfileProperty(b, property, stringWriter));
+        this.writeCollection(buf, profile.properties(), (b, property) -> this.writeGameProfileProperty(b, property, stringWriter));
     }
 
-    public static GameProfile.Property readGameProfileProperty(ByteBuf buf, Function<ByteBuf, String> stringReader) {
+    public GameProfile.Property readGameProfileProperty(ByteBuf buf, Function<ByteBuf, String> stringReader) {
         String name = stringReader.apply(buf);
         String value = stringReader.apply(buf);
         String signature = stringReader.apply(buf);
         return new GameProfile.Property(name, value, signature);
     }
 
-    public static void writeGameProfileProperty(ByteBuf buf, GameProfile.Property property, BiConsumer<ByteBuf, String> stringWriter) {
+    public void writeGameProfileProperty(ByteBuf buf, GameProfile.Property property, BiConsumer<ByteBuf, String> stringWriter) {
         stringWriter.accept(buf, property.name());
         stringWriter.accept(buf, property.value());
         stringWriter.accept(buf, property.signature());

@@ -4,8 +4,10 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
+import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.plasmo.adapter.conifg.PlasmoConfig;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
@@ -16,6 +18,7 @@ public class PlasmoAdapter implements SonusAdapter {
     private @MonotonicNonNull PlasmoProtocolAdapter adapter;
     private @MonotonicNonNull PlasmoSessionManager sessionManager;
     private @MonotonicNonNull PlasmoSonusListener serviceListener;
+    private @MonotonicNonNull YamlConfigHolder<PlasmoConfig> config;
 
     @Override
     public void init(ISonusService service) {
@@ -24,6 +27,7 @@ public class PlasmoAdapter implements SonusAdapter {
         this.adapter = new PlasmoProtocolAdapter(this);
         this.sessionManager = new PlasmoSessionManager(this);
         this.serviceListener = new PlasmoSonusListener(this);
+        this.config = new YamlConfigHolder<>(PlasmoConfig.class, this.service.getDataDirectory().resolve("plasmo-config.yml"));
 
         this.service.getEventManager().registerListener(this.serviceListener);
     }
@@ -46,6 +50,10 @@ public class PlasmoAdapter implements SonusAdapter {
     @Override
     public PlasmoProtocolAdapter getProtocolAdapter() {
         return this.adapter;
+    }
+
+    public @MonotonicNonNull YamlConfigHolder<PlasmoConfig> getConfig() {
+        return this.config;
     }
 
     public ISonusService getService() {

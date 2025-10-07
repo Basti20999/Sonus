@@ -2,6 +2,7 @@ package dev.minceraft.sonus.service;
 // Created by booky10 in Sonus (01:08 10.08.2025)
 
 import dev.minceraft.sonus.common.ISonusConfig;
+import dev.minceraft.sonus.common.protocol.codec.OpusCodec;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
@@ -13,6 +14,8 @@ public class SonusConfig implements ISonusConfig {
 
     private InetSocketAddress bind = new InetSocketAddress("0.0.0.0", 9982);
     private InetSocketAddress host = new InetSocketAddress("127.0.0.1", 9982);
+
+    private OpusCodec opusCodec = OpusCodec.VOIP;
     private int mtuSize = 1412;
     private double voiceChatRange = 32.0;
     private boolean allowRecordings = false;
@@ -35,6 +38,11 @@ public class SonusConfig implements ISonusConfig {
     @Override
     public int getMtuSize() {
         return this.mtuSize;
+    }
+
+    @Override
+    public OpusCodec getOpusCodec() {
+        return this.opusCodec;
     }
 
     @Override

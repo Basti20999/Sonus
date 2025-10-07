@@ -22,13 +22,13 @@ public class CustomPlasmoPacket extends UdpPlasmoPacket<CustomPlasmoPacket> {
     @Override
     public void encode(ByteBuf buf) {
         Utf8String.writeUnsignedShort(buf, this.addonId);
-        DataTypeUtil.writeIntFramedByteArray(buf, this.payload);
+        DataTypeUtil.INT.writeByteArray(buf, this.payload);
     }
 
     @Override
     public void decode(ByteBuf buf) {
         this.addonId = Utf8String.readUnsignedShort(buf);
-        this.payload = DataTypeUtil.readIntFramedByteArray(buf);
+        this.payload = DataTypeUtil.INT.readByteArray(buf);
     }
 
     @Override

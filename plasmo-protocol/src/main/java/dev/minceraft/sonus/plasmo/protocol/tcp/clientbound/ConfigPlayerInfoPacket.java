@@ -1,29 +1,29 @@
 package dev.minceraft.sonus.plasmo.protocol.tcp.clientbound;
 
-
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpHandler;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPlasmoPacket;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.Object2BooleanArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @NullMarked
 public class ConfigPlayerInfoPacket<T extends ConfigPlayerInfoPacket<T>> extends TcpPlasmoPacket<T> {
 
-    protected @MonotonicNonNull Object2BooleanMap<String> permissions;
+    protected @MonotonicNonNull Map<String, Boolean> permissions;
 
     @Override
     public void encode(ByteBuf buf) {
-        DataTypeUtil.writeMap(buf, this.permissions, Utf8String::writeUnsignedShort, ByteBuf::writeBoolean);
+        DataTypeUtil.INT.writeMap(buf, this.permissions, Utf8String::writeUnsignedShort, ByteBuf::writeBoolean);
     }
 
     @Override
     public void decode(ByteBuf buf) {
-        this.permissions = DataTypeUtil.readMap(buf, Utf8String::readUnsignedShort, ByteBuf::readBoolean, Object2BooleanArrayMap::new);
+        this.permissions = DataTypeUtil.INT.readMap(buf, Utf8String::readUnsignedShort, ByteBuf::readBoolean, HashMap::new);
     }
 
     @Override
@@ -31,11 +31,11 @@ public class ConfigPlayerInfoPacket<T extends ConfigPlayerInfoPacket<T>> extends
         handler.handleConfigPlayerInfoPacket(this);
     }
 
-    public Object2BooleanMap<String> getPermissions() {
+    public Map<String, Boolean> getPermissions() {
         return this.permissions;
     }
 
-    public void setPermissions(Object2BooleanMap<String> permissions) {
+    public void setPermissions(Map<String, Boolean> permissions) {
         this.permissions = permissions;
     }
 }

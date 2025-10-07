@@ -28,7 +28,7 @@ public class VoiceSourceLine {
         this.icon = Utf8String.readUnsignedShort(buf);
         this.defaultVolume = buf.readDouble();
         this.weight = buf.readInt();
-        this.players = DataTypeUtil.readIfOrElse(buf, b -> DataTypeUtil.readCollection(b, _b -> DataTypeUtil.readGameProfile(_b, Utf8String::readUnsignedShort), HashSet::new), HashSet::new);
+        this.players = DataTypeUtil.readIfOrElse(buf, b -> DataTypeUtil.INT.readCollection(b, _b -> DataTypeUtil.INT.readGameProfile(_b, Utf8String::readUnsignedShort), HashSet::new), HashSet::new);
     }
 
     public VoiceSourceLine(String name, String translation, String icon, double defaultVolume, int weight, Set<GameProfile> players) {
@@ -51,8 +51,8 @@ public class VoiceSourceLine {
         Utf8String.writeUnsignedShort(buf, this.icon);
         buf.writeDouble(this.defaultVolume);
         buf.writeInt(this.weight);
-        DataTypeUtil.writeIf(buf, !this.players.isEmpty(), b -> DataTypeUtil.writeCollection(b, this.players,
-                (_b, profile) -> DataTypeUtil.writeGameProfile(_b, profile, Utf8String::writeUnsignedShort)));
+        DataTypeUtil.writeIf(buf, !this.players.isEmpty(), b -> DataTypeUtil.INT.writeCollection(b, this.players,
+                (_b, profile) -> DataTypeUtil.INT.writeGameProfile(_b, profile, Utf8String::writeUnsignedShort)));
     }
 
     public UUID getId() {

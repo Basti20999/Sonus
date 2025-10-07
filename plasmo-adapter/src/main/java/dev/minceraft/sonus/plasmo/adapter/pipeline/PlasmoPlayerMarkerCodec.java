@@ -19,15 +19,16 @@ public class PlasmoPlayerMarkerCodec extends PlasmoUdpPipelineNode<UdpPlasmoPack
 
     @Override
     public void encode(ChannelHandlerContext ctx, UdpPlasmoPacket<?> msg, List<Object> out, PlasmoUdpContext adapterCtx) throws Exception {
-        adapterCtx.connection = this.adapter.getSessionManager().getConnection(msg.getSecret());
-        if (adapterCtx.connection == null) {
-            return;
-        }
         out.add(msg);
     }
 
     @Override
     public void decode(ChannelHandlerContext ctx, UdpPlasmoPacket<?> msg, List<Object> out, PlasmoUdpContext adapterCtx) throws Exception {
+        adapterCtx.connection = this.adapter.getSessionManager().getConnectionBySecret(msg.getSecret());
+        if (adapterCtx.connection == null) {
+            return;
+        }
+        adapterCtx.connection.setRemoteAddress(adapterCtx.remoteAddress);
         out.add(msg);
     }
 }

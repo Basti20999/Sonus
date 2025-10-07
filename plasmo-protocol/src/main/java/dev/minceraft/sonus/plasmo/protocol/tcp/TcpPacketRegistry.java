@@ -37,12 +37,14 @@ public final class TcpPacketRegistry {
     public static final SimpleRegistry<ByteBuf, TcpPlasmoPacket<?>> REGISTRY =
             SimpleRegistry.Builder.<ByteBuf, TcpPlasmoPacket<?>>createSimple()
                     .codec((buf, packet) -> packet.decode(buf), (buf, packet) -> packet.encode(buf))
-                    .idCodec(ByteBuf::readByte, ByteBuf::writeByte) // Plasmo index starts at 0
+                    .idCodec(ByteBuf::readByte, ByteBuf::writeByte)
+                    .idOffset(1) // Plasmo index starts at 1
                     .register(ConnectionPacket.class, ConnectionPacket::new)
                     .register(PlayerInfoRequestPacket.class, PlayerInfoRequestPacket::new)
                     .register(ConfigPacket.class, ConfigPacket::new)
                     .register(ConfigPlayerInfoPacket.class, (ConfigPlayerInfoPacket::new))
                     .register(LanguageRequestPacket.class, LanguageRequestPacket::new)
+
                     .register(LanguagePacket.class, LanguagePacket::new)
                     .register(PlayerListPacket.class, PlayerListPacket::new)
                     .register(PlayerInfoUpdatePacket.class, PlayerInfoUpdatePacket::new)
@@ -51,18 +53,22 @@ public final class TcpPacketRegistry {
                     .register(PlayerStatePacket.class, PlayerStatePacket::new)
                     .register(PlayerAudioEndPacket.class, PlayerAudioEndPacket::new)
                     .register(PlayerActivationDistancesPacket.class, PlayerActivationDistancesPacket::new)
+
                     .register(DistanceVisualizePacket.class, DistanceVisualizePacket::new)
                     .register(SourceInfoRequestPacket.class, SourceInfoRequestPacket::new)
                     .register(SourceInfoPacket.class, SourceInfoPacket::new)
                     .register(SelfSourceInfoPacket.class, SelfSourceInfoPacket::new)
                     .register(SourceAudioEndPacket.class, SourceAudioEndPacket::new)
+
                     .register(ActivationRegisterPacket.class, ActivationRegisterPacket::new)
                     .register(ActivationUnregisterPacket.class, ActivationUnregisterPacket::new)
+
                     .register(SourceLineRegisterPacket.class, SourceLineRegisterPacket::new)
                     .register(SourceLineUnregisterPacket.class, SourceLineUnregisterPacket::new)
                     .register(SourceLinePlayerAddPacket.class, SourceLinePlayerAddPacket::new)
                     .register(SourceLinePlayerRemovePacket.class, SourceLinePlayerRemovePacket::new)
                     .register(SourceLinePlayersListPacket.class, SourceLinePlayersListPacket::new)
+
                     .register(AnimatedActionBarPacket.class, AnimatedActionBarPacket::new)
                     .build();
 }

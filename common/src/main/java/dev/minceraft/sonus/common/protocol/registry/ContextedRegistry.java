@@ -3,6 +3,8 @@ package dev.minceraft.sonus.common.protocol.registry;
 
 import dev.minceraft.sonus.common.protocol.util.ObjIntObjectConsumer;
 import dev.minceraft.sonus.common.protocol.util.TriConsumer;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -25,16 +27,17 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
     private final Codec<D, T, C> codec;
     private final IdCodec<D, C> idCodec;
 
-    private final List<Supplier<? extends T>> constructors;
+    private final Int2ObjectMap<Supplier<? extends T>> constructors;
     private final Map<Class<? extends T>, Integer> packetIds;
 
     protected ContextedRegistry(Codec<D, T, C> codec, IdCodec<D, C> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idConsumer) {
         this.codec = codec;
         this.idCodec = idCodec;
-        this.constructors = packets.stream().<Supplier<? extends T>>map(Entry::ctor).toList();
+        this.constructors = new Int2ObjectArrayMap<>(packets.size());
         this.packetIds = new IdentityHashMap<>(packets.size());
 
         for (Entry<? extends T> packet : packets) {
+            this.constructors.put(packet.id(), packet.ctor());
             this.packetIds.put(packet.clazz(), packet.id());
             idConsumer.accept(packet.id(), packet.ctor().get());
         }
@@ -56,6 +59,10 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         } catch (NullPointerException exception) {
             throw new IllegalArgumentException("The given packet is not registered: " + packet.getClass(), exception);
         }
+    }
+
+    public <A extends T> int getPacketId(Class<A> clazz) {
+        return this.packetIds.get(clazz);
     }
 
     public static class Builder<D, T extends ProtocolMessage<?>, C, S extends Builder<D, T, C, S>> {
@@ -87,6 +94,15 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         @SuppressWarnings("unchecked")
         protected S getThis() {
             return (S) this;
+        }
+
+        public <Z extends T> S idOffset(int firstId) {
+            if (!this.packets.isEmpty()) {
+                LOGGER.warn("Changed idOffset while already having packets registered");
+            }
+            this.nextId = firstId;
+
+            return this.getThis();
         }
 
         public <Z extends T> S register(Class<Z> clazz, Supplier<Z> ctor) {

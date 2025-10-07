@@ -26,7 +26,7 @@ public class SelfAudioInfoPlasmoPacket extends UdpPlasmoPacket<SelfAudioInfoPlas
     public void encode(ByteBuf buf) {
         DataTypeUtil.writeUniqueId(buf, this.sourceId);
         buf.writeLong(this.sequenceNumber);
-        DataTypeUtil.writeIntFramedByteArray(buf, this.audioData);
+        DataTypeUtil.INT.writeByteArray(buf, this.audioData);
         buf.writeShort(this.distance);
     }
 
@@ -34,7 +34,7 @@ public class SelfAudioInfoPlasmoPacket extends UdpPlasmoPacket<SelfAudioInfoPlas
     public void decode(ByteBuf buf) {
         this.sourceId = DataTypeUtil.readUniqueId(buf);
         this.sequenceNumber = buf.readLong();
-        this.audioData = DataTypeUtil.readIntFramedByteArray(buf);
+        this.audioData = DataTypeUtil.INT.readByteArray(buf);
         this.distance = buf.readShort();
     }
 

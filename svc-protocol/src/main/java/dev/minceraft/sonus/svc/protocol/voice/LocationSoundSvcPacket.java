@@ -22,7 +22,7 @@ public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacke
         DataTypeUtil.writeUniqueId(buf, this.channelId);
         DataTypeUtil.writeUniqueId(buf, this.sender);
         Vec3d.write(buf, this.location);
-        DataTypeUtil.writeByteArray(buf, this.data);
+        DataTypeUtil.VAR_INT.writeByteArray(buf, this.data);
         buf.writeLong(this.sequenceNumber);
         buf.writeFloat(this.distance);
 
@@ -41,7 +41,7 @@ public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacke
         this.channelId = DataTypeUtil.readUniqueId(buf);
         this.sender = DataTypeUtil.readUniqueId(buf);
         this.location = Vec3d.read(buf); // local field
-        this.data = DataTypeUtil.readByteArray(buf);
+        this.data = DataTypeUtil.VAR_INT.readByteArray(buf);
         this.sequenceNumber = buf.readLong();
         this.distance = buf.readFloat(); // local field
 

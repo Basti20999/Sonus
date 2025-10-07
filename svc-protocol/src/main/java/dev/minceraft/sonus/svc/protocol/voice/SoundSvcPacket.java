@@ -36,7 +36,7 @@ public abstract class SoundSvcPacket<T extends SoundSvcPacket<?>> extends SvcVoi
     public void encode(ByteBuf buf) {
         DataTypeUtil.writeUniqueId(buf, this.channelId);
         DataTypeUtil.writeUniqueId(buf, this.sender);
-        DataTypeUtil.writeByteArray(buf,this.data);
+        DataTypeUtil.VAR_INT.writeByteArray(buf,this.data);
         buf.writeLong(this.sequenceNumber);
 
         byte data = 0b0;
@@ -53,7 +53,7 @@ public abstract class SoundSvcPacket<T extends SoundSvcPacket<?>> extends SvcVoi
     public void decode(ByteBuf buf) {
         this.channelId = DataTypeUtil.readUniqueId(buf);
         this.sender = DataTypeUtil.readUniqueId(buf);
-        this.data = DataTypeUtil.readByteArray(buf);
+        this.data = DataTypeUtil.VAR_INT.readByteArray(buf);
         this.sequenceNumber = buf.readLong();
 
         byte data = buf.readByte();

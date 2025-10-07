@@ -50,5 +50,10 @@ public class SonusScheduler implements ISonusScheduler {
         public boolean isCancelled() {
             return this.task.isCancelled();
         }
+
+        @Override
+        public boolean isDone() {
+            return this.task.isDone();
+        }
     }
 }

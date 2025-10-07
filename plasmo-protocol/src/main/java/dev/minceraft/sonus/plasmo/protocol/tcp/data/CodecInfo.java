@@ -5,6 +5,7 @@ import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import io.netty.buffer.ByteBuf;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class CodecInfo {
@@ -14,7 +15,7 @@ public class CodecInfo {
 
     public CodecInfo(ByteBuf buf) {
         this.name = Utf8String.readUnsignedShort(buf);
-        this.params = DataTypeUtil.readMap(buf, Utf8String::readUnsignedShort, Utf8String::readUnsignedShort);
+        this.params = DataTypeUtil.INT.readMap(buf, Utf8String::readUnsignedShort, Utf8String::readUnsignedShort, HashMap::new);
     }
 
     public CodecInfo(String name, Map<String, String> params) {
@@ -24,7 +25,7 @@ public class CodecInfo {
 
     public void write(ByteBuf buf) {
         Utf8String.writeUnsignedShort(buf, this.name);
-        DataTypeUtil.writeMap(buf, this.params, Utf8String::writeUnsignedShort, Utf8String::writeUnsignedShort);
+        DataTypeUtil.INT.writeMap(buf, this.params, Utf8String::writeUnsignedShort, Utf8String::writeUnsignedShort);
     }
 
     public String getName() {

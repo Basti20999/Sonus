@@ -17,14 +17,14 @@ public class MicSvcPacket extends SvcVoicePacket<MicSvcPacket> {
 
     @Override
     public void encode(ByteBuf buf) {
-        DataTypeUtil.writeByteArray(buf, this.data);
+        DataTypeUtil.VAR_INT.writeByteArray(buf, this.data);
         buf.writeLong(this.sequenceNumber);
         buf.writeBoolean(this.whispering);
     }
 
     @Override
     public void decode(ByteBuf buf) {
-        this.data = DataTypeUtil.readByteArray(buf);
+        this.data = DataTypeUtil.VAR_INT.readByteArray(buf);
         this.sequenceNumber = buf.readLong();
         this.whispering = buf.readBoolean();
     }

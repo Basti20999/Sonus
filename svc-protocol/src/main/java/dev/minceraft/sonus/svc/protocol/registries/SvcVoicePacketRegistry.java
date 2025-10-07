@@ -23,7 +23,8 @@ public final class SvcVoicePacketRegistry {
     public static final SimpleRegistry<ByteBuf, SvcVoicePacket<?>> REGISTRY =
             SimpleRegistry.Builder.<ByteBuf, SvcVoicePacket<?>>createSimple()
                     .codec((buf, packet) -> packet.decode(buf), (buf, packet) -> packet.encode(buf))
-                    .idCodec(buf -> VarInt.read(buf) - 1, (buf, id) -> VarInt.write(buf, id + 1)) // Svc index starts at 1
+                    .idCodec(VarInt::read, VarInt::write)
+                    .idOffset(1)  // Svc index starts at 1
                     .register(MicSvcPacket.class, MicSvcPacket::new)
                     .register(PlayerSoundSvcPacket.class, PlayerSoundSvcPacket::new)
                     .register(GroupSoundSvcPacket.class, GroupSoundSvcPacket::new)

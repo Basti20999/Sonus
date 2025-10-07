@@ -1,14 +1,14 @@
 package dev.minceraft.sonus.plasmo.protocol.tcp.data;
 
-import com.google.common.base.Charsets;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class VoiceActivation {
@@ -17,7 +17,7 @@ public class VoiceActivation {
     private final String name;
     private final String translation;
     private final String icon;
-    private final IntList distances;
+    private final List<Integer> distances;
     private final int defaultDistance;
     private final boolean proximity;
     private final boolean transitive;
@@ -30,7 +30,7 @@ public class VoiceActivation {
         this.id = generateId(this.name);
         this.translation = Utf8String.readUnsignedShort(buf);
         this.icon = Utf8String.readUnsignedShort(buf);
-        this.distances = DataTypeUtil.readCollection(buf, ByteBuf::readInt, IntArrayList::new);
+        this.distances = DataTypeUtil.INT.readCollection(buf, ByteBuf::readInt, ArrayList::new);
         this.defaultDistance = buf.readInt();
         this.proximity = buf.readBoolean();
         this.stereoSupported = buf.readBoolean();
@@ -40,7 +40,7 @@ public class VoiceActivation {
     }
 
     public VoiceActivation(
-            String name, String translation, String icon, IntList distances,
+            String name, String translation, String icon, List<Integer> distances,
             int defaultDistance, boolean proximity, boolean stereoSupported, boolean transitive,
             @Nullable CodecInfo encoderInfo, int weight) {
         this.id = generateId(name);
@@ -57,14 +57,14 @@ public class VoiceActivation {
     }
 
     public static UUID generateId(@NotNull String name) {
-        return UUID.nameUUIDFromBytes((name + "_activation").getBytes(Charsets.UTF_8));
+        return UUID.nameUUIDFromBytes((name + "_activation").getBytes(StandardCharsets.UTF_8));
     }
 
     public void write(ByteBuf buf) {
         Utf8String.writeUnsignedShort(buf, this.name);
         Utf8String.writeUnsignedShort(buf, this.translation);
         Utf8String.writeUnsignedShort(buf, this.icon);
-        DataTypeUtil.writeCollection(buf, this.distances, ByteBuf::writeInt);
+        DataTypeUtil.INT.writeCollection(buf, this.distances, ByteBuf::writeInt);
         buf.writeInt(this.defaultDistance);
         buf.writeBoolean(this.proximity);
         buf.writeBoolean(this.stereoSupported);
@@ -89,7 +89,7 @@ public class VoiceActivation {
         return this.icon;
     }
 
-    public IntList getDistances() {
+    public List<Integer> getDistances() {
         return this.distances;
     }
 

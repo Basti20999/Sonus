@@ -21,12 +21,12 @@ public class PlayerActivationDistancesPacket extends TcpPlasmoPacket<PlayerActiv
 
     @Override
     public void encode(ByteBuf buf) {
-        DataTypeUtil.writeMap(buf, this.distances, DataTypeUtil::writeUniqueId, ByteBuf::writeInt);
+        DataTypeUtil.INT.writeMap(buf, this.distances, DataTypeUtil::writeUniqueId, ByteBuf::writeInt);
     }
 
     @Override
     public void decode(ByteBuf buf) {
-        this.distances = DataTypeUtil.readMap(buf, DataTypeUtil::readUniqueId, ByteBuf::readInt, Object2IntArrayMap::new);
+        this.distances = DataTypeUtil.INT.readMap(buf, DataTypeUtil::readUniqueId, ByteBuf::readInt, Object2IntArrayMap::new);
     }
 
     @Override

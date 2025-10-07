@@ -6,14 +6,19 @@ import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
 import dev.minceraft.sonus.plasmo.adapter.pipeline.PlasmoUdpContext;
 import dev.minceraft.sonus.plasmo.protocol.AbstractPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.PlasmoPmChannels;
+import dev.minceraft.sonus.plasmo.protocol.cipher.CipherAes;
 import dev.minceraft.sonus.plasmo.protocol.cipher.ICipher;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPacketRegistry;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceActivation;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpPlasmoPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 import java.net.InetSocketAddress;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class PlasmoConnection {
@@ -21,12 +26,35 @@ public class PlasmoConnection {
     private final PlasmoAdapter adapter;
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
+    private final MetaHandler metaHandler;
+    private final VoiceHandler voiceHandler;
+    private final Set<VoiceActivation> voiceActivations = new HashSet<>();
+    private long lastKeepAlive;
+    private boolean connected;
     private ICipher cipher;
     private InetSocketAddress remoteAddress;
 
     public PlasmoConnection(PlasmoAdapter adapter, ISonusPlayer player) {
         this.adapter = adapter;
         this.player = player;
+        this.metaHandler = new MetaHandler(adapter, this);
+        this.voiceHandler = new VoiceHandler(adapter, this);
+
+        int voiceChatRange = (int) this.adapter.getService().getConfig().getVoiceChatRange();
+        VoiceActivation defaultActivation = new VoiceActivation(
+                "proximity",
+                "pv.activation.proximity",
+                "plasmovoice:textures/icons/microphone.png",
+                List.of(voiceChatRange),
+                voiceChatRange,
+                true, // Allow proximity
+                false, // Force mono audio
+                true, // Allow other activations
+                this.adapter.getProtocolAdapter().getCodecInfo(),
+                1 // weight
+        );
+
+        voiceActivations.add(defaultActivation);
     }
 
     public ICipher getCipher() {
@@ -47,6 +75,8 @@ public class PlasmoConnection {
         if (this.remoteAddress == null) {
             throw new IllegalStateException("Cannot send UDP packet before remote address is set.");
         }
+        packet.setSecret(this.getSecret());
+        packet.setTimestamp(System.currentTimeMillis());
         WrappedUdpPipelineData payload = new WrappedUdpPipelineData(
                 PlasmoUdpContext.newInstance(this.remoteAddress, this),
                 this.adapter.getProtocolAdapter().getPlasmoCodec(),
@@ -65,7 +95,51 @@ public class PlasmoConnection {
         }
     }
 
+    public ISonusPlayer getPlayer() {
+        return this.player;
+    }
+
     public UUID getSecret() {
         return this.secret;
+    }
+
+    public MetaHandler getMetaHandler() {
+        return this.metaHandler;
+    }
+
+    public VoiceHandler getVoiceHandler() {
+        return this.voiceHandler;
+    }
+
+    public Set<VoiceActivation> getVoiceActivations() {
+        return this.voiceActivations;
+    }
+
+    public long getLastKeepAlive() {
+        return this.lastKeepAlive;
+    }
+
+    public void setLastKeepAlive(long keepAlive) {
+        this.lastKeepAlive = keepAlive;
+    }
+
+    public void initCipher(byte[] publicKey) {
+        this.cipher = CipherAes.createFromRsaHandshake(publicKey);
+    }
+
+    public boolean isConnected() {
+        return this.connected;
+    }
+
+    public void setConnected(boolean connected) {
+        this.connected = connected;
+    }
+
+    public InetSocketAddress getRemoteAddress() {
+        return this.remoteAddress;
+    }
+
+    public void setRemoteAddress(InetSocketAddress remoteAddress) {
+        this.remoteAddress = remoteAddress;
     }
 }

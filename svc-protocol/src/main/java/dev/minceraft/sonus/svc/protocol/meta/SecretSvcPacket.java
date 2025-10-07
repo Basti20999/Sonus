@@ -2,9 +2,9 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 
 import com.google.gson.JsonObject;
+import dev.minceraft.sonus.common.protocol.codec.OpusCodec;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
-import dev.minceraft.sonus.svc.protocol.data.Codec;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -18,7 +18,7 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
     private @MonotonicNonNull UUID secret;
     private int serverPort;
     private @MonotonicNonNull UUID playerId;
-    private @MonotonicNonNull Codec codec;
+    private @MonotonicNonNull OpusCodec codec;
     private int mtuSize;
     private double voiceChatDistance;
     private int keepAlive;
@@ -49,7 +49,7 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
         this.secret = DataTypeUtil.readUniqueId(buf);
         this.serverPort = buf.readInt();
         this.playerId = DataTypeUtil.readUniqueId(buf);
-        this.codec = Codec.values()[buf.readByte()];
+        this.codec = OpusCodec.values()[buf.readByte()];
         this.mtuSize = buf.readInt();
         this.voiceChatDistance = buf.readDouble();
         this.keepAlive = buf.readInt();
@@ -77,7 +77,7 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
         this.secret = UUID.fromString(json.get("secret").getAsString());
         this.serverPort = json.get("serverPort").getAsInt();
         this.playerId = UUID.fromString(json.get("playerId").getAsString());
-        this.codec = Codec.valueOf(json.get("codec").getAsString());
+        this.codec = OpusCodec.valueOf(json.get("codec").getAsString());
         this.mtuSize = json.get("mtuSize").getAsInt();
         this.voiceChatDistance = json.get("voiceChatDistance").getAsDouble();
         this.keepAlive = json.get("keepAlive").getAsInt();
@@ -115,11 +115,11 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
         this.playerId = playerId;
     }
 
-    public Codec getCodec() {
+    public OpusCodec getCodec() {
         return this.codec;
     }
 
-    public void setCodec(Codec codec) {
+    public void setCodec(OpusCodec codec) {
         this.codec = codec;
     }
 

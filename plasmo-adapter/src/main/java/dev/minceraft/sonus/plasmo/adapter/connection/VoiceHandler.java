@@ -1,0 +1,67 @@
+package dev.minceraft.sonus.plasmo.adapter.connection;
+
+import dev.minceraft.sonus.common.SonusConstants;
+import dev.minceraft.sonus.common.audio.SonusAudio;
+import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.ConfigPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.CaptureInfo;
+import dev.minceraft.sonus.plasmo.protocol.udp.UdpHandler;
+import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.BaseAudioPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.CustomPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.udp.serverbound.PlayerAudioPlasmoPacket;
+
+import java.util.Map;
+import java.util.Set;
+
+public class VoiceHandler implements UdpHandler {
+
+    private final PlasmoAdapter adapter;
+    private final PlasmoConnection connection;
+
+    public VoiceHandler(PlasmoAdapter adapter, PlasmoConnection connection) {
+        this.adapter = adapter;
+        this.connection = connection;
+    }
+
+    @Override
+    public void handlePlayerAudioPacket(PlayerAudioPlasmoPacket packet) {
+        this.connection.getPlayer().handleAudioInput(new SonusAudio(packet.getAudioData(), packet.getSequenceNumber()));
+    }
+
+    @Override
+    public void handleBaseAudioPacket(BaseAudioPlasmoPacket packet) {
+
+    }
+
+    @Override
+    public void handleCustomPacket(CustomPlasmoPacket packet) {
+
+    }
+
+    @Override
+    public void handlePingPacket(PingPlasmoPacket packet) {
+        if (!this.connection.isConnected()) { // Init connection
+            ConfigPacket configPacket = new ConfigPacket();
+            configPacket.setPermissions(Map.of());
+            configPacket.setServerId(this.adapter.getConfig().getDelegate().serverId);
+
+
+            CaptureInfo captureInfo = new CaptureInfo(
+                    SonusConstants.SAMPLE_RATE,
+                    this.adapter.getService().getConfig().getMtuSize(),
+                    this.adapter.getProtocolAdapter().getCodecInfo()
+            );
+            configPacket.setCaptureInfo(captureInfo);
+
+            configPacket.setEncryptionInfo(this.connection.getCipher().getEncryptionInfo());
+            configPacket.setSourceLines(Set.of());
+            configPacket.setActivations(this.connection.getVoiceActivations());
+
+            this.connection.sendPacket(configPacket);
+
+            this.connection.setConnected(true);
+            this.connection.getPlayer().handleConnect();
+        }
+    }
+}

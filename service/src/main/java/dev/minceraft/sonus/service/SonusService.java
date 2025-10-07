@@ -84,6 +84,7 @@ public final class SonusService implements ISonusService {
         return this.config.getDelegate();
     }
 
+    @Override
     public YamlConfigHolder<SonusConfig> getConfigHolder() {
         return this.config;
     }

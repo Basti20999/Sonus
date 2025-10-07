@@ -19,7 +19,7 @@ public class PlayerSoundSvcPacket extends SoundSvcPacket<PlayerSoundSvcPacket> {
         // what the fuck happened here with the field order? We can't use proper inheritance.
         DataTypeUtil.writeUniqueId(buf, this.channelId);
         DataTypeUtil.writeUniqueId(buf, this.sender);
-        DataTypeUtil.writeByteArray(buf, this.data);
+        DataTypeUtil.VAR_INT.writeByteArray(buf, this.data);
         buf.writeLong(this.sequenceNumber);
         buf.writeFloat(this.distance);
 
@@ -40,7 +40,7 @@ public class PlayerSoundSvcPacket extends SoundSvcPacket<PlayerSoundSvcPacket> {
     public void decode(ByteBuf buf) {
         this.channelId = DataTypeUtil.readUniqueId(buf);
         this.sender = DataTypeUtil.readUniqueId(buf);
-        this.data = DataTypeUtil.readByteArray(buf);
+        this.data = DataTypeUtil.VAR_INT.readByteArray(buf);
         this.sequenceNumber = buf.readLong();
         this.distance = buf.readFloat();
 

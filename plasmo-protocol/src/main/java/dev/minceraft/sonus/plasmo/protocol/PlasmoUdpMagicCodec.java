@@ -6,6 +6,7 @@ import dev.minceraft.sonus.common.protocol.udp.AbstractMagicUdpCodec;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpPlasmoPacket;
 import io.leangen.geantyref.TypeToken;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 public class PlasmoUdpMagicCodec extends AbstractMagicUdpCodec<UdpPlasmoPacket<?>> {
 
@@ -15,6 +16,13 @@ public class PlasmoUdpMagicCodec extends AbstractMagicUdpCodec<UdpPlasmoPacket<?
 
     public PlasmoUdpMagicCodec(VoiceProtocolAdapter adapter) {
         super(adapter, MAGIC_BYTE, new TypeToken<UdpPlasmoPacket<?>>() {});
+    }
+
+    @Override
+    protected ByteBuf allocateMagicBuffer() {
+        ByteBuf buffer = Unpooled.buffer(4, 4);
+        buffer.writeInt(MAGIC_NUMBER);
+        return buffer;
     }
 
     @Override

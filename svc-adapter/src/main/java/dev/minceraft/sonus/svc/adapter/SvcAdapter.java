@@ -6,10 +6,8 @@ import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
-import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
-import dev.minceraft.sonus.svc.adapter.config.SvcConfig;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
 import dev.minceraft.sonus.svc.protocol.voice.GroupSoundSvcPacket;
@@ -25,7 +23,6 @@ public class SvcAdapter implements SonusAdapter {
     private @MonotonicNonNull SvcSonusListener serviceListener;
     private @MonotonicNonNull SvcProtocolAdapter protocolAdapter;
     private @MonotonicNonNull ISonusService service;
-    private @MonotonicNonNull YamlConfigHolder<SvcConfig> config;
 
     @Override
     public void init(ISonusService service) {
@@ -33,7 +30,6 @@ public class SvcAdapter implements SonusAdapter {
         this.sessionManager = new SvcSessionManager(this);
         this.serviceListener = new SvcSonusListener(this);
         this.protocolAdapter = new SvcProtocolAdapter(this);
-        this.config = new YamlConfigHolder<>(SvcConfig.class, this.service.getDataDirectory().resolve("svc-config.yml"));
 
         this.service.getEventManager().registerListener(this.serviceListener);
 
@@ -90,10 +86,6 @@ public class SvcAdapter implements SonusAdapter {
 
     public ISonusService getService() {
         return this.service;
-    }
-
-    public SvcConfig getConfig() {
-        return this.config.getDelegate();
     }
 
     public SvcSessionManager getSessionManager() {

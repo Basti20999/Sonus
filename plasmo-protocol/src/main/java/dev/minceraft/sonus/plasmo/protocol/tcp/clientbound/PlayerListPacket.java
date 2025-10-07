@@ -22,12 +22,12 @@ public class PlayerListPacket extends TcpPlasmoPacket<PlayerListPacket> {
 
     @Override
     public void encode(ByteBuf buf) {
-        DataTypeUtil.writeCollection(buf, this.players, (buffer, info) -> info.write(buffer));
+        DataTypeUtil.INT.writeCollection(buf, this.players, (buffer, info) -> info.write(buffer));
     }
 
     @Override
     public void decode(ByteBuf buf) {
-        this.players = DataTypeUtil.readCollection(buf, VoicePlayerInfo::new, ArrayList::new);
+        this.players = DataTypeUtil.INT.readCollection(buf, VoicePlayerInfo::new, ArrayList::new);
     }
 
     @Override

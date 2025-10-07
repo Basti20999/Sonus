@@ -25,15 +25,15 @@ public class SourceLinePlayersListPacket extends TcpPlasmoPacket<SourceLinePlaye
     @Override
     public void encode(ByteBuf buf) {
         DataTypeUtil.writeUniqueId(buf, this.sourceLineId);
-        DataTypeUtil.writeCollection(buf, this.players, (b, profile) ->
-                DataTypeUtil.writeGameProfile(b, profile, Utf8String::writeUnsignedShort));
+        DataTypeUtil.INT.writeCollection(buf, this.players, (b, profile) ->
+                DataTypeUtil.INT.writeGameProfile(b, profile, Utf8String::writeUnsignedShort));
     }
 
     @Override
     public void decode(ByteBuf buf) {
         this.sourceLineId = DataTypeUtil.readUniqueId(buf);
-        this.players = DataTypeUtil.readCollection(buf, b ->
-                DataTypeUtil.readGameProfile(b, Utf8String::readUnsignedShort), ArrayList::new);
+        this.players = DataTypeUtil.INT.readCollection(buf, b ->
+                DataTypeUtil.INT.readGameProfile(b, Utf8String::readUnsignedShort), ArrayList::new);
     }
 
     @Override

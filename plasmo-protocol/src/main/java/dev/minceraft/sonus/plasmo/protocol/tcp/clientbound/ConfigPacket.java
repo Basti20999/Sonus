@@ -33,8 +33,8 @@ public class ConfigPacket extends ConfigPlayerInfoPacket<ConfigPacket> {
         DataTypeUtil.writeUniqueId(buf, this.serverId);
         this.captureInfo.write(buf);
         DataTypeUtil.writeNullable(buf, this.encryptionInfo, (b, e) -> e.write(b));
-        DataTypeUtil.writeCollection(buf, this.sourceLines, (b, s) -> s.write(b));
-        DataTypeUtil.writeCollection(buf, this.activations, (b, a) -> a.write(b));
+        DataTypeUtil.INT.writeCollection(buf, this.sourceLines, (b, s) -> s.write(b));
+        DataTypeUtil.INT.writeCollection(buf, this.activations, (b, a) -> a.write(b));
 
         super.encode(buf); // at the end
     }
@@ -44,8 +44,8 @@ public class ConfigPacket extends ConfigPlayerInfoPacket<ConfigPacket> {
         this.serverId = DataTypeUtil.readUniqueId(buf);
         this.captureInfo = new CaptureInfo(buf);
         this.encryptionInfo = DataTypeUtil.readIf(buf, EncryptionInfo::new);
-        this.sourceLines = DataTypeUtil.readCollection(buf, VoiceSourceLine::new, HashSet::new);
-        this.activations = DataTypeUtil.readCollection(buf, VoiceActivation::new, HashSet::new);
+        this.sourceLines = DataTypeUtil.INT.readCollection(buf, VoiceSourceLine::new, HashSet::new);
+        this.activations = DataTypeUtil.INT.readCollection(buf, VoiceActivation::new, HashSet::new);
 
         super.decode(buf); // at the end
     }

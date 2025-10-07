@@ -91,7 +91,7 @@ public class MetaHandler implements IMetaSvcHandler {
         secretSvcPacket.setSecret(this.connection.getSecret());
         secretSvcPacket.setServerPort(remoteAddress.getPort());
         secretSvcPacket.setPlayerId(this.connection.getPlayer().getUniqueId());
-        secretSvcPacket.setCodec(this.protocolAdapter.getAdapter().getConfig().codec);
+        secretSvcPacket.setCodec(this.protocolAdapter.getAdapter().getService().getConfig().getOpusCodec());
         secretSvcPacket.setMtuSize(service.getConfig().getMtuSize());
         secretSvcPacket.setKeepAlive(service.getConfig().getKeepAliveMs());
         secretSvcPacket.setGroupsEnabled(true); // Sonus requires groups to be enabled

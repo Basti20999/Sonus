@@ -9,6 +9,8 @@ import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
+import java.net.InetSocketAddress;
+
 @NullMarked
 public class PingPlasmoPacket extends UdpPlasmoPacket<PingPlasmoPacket> {
 
@@ -78,6 +80,11 @@ public class PingPlasmoPacket extends UdpPlasmoPacket<PingPlasmoPacket> {
 
     public void setServerPort(int serverPort) {
         this.serverPort = serverPort;
+    }
+
+    public void setInetSocketAddress(InetSocketAddress socketAddress) {
+        this.serverAddress = socketAddress.getHostString();
+        this.serverPort = socketAddress.getPort();
     }
 
     @Override

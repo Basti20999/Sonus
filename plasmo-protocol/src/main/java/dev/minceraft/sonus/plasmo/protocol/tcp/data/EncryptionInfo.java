@@ -19,12 +19,12 @@ public class EncryptionInfo {
 
     public EncryptionInfo(ByteBuf buf) {
         this.algorithm = Utf8String.readUnsignedShort(buf);
-        this.data = DataTypeUtil.readIntFramedByteArray(buf);
+        this.data = DataTypeUtil.INT.readByteArray(buf);
     }
 
     public void write(ByteBuf buf) {
         Utf8String.writeUnsignedShort(buf, this.algorithm);
-        DataTypeUtil.writeIntFramedByteArray(buf, this.data);
+        DataTypeUtil.INT.writeByteArray(buf, this.data);
     }
 
     public String getAlgorithm() {
