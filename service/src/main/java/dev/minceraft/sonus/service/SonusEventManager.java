@@ -1,7 +1,9 @@
 package dev.minceraft.sonus.service;
 
-import dev.minceraft.sonus.common.service.ISonusServiceEvents;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
+import dev.minceraft.sonus.common.service.ISonusServiceEvents;
+import net.kyori.adventure.key.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,5 +48,27 @@ public class SonusEventManager implements ISonusEventManager {
             }
         }
         this.service.getPlayerManager().unregisterPlayer(playerId);
+    }
+
+    @Override
+    public void onPlayerStateUpdate(ISonusPlayer player) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onPlayerStateUpdate(player);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onPlayerQuit for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+    }
+
+    @Override
+    public void onChannelRegistered(UUID playerId, Set<Key> channel) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onChannelRegistered(playerId, Set.copyOf(channel));
+            } catch (Exception exception) {
+                LOGGER.error("Error in onPlayerQuit for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
     }
 }

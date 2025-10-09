@@ -8,6 +8,7 @@ import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.plasmo.adapter.conifg.PlasmoConfig;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
@@ -62,5 +63,15 @@ public class PlasmoAdapter implements SonusAdapter {
 
     public PlasmoSessionManager getSessionManager() {
         return this.sessionManager;
+    }
+
+    public VoicePlayerInfo buildPlayerInfo(ISonusPlayer player) {
+        return new VoicePlayerInfo(
+                player.getUniqueId(),
+                player.getName(),
+                player.isMuted(),
+                player.isConnected(),
+                player.isDeafened()
+        );
     }
 }

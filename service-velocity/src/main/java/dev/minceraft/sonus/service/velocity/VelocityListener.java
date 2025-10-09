@@ -3,8 +3,10 @@ package dev.minceraft.sonus.service.velocity;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.event.player.PlayerChannelRegisterEvent;
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import dev.minceraft.sonus.common.protocol.tcp.MessageSource;
 import dev.minceraft.sonus.service.SonusService;
@@ -12,6 +14,9 @@ import dev.minceraft.sonus.service.player.SonusPlayer;
 import net.kyori.adventure.key.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class VelocityListener {
 
@@ -24,13 +29,23 @@ public class VelocityListener {
     }
 
     @Subscribe
-    public void onPlayerSwitch(ServerConnectedEvent event) {
+    public void onPlayerSwitch(ServerPostConnectEvent event) {
         this.service.getEventManager().onPlayerSwitchBackend(event.getPlayer().getUniqueId());
     }
 
     @Subscribe
     public void onQuit(DisconnectEvent event) {
         this.service.getEventManager().onPlayerQuit(event.getPlayer().getUniqueId());
+    }
+
+    @Subscribe
+    public void onChannelRegistered(PlayerChannelRegisterEvent event) {
+        Set<Key> channels = new HashSet<>(event.getChannels().size());
+        for (ChannelIdentifier channel : event.getChannels()) {
+            channels.add(Key.key(channel.getId()));
+        }
+        this.service.getEventManager().onChannelRegistered(
+                event.getPlayer().getUniqueId(), channels);
     }
 
     @Subscribe

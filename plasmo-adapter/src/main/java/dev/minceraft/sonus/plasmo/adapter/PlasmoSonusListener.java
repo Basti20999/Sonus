@@ -1,13 +1,17 @@
 package dev.minceraft.sonus.plasmo.adapter;
 
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
+import dev.minceraft.sonus.plasmo.protocol.PlasmoPmChannels;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerInfoRequestPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerInfoUpdatePacket;
+import net.kyori.adventure.key.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 public class PlasmoSonusListener implements ISonusServiceEvents {
 
@@ -20,21 +24,31 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
     }
 
     @Override
-    public void onPlayerSwitchBackend(UUID playerId) {
-        PlasmoConnection connection = this.adapter.getSessionManager().createConnection(playerId);
-        if (connection == null) {
-            LOGGER.warn("Player '{}' switched Server, but this player is not known!", playerId);
-            return;
-        }
-
-        this.adapter.getService().getScheduler().schedule(() -> { // TODO: Remove this delay
-            PlayerInfoRequestPacket packet = new PlayerInfoRequestPacket();
-            connection.sendPacket(packet);
-        }, 1, TimeUnit.SECONDS);
+    public void onPlayerQuit(UUID playerId) {
+        ISonusServiceEvents.super.onPlayerQuit(playerId);
     }
 
     @Override
-    public void onPlayerQuit(UUID playerId) {
-        ISonusServiceEvents.super.onPlayerQuit(playerId);
+    public void onPlayerStateUpdate(ISonusPlayer player) {
+        PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket();
+        packet.setPlayerInfo(this.adapter.buildPlayerInfo(player));
+
+        this.adapter.getSessionManager().broadcastPacket(packet);
+    }
+
+    @Override
+    public void onChannelRegistered(UUID playerId, Set<Key> channel) {
+        if (!channel.contains(PlasmoPmChannels.CHANNEL)) {
+            return;
+        }
+
+        PlasmoConnection connection = this.adapter.getSessionManager().createConnection(playerId);
+        if (connection == null) {
+            LOGGER.warn("Player '{}' registered plasmo channels, but this player is not known!", playerId);
+            return;
+        }
+
+        PlayerInfoRequestPacket packet = new PlayerInfoRequestPacket();
+        connection.sendPacket(packet);
     }
 }

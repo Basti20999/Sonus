@@ -9,6 +9,7 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
+import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
 import dev.minceraft.sonus.svc.protocol.voice.GroupSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.LocationSoundSvcPacket;
@@ -82,6 +83,16 @@ public class SvcAdapter implements SonusAdapter {
     @Override
     public VoiceProtocolAdapter getProtocolAdapter() {
         return this.protocolAdapter;
+    }
+
+    public SvcPlayerState buildPlayerState(ISonusPlayer player) {
+        return new SvcPlayerState(
+                player.getUniqueId(),
+                player.getName(),
+                player.isDeafened(),
+                !player.isConnected(),
+                player.getCustomRoom() == null ? null : player.getCustomRoom().getId()
+        );
     }
 
     public ISonusService getService() {

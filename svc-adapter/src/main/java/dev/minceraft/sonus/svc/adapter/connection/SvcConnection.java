@@ -30,7 +30,6 @@ public class SvcConnection {
     private @Nullable SvcPlayerCipherCodec cipher;
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
-    private boolean connected = false;
     private long lastKeepAlive = System.currentTimeMillis();
     private int version = -1;
 
@@ -118,12 +117,11 @@ public class SvcConnection {
     }
 
     public boolean isConnected() {
-        return this.connected;
+        return this.player.isConnected();
     }
 
     public void setConnected(boolean connected) {
-        this.connected = connected;
-        this.player.handleConnect();
+        this.player.setConnected(connected);
     }
 
     public boolean isDisabled() {

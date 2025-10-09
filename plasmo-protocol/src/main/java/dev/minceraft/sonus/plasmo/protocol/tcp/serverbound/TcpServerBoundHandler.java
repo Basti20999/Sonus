@@ -14,7 +14,7 @@ public interface TcpServerBoundHandler {
     default void handlePlayerInfoPacket(PlayerInfoPacket packet) {
     }
 
-    default void handlePlayerStatePacket(PlayerStatePacket packet) {
+    default void handlePlayerStatePacket(PlayerStatePacket<?> packet) {
     }
 
     default void handleSourceInfoRequestPacket(SourceInfoRequestPacket packet) {

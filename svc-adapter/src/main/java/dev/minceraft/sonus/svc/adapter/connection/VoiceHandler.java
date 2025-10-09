@@ -50,6 +50,8 @@ public class VoiceHandler implements IVoiceSvcHandler {
         this.protocolAdapter.getAdapter().getSessionManager().onConnectionEstablished(this.connection);
 
         this.connection.sendPacket(new ConnectionCheckAckSvcPacket());
+
+        this.connection.getPlayer().handleConnect();
     }
 
     @Override

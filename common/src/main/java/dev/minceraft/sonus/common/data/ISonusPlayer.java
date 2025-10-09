@@ -54,6 +54,10 @@ public interface ISonusPlayer extends IAudioSource {
 
     void setDeafened(boolean deafened);
 
+    void setConnected(boolean connected);
+
+    boolean isConnected();
+
     void handleAudioInput(SonusAudio audio);
 
     void sendPluginMessage(Key key, ByteBuf data);

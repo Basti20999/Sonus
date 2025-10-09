@@ -106,6 +106,6 @@ public class MetaHandler implements IMetaSvcHandler {
         if (!this.connection.setDisabled(packet.isDisabled())) {
             return;
         }
-        this.protocolAdapter.getAdapter().getSessionManager().broadcastState(this.connection);
+        this.protocolAdapter.getAdapter().getService().getEventManager().onPlayerStateUpdate(this.connection.getPlayer());
     }
 }

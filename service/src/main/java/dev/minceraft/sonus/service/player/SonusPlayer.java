@@ -39,6 +39,7 @@ public final class SonusPlayer implements ISonusPlayer {
     private @Nullable IRoom customRoom;
     private @Nullable WorldVec3d position;
     private @Nullable SonusAdapter sonusAdapter;
+    private boolean connected;
     private boolean muted;
     private boolean deafened;
 
@@ -225,6 +226,16 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     @Override
+    public boolean isConnected() {
+        return this.connected;
+    }
+
+    @Override
+    public void setConnected(boolean connected) {
+        this.connected = connected;
+    }
+
+    @Override
     public UUID getSenderId() {
         return this.getUniqueId();
     }
@@ -248,6 +259,8 @@ public final class SonusPlayer implements ISonusPlayer {
         }
         this.setServerRoom(room);
         this.joinRoom(room);
+
+        this.service.getEventManager().onPlayerStateUpdate(this);
     }
 
     public void setStates(Collection<SonusPlayerState> value) {

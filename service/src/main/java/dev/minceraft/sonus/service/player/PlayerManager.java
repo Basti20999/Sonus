@@ -7,6 +7,7 @@ import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,5 +44,10 @@ public final class PlayerManager implements IPlayerManager {
         }
 
         return player;
+    }
+
+    @Override
+    public Collection<SonusPlayer> getPlayers() {
+        return this.players.values();
     }
 }
