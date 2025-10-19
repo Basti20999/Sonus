@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @NullMarked
 public final class SonusPlayer implements ISonusPlayer {
@@ -35,6 +36,7 @@ public final class SonusPlayer implements ISonusPlayer {
     private final Map<UUID, SonusPlayerState> perPlayerStates = new HashMap<>();
     private final AudioProcessor processor;
     private final AgcNode agcNode = new AgcNode();
+    private final AtomicLong sequenceNumber = new AtomicLong();
     private @Nullable IRoom serverRoom;
     private @Nullable IRoom customRoom;
     private @Nullable WorldVec3d position;
@@ -55,6 +57,12 @@ public final class SonusPlayer implements ISonusPlayer {
         if (this.muted) {
             return;
         }
+
+        // Prevents sequence number regression, e.g. after a reconnect
+        if (audio.sequenceNumber() > this.sequenceNumber.get()) {
+            this.sequenceNumber.set(audio.sequenceNumber());
+        }
+        audio = audio.withSequenceNumber(this.sequenceNumber.getAndIncrement());
 
         if (this.service.getConfig().agcEnabled()) {
             byte[] process = this.processor.process(audio.data(), this.agcNode);
