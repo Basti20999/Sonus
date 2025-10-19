@@ -25,11 +25,15 @@ public class SvcSonusListener implements ISonusServiceEvents {
     @Override
     public void onPlayerQuit(UUID playerId) {
         this.adapter.getSessionManager().removeSession(playerId);
+        RemovePlayerStatePacket packet = new RemovePlayerStatePacket();
+        packet.setPlayerId(playerId);
+
+        this.adapter.getSessionManager().broadcastPacket(packet);
     }
 
     @Override
     public void onPlayerStateUpdate(ISonusPlayer player) {
-        if (!player.isConnected()) {
+        if (!player.isConnected() && player.getPrimaryRoom() == null) {
             RemovePlayerStatePacket packet = new RemovePlayerStatePacket();
             packet.setPlayerId(player.getUniqueId());
 
