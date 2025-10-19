@@ -59,6 +59,9 @@ public final class PlayerManager implements IPlayerManager {
             return;
         }
         player.setConnected(false); // Mark as disconnected, prevents packet sending
+        player.setMuted(true);
+        player.setDeafened(true);
+        this.service.getEventManager().onPlayerStateUpdate(player);
 
         IRoom customRoom = player.getCustomRoom();
         if (customRoom == null) {
