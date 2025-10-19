@@ -91,7 +91,7 @@ public class SvcAdapter implements SonusAdapter {
                 player.getName(),
                 player.isDeafened(),
                 !player.isConnected(),
-                player.getCustomRoom() == null ? null : player.getCustomRoom().getId()
+                player.getPrimaryRoom() == null ? null : player.getPrimaryRoom().getId()
         );
     }
 

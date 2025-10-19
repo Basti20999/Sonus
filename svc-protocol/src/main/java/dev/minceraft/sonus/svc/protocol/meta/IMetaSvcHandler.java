@@ -26,6 +26,9 @@ public interface IMetaSvcHandler {
     default void handlePlayerStatePacket(PlayerStateSvcPacket packet) {
     }
 
+    default void handleRemovePlayerStatePacket(RemovePlayerStatePacket packet) {
+    }
+
     default void handleRemoveCategoryPacket(RemoveCategorySvcPacket packet) {
     }
 

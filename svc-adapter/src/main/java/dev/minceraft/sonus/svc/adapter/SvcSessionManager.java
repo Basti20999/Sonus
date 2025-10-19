@@ -41,10 +41,10 @@ public class SvcSessionManager {
     }
 
     public void onConnectionEstablished(SvcConnection connection) {
-        this.broadcastState(connection);
+        this.adapter.getService().getEventManager().onPlayerStateUpdate(connection.getPlayer());
 
         PlayerStatesSvcPacket statesPacket = new PlayerStatesSvcPacket();
-        statesPacket.setStates(this.getPlayerStates());
+        statesPacket.setStates(this.getPlayerStates(connection));
         connection.sendPacket(statesPacket);
 
         for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
@@ -67,11 +67,21 @@ public class SvcSessionManager {
         }
     }
 
-    public Map<UUID, SvcPlayerState> getPlayerStates() {
+    public void broadcastPacketSourced(ISonusPlayer source, PlayerStateSvcPacket packet) {
+        for (SvcConnection conn : this.connections.values()) {
+            if (!conn.isConnected() || !conn.getPlayer().shouldSee(source)) {
+                continue;
+            }
+            conn.getPlayer().ensureTabListed(source);
+            conn.sendPacket(packet);
+        }
+    }
+
+    public Map<UUID, SvcPlayerState> getPlayerStates(SvcConnection listener) {
         Collection<? extends ISonusPlayer> players = this.adapter.getService().getPlayerManager().getPlayers();
         Map<UUID, SvcPlayerState> states = new HashMap<>(this.connections.size());
         for (ISonusPlayer player : players) {
-            if (!player.isConnected()) {
+            if (!player.isConnected() || !player.shouldSee(listener.getPlayer())) {
                 continue;
             }
             states.put(player.getUniqueId(), this.adapter.buildPlayerState(player));
@@ -81,12 +91,6 @@ public class SvcSessionManager {
 
     public void removeSession(UUID playerId) {
         this.connections.remove(playerId);
-    }
-
-    public void broadcastState(SvcConnection connection) {
-        PlayerStateSvcPacket statePacket = new PlayerStateSvcPacket();
-        statePacket.setState(connection.buildState());
-        this.broadcastPacket(statePacket);
     }
 
     public void broadcastNewGroup(IRoom room) {

@@ -67,7 +67,7 @@ public class ServicePlatformVelocity implements IServicePlatform {
 
     @Override
     public AbstractRoom provideRoom(IServer server) {
-        return new SpatialRoom(server.getUniqueId(), RoomType.SPECIAL_SERVER_OWNED, this.velocityPlugin.getService());
+        return new SpatialRoom(this.velocityPlugin.getService(), server.getUniqueId(), RoomType.SPECIAL_SERVER_OWNED);
     }
 
     public ServicePlatformVelocity connectPlugin(VelocitySonusService velocityPlugin) {

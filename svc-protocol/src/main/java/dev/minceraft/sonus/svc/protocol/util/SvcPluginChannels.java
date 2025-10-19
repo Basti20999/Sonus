@@ -24,6 +24,9 @@ public final class SvcPluginChannels {
     public static final Versioned<Key> PLAYER_STATES = register(
             entry(V_18, Key.key(NAMESPACE, "player_states")),
             entry(V_20, Key.key(NAMESPACE, "states")));
+    public static final Versioned<Key> REMOVE_PLAYER_STATE = register(
+            entry(V_20, Key.key(NAMESPACE, "remove_state"))
+    );
     public static final Key SET_GROUP = register(Key.key(NAMESPACE, "set_group"));
     public static final Key CREATE_GROUP = register(Key.key(NAMESPACE, "create_group"));
     public static final Key ADD_GROUP = register(Key.key(NAMESPACE, "add_group"));

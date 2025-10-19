@@ -7,7 +7,6 @@ import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcPlayerCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
-import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
@@ -73,6 +72,9 @@ public class SvcConnection {
 
     private void sendTcpPacket(SvcMetaPacket<?> packet) {
         Key channel = packet.getPluginMessageChannel().getForVersion(this.version);
+        if (channel == null) {
+            return;
+        }
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(channel);
         try {
             SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet, new SvcMetaPacketRegistry.SvcMetaContext(this.version));
@@ -81,16 +83,6 @@ public class SvcConnection {
         } finally {
             data.recycle();
         }
-    }
-
-    public SvcPlayerState buildState() {
-        return new SvcPlayerState(
-                this.player.getUniqueId(),
-                this.player.getName(),
-                this.isDisabled(),
-                !this.isConnected(),
-                this.player.getCustomRoom() == null ? null : this.player.getCustomRoom().getId()
-        );
     }
 
     public SvcPlayerCipherCodec getCipher() {

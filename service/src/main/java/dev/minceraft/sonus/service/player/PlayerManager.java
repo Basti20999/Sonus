@@ -63,7 +63,7 @@ public final class PlayerManager implements IPlayerManager {
         player.setDeafened(true);
         this.service.getEventManager().onPlayerStateUpdate(player);
 
-        IRoom customRoom = player.getCustomRoom();
+        IRoom customRoom = player.getPrimaryRoom();
         if (customRoom == null) {
             return;
         }

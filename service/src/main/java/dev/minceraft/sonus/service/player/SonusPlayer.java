@@ -38,7 +38,7 @@ public final class SonusPlayer implements ISonusPlayer {
     private final AgcNode agcNode = new AgcNode();
     private final AtomicLong sequenceNumber = new AtomicLong();
     private @Nullable IRoom serverRoom;
-    private @Nullable IRoom customRoom;
+    private @Nullable IRoom primaryRoom;
     private @Nullable WorldVec3d position;
     private @Nullable SonusAdapter sonusAdapter;
     private boolean connected;
@@ -69,7 +69,7 @@ public final class SonusPlayer implements ISonusPlayer {
             audio = audio.withData(process);
         }
 
-        IRoom customRoom = this.getCustomRoom();
+        IRoom customRoom = this.getPrimaryRoom();
         if (customRoom != null) {
             if (customRoom.getRoomAudioType() != RoomAudioType.OPEN) {
                 customRoom.sendAudio(this, audio);
@@ -85,10 +85,10 @@ public final class SonusPlayer implements ISonusPlayer {
         if (this.deafened) {
             return false;
         }
-        IRoom customRoom = this.getCustomRoom();
+        IRoom customRoom = this.getPrimaryRoom();
         if (customRoom != null) {
             if (customRoom.getRoomAudioType() == RoomAudioType.ISOLATED && source instanceof ISonusPlayer other) {
-                return other.getCustomRoom() == customRoom;
+                return other.getPrimaryRoom() == customRoom;
             }
         }
         return true;
@@ -149,16 +149,16 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     @Override
-    public @Nullable IRoom getCustomRoom() {
-        return this.customRoom;
+    public @Nullable IRoom getPrimaryRoom() {
+        return this.primaryRoom;
     }
 
     @Override
-    public void setCustomRoom(@Nullable IRoom room) {
-        if (this.customRoom != null) {
-            this.customRoom.removeMember(this);
+    public void setPrimaryRoom(@Nullable IRoom room) {
+        if (this.primaryRoom != null) {
+            this.primaryRoom.removeMember(this);
         }
-        this.customRoom = room;
+        this.primaryRoom = room;
     }
 
     @Override
@@ -276,6 +276,11 @@ public final class SonusPlayer implements ISonusPlayer {
         this.platform.ensureTabListed(target);
     }
 
+    @Override
+    public void updateState() {
+        this.service.getEventManager().onPlayerStateUpdate(this);
+    }
+
     public void setStates(Collection<SonusPlayerState> value) {
         this.perPlayerStates.clear();
         for (SonusPlayerState state : value) {
@@ -284,9 +289,9 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     public void handleQuit() {
-        if (this.customRoom != null) {
-            this.customRoom.removeMember(this);
-            this.setCustomRoom(null);
+        if (this.primaryRoom != null) {
+            this.primaryRoom.removeMember(this);
+            this.setPrimaryRoom(null);
         }
         for (IRoom room : this.voiceRooms.values()) {
             this.leaveRoom(room);

@@ -5,13 +5,14 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.RoomType;
+import dev.minceraft.sonus.service.SonusService;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
 public class StaticRoom extends AbstractRoom {
 
-    public StaticRoom(RoomType type) {
-        super(type);
+    public StaticRoom(SonusService service, RoomType type) {
+        super(service, type);
     }
 
     @Override

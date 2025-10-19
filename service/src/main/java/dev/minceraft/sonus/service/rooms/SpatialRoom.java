@@ -17,8 +17,8 @@ public class SpatialRoom extends AbstractRoom {
 
     private double maxDistanceSquared;
 
-    public SpatialRoom(UUID roomId, RoomType roomType, SonusService service) {
-        super(roomId, roomType);
+    public SpatialRoom(SonusService service, UUID roomId, RoomType roomType) {
+        super(service, roomId, roomType);
         service.getConfigHolder().addReloadHookAndRun(config -> {
             this.maxDistanceSquared = config.getVoiceChatRange();
             this.maxDistanceSquared *= this.maxDistanceSquared;

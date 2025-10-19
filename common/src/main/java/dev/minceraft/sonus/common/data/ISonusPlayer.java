@@ -10,6 +10,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @NullMarked
@@ -42,9 +43,9 @@ public interface ISonusPlayer extends IAudioSource {
     void setServerRoom(@Nullable IRoom room);
 
     @Nullable
-    IRoom getCustomRoom();
+    IRoom getPrimaryRoom();
 
-    void setCustomRoom(@Nullable IRoom room);
+    void setPrimaryRoom(@Nullable IRoom room);
 
     boolean isMuted();
 
@@ -54,9 +55,9 @@ public interface ISonusPlayer extends IAudioSource {
 
     void setDeafened(boolean deafened);
 
-    void setConnected(boolean connected);
-
     boolean isConnected();
+
+    void setConnected(boolean connected);
 
     void handleAudioInput(SonusAudio audio);
 
@@ -65,4 +66,11 @@ public interface ISonusPlayer extends IAudioSource {
     void handleConnect();
 
     void ensureTabListed(ISonusPlayer target);
+
+    void updateState();
+
+    default boolean shouldSee(ISonusPlayer target) {
+        return target.getPrimaryRoom() != null ||
+                Objects.requireNonNull(this.getServerId()).equals(target.getServerId()); // Server ID should never be null here
+    }
 }

@@ -2,6 +2,6 @@ package dev.minceraft.sonus.common.rooms;
 
 public enum RoomType {
 
-    PLAYER_OWNED,
+    PRIMARY,
     SPECIAL_SERVER_OWNED,
 }

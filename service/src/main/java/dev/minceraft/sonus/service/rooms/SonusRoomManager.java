@@ -2,6 +2,7 @@ package dev.minceraft.sonus.service.rooms;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.common.rooms.RoomAudioType;
 import dev.minceraft.sonus.common.rooms.RoomType;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.service.SonusService;
@@ -65,33 +66,67 @@ public class SonusRoomManager implements ISonusRoomManager {
         return this.rooms.values();
     }
 
-    @Override
-    public boolean joinRoom(ISonusPlayer player, UUID roomId, @Nullable String password) {
+    private IRoom joinRoom0(ISonusPlayer player, UUID roomId, @Nullable String password) {
         IRoom room;
         synchronized (this.rooms) {
             room = this.rooms.get(roomId);
         }
         if (room == null) {
-            return false;
+            return null;
         }
         if (!Objects.equals(room.getPassword(), password)) {
-            return false;
+            return null;
         }
         player.joinRoom(room);
 
-        return true;
+        return room;
     }
 
     @Override
-    public IRoom createStaticRoom(String name, @Nullable String password) {
-        StaticRoom room = new StaticRoom(RoomType.PLAYER_OWNED);
+    public boolean joinRoom(ISonusPlayer player, UUID roomId, @Nullable String password) {
+        IRoom room = joinRoom0(player, roomId, password);
+        return room != null;
+    }
+
+    @Override
+    public boolean joinPrimaryRoom(ISonusPlayer player, UUID roomId, @Nullable String password) {
+        IRoom room = joinRoom0(player, roomId, password);
+        if (room != null) {
+            player.setPrimaryRoom(room);
+            player.updateState();
+        }
+
+        return room != null;
+    }
+
+    @Override
+    public IRoom createStaticPrimaryRoom(String name, @Nullable String password, RoomAudioType audioType) {
+        StaticRoom room = new StaticRoom(this.service, RoomType.PRIMARY);
         room.setName(name);
         room.setPassword(password);
+        room.setRoomAudioType(audioType);
 
         synchronized (this.rooms) {
             this.rooms.put(room.getId(), room);
         }
+
+        this.service.getEventManager().onGroupCreate(room);
         return room;
+    }
+
+    @Override
+    public void leavePrimaryRoom(ISonusPlayer player) {
+        IRoom primaryRoom = player.getPrimaryRoom();
+        if (primaryRoom == null) {
+            return; // Not in a primary room
+        }
+        player.leaveRoom(primaryRoom);
+        player.setPrimaryRoom(null);
+        this.service.getEventManager().onPlayerStateUpdate(player);
+
+        if (primaryRoom.getMembers().isEmpty()) {
+            this.removeRoom(primaryRoom);
+        }
     }
 
     @Override
@@ -99,5 +134,6 @@ public class SonusRoomManager implements ISonusRoomManager {
         synchronized (this.rooms) {
             this.rooms.remove(room.getId());
         }
+        this.service.getEventManager().onGroupRemove(room);
     }
 }

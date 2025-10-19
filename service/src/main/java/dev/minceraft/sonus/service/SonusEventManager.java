@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.service;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import net.kyori.adventure.key.Key;
@@ -57,7 +58,7 @@ public class SonusEventManager implements ISonusEventManager {
             try {
                 listener.onPlayerStateUpdate(player);
             } catch (Exception exception) {
-                LOGGER.error("Error in onPlayerQuit for listener {}", listener.getClass().getSimpleName(), exception);
+                LOGGER.error("Error in onPlayerStateUpdate for listener {}", listener.getClass().getSimpleName(), exception);
             }
         }
     }
@@ -68,7 +69,40 @@ public class SonusEventManager implements ISonusEventManager {
             try {
                 listener.onChannelRegistered(playerId, Set.copyOf(channel));
             } catch (Exception exception) {
-                LOGGER.error("Error in onPlayerQuit for listener {}", listener.getClass().getSimpleName(), exception);
+                LOGGER.error("Error in onChannelRegistered for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+    }
+
+    @Override
+    public void onGroupLeave(IRoom room, UUID playerId) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onGroupLeave(room, playerId);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onGroupLeave for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+    }
+
+    @Override
+    public void onGroupCreate(IRoom room) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onGroupCreate(room);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onGroupCreate for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+    }
+
+    @Override
+    public void onGroupRemove(IRoom room) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onGroupRemove(room);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onGroupRemove for listener {}", listener.getClass().getSimpleName(), exception);
             }
         }
     }
