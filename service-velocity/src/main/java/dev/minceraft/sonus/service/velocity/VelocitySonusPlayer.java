@@ -1,21 +1,28 @@
 package dev.minceraft.sonus.service.velocity;
 
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.api.proxy.player.TabList;
+import com.velocitypowered.api.proxy.player.TabListEntry;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @NullMarked
 public class VelocitySonusPlayer implements IPlatformPlayer {
 
+    private final ProxyServer server;
     private final Player player;
 
-    public VelocitySonusPlayer(Player player) {
+    public VelocitySonusPlayer(ProxyServer server, Player player) {
+        this.server = server;
         this.player = player;
     }
 
@@ -41,5 +48,23 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
         byte[] array = new byte[data.readableBytes()];
         data.readBytes(array);
         this.player.sendPluginMessage(MinecraftChannelIdentifier.from(key), array);
+    }
+
+    @Override
+    public void ensureTabListed(ISonusPlayer target) {
+        TabList tabList = this.player.getTabList();
+        if (tabList.getEntry(target.getUniqueId()).isPresent()) {
+            return; // Already present
+        }
+        Optional<Player> targetPlayer = this.server.getPlayer(target.getUniqueId());
+        if (targetPlayer.isEmpty()) {
+            return; // Target player not online
+        }
+        tabList.addEntry(TabListEntry.builder()
+                .profile(targetPlayer.get().getGameProfile())
+                .listed(false) // We don't want them to be visible in the tab list
+                .showHat(true) // Force showing hats
+                .tabList(tabList)
+                .build());
     }
 }

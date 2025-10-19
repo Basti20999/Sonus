@@ -2,6 +2,8 @@ package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
 import dev.minceraft.sonus.common.IPlayerManager;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import org.jspecify.annotations.NullMarked;
@@ -49,5 +51,22 @@ public final class PlayerManager implements IPlayerManager {
     @Override
     public Collection<SonusPlayer> getPlayers() {
         return this.players.values();
+    }
+
+    public void onPlayerSwitchBackend(UUID playerId) {
+        SonusPlayer player = this.getPlayer(playerId);
+        if (player == null) {
+            return;
+        }
+        player.setConnected(false); // Mark as disconnected, prevents packet sending
+
+        IRoom customRoom = player.getCustomRoom();
+        if (customRoom == null) {
+            return;
+        }
+        for (ISonusPlayer member : customRoom.getMembers()) {
+            member.ensureTabListed(player);
+            player.ensureTabListed(member);
+        }
     }
 }

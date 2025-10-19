@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.service.platform;
 
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -18,4 +19,6 @@ public interface IPlatformPlayer {
     String getName();
 
     void sendPluginMessage(Key key, ByteBuf data);
+
+    void ensureTabListed(ISonusPlayer target);
 }

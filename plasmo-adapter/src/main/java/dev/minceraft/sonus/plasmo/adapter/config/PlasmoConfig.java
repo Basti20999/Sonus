@@ -1,4 +1,4 @@
-package dev.minceraft.sonus.plasmo.adapter.conifg;
+package dev.minceraft.sonus.plasmo.adapter.config;
 
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 

@@ -263,6 +263,11 @@ public final class SonusPlayer implements ISonusPlayer {
         this.service.getEventManager().onPlayerStateUpdate(this);
     }
 
+    @Override
+    public void ensureTabListed(ISonusPlayer target) {
+        this.platform.ensureTabListed(target);
+    }
+
     public void setStates(Collection<SonusPlayerState> value) {
         this.perPlayerStates.clear();
         for (SonusPlayerState state : value) {

@@ -30,7 +30,6 @@ public class PlasmoConnection {
     private final VoiceHandler voiceHandler;
     private final Set<VoiceActivation> voiceActivations = new HashSet<>();
     private long lastKeepAlive;
-    private boolean realPlasmo;
     private ICipher cipher;
     private InetSocketAddress remoteAddress;
 
@@ -133,11 +132,6 @@ public class PlasmoConnection {
 
     public void setConnected(boolean connected) {
         this.player.setConnected(connected);
-        this.realPlasmo = connected;
-    }
-
-    public boolean isRealPlasmo() {
-        return this.realPlasmo;
     }
 
     public InetSocketAddress getRemoteAddress() {

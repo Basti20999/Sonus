@@ -7,7 +7,7 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
-import dev.minceraft.sonus.plasmo.adapter.conifg.PlasmoConfig;
+import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;

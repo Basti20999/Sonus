@@ -14,7 +14,7 @@ dependencies {
 configure<BukkitPluginDescription> {
     authors = listOf("pianoman911", "booky10")
     website = "https://minceraft.dev/sonus"
-    apiVersion = "1.21.4"
+    apiVersion = "1.13"
     main = "dev.minceraft.sonus.agent.paper.SonusAgentPlugin"
 }
 

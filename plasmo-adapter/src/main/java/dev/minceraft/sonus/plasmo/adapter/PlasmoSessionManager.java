@@ -36,7 +36,7 @@ public class PlasmoSessionManager {
 
     public void broadcastPacket(AbstractPlasmoPacket<?> packet) {
         for (PlasmoConnection conn : this.usersByUniqueId.values()) {
-            if (!conn.isConnected() || !conn.isRealPlasmo()) {
+            if (!conn.isConnected()) {
                 continue;
             }
             conn.sendPacket(packet);

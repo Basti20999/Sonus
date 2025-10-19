@@ -36,6 +36,7 @@ public class SonusEventManager implements ISonusEventManager {
                 LOGGER.error("Error in onPlayerSwitchBackend for listener {}", listener.getClass().getSimpleName(), exception);
             }
         }
+        this.service.getPlayerManager().onPlayerSwitchBackend(playerId);
     }
 
     @Override

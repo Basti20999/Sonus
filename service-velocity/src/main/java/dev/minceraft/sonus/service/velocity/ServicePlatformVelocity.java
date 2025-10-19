@@ -46,7 +46,7 @@ public class ServicePlatformVelocity implements IServicePlatform {
     @Nullable
     public IPlatformPlayer getPlayer(UUID uniqueId) {
         return this.server.getPlayer(uniqueId)
-                .map(VelocitySonusPlayer::new).orElse(null);
+                .map(player -> new VelocitySonusPlayer(this.server, player)).orElse(null);
     }
 
     @Override
