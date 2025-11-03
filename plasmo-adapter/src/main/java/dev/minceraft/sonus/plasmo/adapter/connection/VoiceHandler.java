@@ -4,12 +4,14 @@ import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.ConfigPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerListPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.CaptureInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpHandler;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.CustomPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.serverbound.PlayerAudioPlasmoPacket;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,6 +58,11 @@ public class VoiceHandler implements UdpHandler {
 
             this.connection.setConnected(true);
             this.connection.getPlayer().handleConnect();
+
+            PlayerListPacket playerListPacket = new PlayerListPacket();
+            playerListPacket.setPlayers(List.copyOf(this.adapter.getSessionManager().getPlayerInfos(this.connection).values()));
+
+            this.connection.sendPacket(playerListPacket);
         }
     }
 }

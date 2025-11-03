@@ -12,21 +12,8 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerStatePacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.SourceInfoRequestPacket;
 import org.jspecify.annotations.NullMarked;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-
 @NullMarked
 public class MetaHandler implements TcpHandler {
-
-    private static final KeyFactory RSA_KEY_FACTORY;
-
-    static {
-        try {
-            RSA_KEY_FACTORY = KeyFactory.getInstance("RSA");
-        } catch (NoSuchAlgorithmException exception) {
-            throw new RuntimeException(exception);
-        }
-    }
 
     private final PlasmoAdapter adapter;
     private final PlasmoConnection connection;
@@ -75,6 +62,6 @@ public class MetaHandler implements TcpHandler {
 
     @Override
     public void handleSourceInfoRequestPacket(SourceInfoRequestPacket packet) {
-
+        System.out.println("SourceInfoRequestPacket received: " + packet.getSourceId());
     }
 }

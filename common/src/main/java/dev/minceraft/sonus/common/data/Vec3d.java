@@ -7,6 +7,8 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class Vec3d {
 
+    public static final Vec3d ZERO = new Vec3d(0.0, 0.0, 0.0);
+
     protected final double x;
     protected final double y;
     protected final double z;

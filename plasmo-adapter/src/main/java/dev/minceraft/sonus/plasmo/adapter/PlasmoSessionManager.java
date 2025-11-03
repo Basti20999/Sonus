@@ -3,10 +3,12 @@ package dev.minceraft.sonus.plasmo.adapter;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.AbstractPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -43,10 +45,17 @@ public class PlasmoSessionManager {
         }
     }
 
-    public void broadcastState(PlasmoConnection connection) {
-
+    public Map<UUID, VoicePlayerInfo> getPlayerInfos(PlasmoConnection listener) {
+        Collection<? extends ISonusPlayer> players = this.adapter.getService().getPlayerManager().getPlayers();
+        Map<UUID, VoicePlayerInfo> states = new HashMap<>(players.size());
+        for (ISonusPlayer player : players) {
+            if (!player.isConnected() || !player.shouldSee(listener.getPlayer())) {
+                continue;
+            }
+            states.put(player.getUniqueId(), this.adapter.buildPlayerInfo(player));
+        }
+        return states;
     }
-
     @Nullable
     public PlasmoConnection getConnectionBySecret(UUID secret) {
         synchronized (this) {

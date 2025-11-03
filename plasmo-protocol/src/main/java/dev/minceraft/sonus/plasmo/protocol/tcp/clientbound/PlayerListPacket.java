@@ -34,4 +34,12 @@ public class PlayerListPacket extends TcpPlasmoPacket<PlayerListPacket> {
     public void handle(TcpHandler handler) {
         handler.handlePlayerListPacket(this);
     }
+
+    public List<VoicePlayerInfo> getPlayers() {
+        return this.players;
+    }
+
+    public void setPlayers(List<VoicePlayerInfo> players) {
+        this.players = players;
+    }
 }
