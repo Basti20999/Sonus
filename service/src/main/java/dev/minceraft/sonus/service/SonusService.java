@@ -62,6 +62,11 @@ public final class SonusService implements ISonusService {
         this.udpServer.bind();
     }
 
+    public void shutdown() {
+        LOGGER.info("Shutting down Sonus Service...");
+        this.udpServer.shutdown();
+    }
+
     public IServicePlatform getPlatform() {
         return this.platform;
     }

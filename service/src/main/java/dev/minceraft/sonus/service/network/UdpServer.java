@@ -66,6 +66,15 @@ public class UdpServer implements IUdpServer {
         });
     }
 
+    public void shutdown() {
+        LOGGER.info("Shutting down Sonus UDP server...");
+        if (this.channel != null) {
+            this.channel.close().awaitUninterruptibly();
+        }
+        this.bossGroup.shutdownGracefully().awaitUninterruptibly();
+        LOGGER.info("Sonus UDP server shut down.");
+    }
+
     @Override
     public <T> void registerCodec(AbstractMagicUdpCodec<T> codec) {
         this.sonusCodec.registerCodec(codec);
