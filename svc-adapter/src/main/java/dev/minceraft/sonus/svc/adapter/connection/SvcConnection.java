@@ -79,7 +79,7 @@ public class SvcConnection {
         try {
             SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet, new SvcMetaPacketRegistry.SvcMetaContext(this.version));
 
-            this.player.sendPluginMessage(data.getSecond(), data.getFirst());
+            this.player.sendPluginMessage(data.getSecond(), data.getFirst().retain());
         } finally {
             data.recycle();
         }
