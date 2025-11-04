@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.common.protocol.util;
 // Created by booky10 in Sonus (01:19 17.07.2025)
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.util.GameProfile;
@@ -14,6 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -83,7 +85,27 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
     }
 
     public <R, C, V> Table<R, C, V> readTable(ByteBuf buf, BufReader<R> rowReader, BufReader<C> columnReader, BufReader<V> valueReader) {
-        
+        HashBasedTable<R, C, V> table = HashBasedTable.create();
+        int columnSize = this.sizeReader.apply(buf);
+        for (int i = 0; i < columnSize; i++) {
+            C column = columnReader.read(buf);
+            int rowSize = this.sizeReader.apply(buf);
+            for (int j = 0; j < rowSize; j++) {
+                R row = rowReader.read(buf);
+                V val = valueReader.read(buf);
+                table.put(row, column, val);
+            }
+        }
+        return table;
+    }
+
+    public <R, C, V> void writeTable(ByteBuf buf, Table<R, C, V> table, BufWriter<R> rowWriter, BufWriter<C> columnWriter, BufWriter<V> valueWriter) {
+        Set<Map.Entry<C, Map<R, V>>> columns = table.columnMap().entrySet();
+        this.sizeWriter.accept(buf, columns.size());
+        for (Map.Entry<C, Map<R, V>> column : columns) {
+            columnWriter.write(buf, column.getKey());
+            this.writeMap(buf, column.getValue(), rowWriter, valueWriter);
+        }
     }
 
     public <K, V> Map<K, V> readMap(ByteBuf buf, BufReader<K> keyReader, BufReader<V> valueReader) {

@@ -4,6 +4,10 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.common.protocol.util.VarInt;
+import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
@@ -11,9 +15,25 @@ import java.util.UUID;
 public final class RoomDefinition {
 
     private final Table<UUID, UUID, RelationState> staticOverrides = HashBasedTable.create();
-    private final Table<String,String, RelationState> teamOverrides = HashBasedTable.create();
+    private final Table<String, String, RelationState> teamOverrides = HashBasedTable.create();
     private RelationState defaultState = RelationState.SPATIAL;
     private boolean dirty = true;
+
+    public static RoomDefinition read(ByteBuf buf, DataTypeUtil types) {
+        RoomDefinition def = new RoomDefinition();
+        def.defaultState = RelationState.read(buf);
+        def.staticOverrides.putAll(types.readTable(buf, DataTypeUtil::readUniqueId,
+                DataTypeUtil::readUniqueId, RelationState::read));
+        def.teamOverrides.putAll(types.readTable(buf, Utf8String::read, Utf8String::read, RelationState::read));
+        return def;
+    }
+
+    public static void write(ByteBuf buf, DataTypeUtil types, RoomDefinition def) {
+        RelationState.write(buf, def.defaultState);
+        types.writeTable(buf, def.staticOverrides, DataTypeUtil::writeUniqueId,
+                DataTypeUtil::writeUniqueId, RelationState::write);
+        types.writeTable(buf, def.teamOverrides, Utf8String::write, Utf8String::write, RelationState::write);
+    }
 
     public RoomDefinition setStatic(UUID sender, UUID receiver, @Nullable RelationState state) {
         if (state != null) {
@@ -25,11 +45,11 @@ public final class RoomDefinition {
         return this;
     }
 
-    public RoomDefinition setTeam(String senderTeam,String receiverTeam, @Nullable RelationState state) {
+    public RoomDefinition setTeam(String senderTeam, String receiverTeam, @Nullable RelationState state) {
         if (state != null) {
-            this.teamOverrides.put(senderTeam, receiverTeam,null);
+            this.teamOverrides.put(senderTeam, receiverTeam, null);
         } else {
-            this.teamOverrides.remove(senderTeam,receiverTeam);
+            this.teamOverrides.remove(senderTeam, receiverTeam);
         }
         this.markDirty();
         return this;
@@ -38,10 +58,6 @@ public final class RoomDefinition {
     public RoomDefinition setDefault(RelationState state) {
         this.defaultState = state;
         return this;
-    }
-
-    private void markDirty() {
-        this.dirty = true;
     }
 
     public RelationState getState(IAudioSource sender, ISonusPlayer receiver) {
@@ -61,10 +77,34 @@ public final class RoomDefinition {
         return this.defaultState;
     }
 
+    private void markDirty() {
+        this.dirty = true;
+    }
+
+    public boolean checkDirty() {
+        if (this.dirty) {
+            this.dirty = false;
+            return true;
+        }
+        return false;
+    }
+
     public enum RelationState {
+
         STATIC,
         SPATIAL,
         SPATIAL_NORMALIZED,
         HIDE,
+        ;
+
+        private static final RelationState[] STATES = values();
+
+        public static RelationState read(ByteBuf buf) {
+            return STATES[VarInt.read(buf)];
+        }
+
+        public static void write(ByteBuf buf, RelationState state) {
+            VarInt.write(buf, state.ordinal());
+        }
     }
 }
