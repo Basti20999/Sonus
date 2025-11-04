@@ -7,5 +7,5 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public interface IMetaHandler {
 
-    void handle(BackendTickMessage message);
+    void handleBackendTick(BackendTickMessage message);
 }

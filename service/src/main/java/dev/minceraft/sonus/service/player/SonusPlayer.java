@@ -17,6 +17,7 @@ import dev.minceraft.sonus.service.processing.AudioProcessor;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -34,9 +35,9 @@ public final class SonusPlayer implements ISonusPlayer {
     private final IPlatformPlayer platform;
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
     private final Map<UUID, SonusPlayerState> perPlayerStates = new HashMap<>();
-    private final AudioProcessor processor;
-    private final AgcNode agcNode = new AgcNode();
     private final AtomicLong sequenceNumber = new AtomicLong();
+    private @MonotonicNonNull AudioProcessor processor;
+    private @MonotonicNonNull AgcNode agcNode;
     private @Nullable IRoom serverRoom;
     private @Nullable IRoom primaryRoom;
     private @Nullable WorldVec3d position;
@@ -44,12 +45,11 @@ public final class SonusPlayer implements ISonusPlayer {
     private boolean connected;
     private boolean muted;
     private boolean deafened;
+    private @Nullable String team;
 
     public SonusPlayer(SonusService service, IPlatformPlayer platform) {
         this.service = service;
         this.platform = platform;
-
-        this.processor = new AudioProcessor(service);
     }
 
     @Override
@@ -65,6 +65,12 @@ public final class SonusPlayer implements ISonusPlayer {
         audio = audio.withSequenceNumber(this.sequenceNumber.getAndIncrement());
 
         if (this.service.getConfig().agcEnabled()) {
+            if (this.agcNode == null) {
+                this.agcNode = new AgcNode();
+            }
+            if (this.processor == null) {
+                this.processor = new AudioProcessor(service);
+            }
             byte[] process = this.processor.process(audio.data(), this.agcNode);
             audio = audio.withData(process);
         }
@@ -174,6 +180,12 @@ public final class SonusPlayer implements ISonusPlayer {
     @Override
     public String getName() {
         return this.platform.getName();
+    }
+
+    @Override
+    @Nullable
+    public String getTeam() {
+        return this.team;
     }
 
     @Override

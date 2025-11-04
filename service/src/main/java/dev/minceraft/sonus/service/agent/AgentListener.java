@@ -24,7 +24,7 @@ public class AgentListener implements IMetaHandler {
     }
 
     @Override
-    public void handle(BackendTickMessage message) {
+    public void handleBackendTick(BackendTickMessage message) {
         PlayerManager playerManager = this.service.getPlayerManager();
 
         if (message.getPositions() != null) {

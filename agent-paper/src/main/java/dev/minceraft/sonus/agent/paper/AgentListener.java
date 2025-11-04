@@ -31,6 +31,7 @@ public class AgentListener implements Listener {
     private final SonusAgentPlugin plugin;
     private final Map<UUID, WorldVec3d> changedPos = new HashMap<>();
     private final Multimap<UUID, SonusPlayerState> hiddenPlayers = HashMultimap.create();
+    private final Map<UUID, String> teams = new HashMap<>();
 
     public AgentListener(SonusAgentPlugin plugin) {
         this.plugin = plugin;
@@ -38,7 +39,7 @@ public class AgentListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onSpawnLocation(PlayerSpawnLocationEvent event) {
-        this.onChange(event.getPlayer().getUniqueId(), event.getSpawnLocation());
+        this.onChangePos(event.getPlayer().getUniqueId(), event.getSpawnLocation());
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -49,7 +50,7 @@ public class AgentListener implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onMove(PlayerMoveEvent event) {
         if (event.hasChangedPosition()) {
-            this.onChange(event.getPlayer().getUniqueId(), event.getTo());
+            this.onChangePos(event.getPlayer().getUniqueId(), event.getTo());
         }
     }
 
@@ -70,7 +71,7 @@ public class AgentListener implements Listener {
         this.hiddenPlayers.put(playerId, new SonusPlayerState(target.getUniqueId(), hidden));
     }
 
-    private void onChange(UUID playerId, Location location) {
+    private void onChangePos(UUID playerId, Location location) {
         NamespacedKey dimensionKey = location.getWorld().getKey();
         WorldVec3d pos = new WorldVec3d(location.getX(), location.getY(), location.getZ(), dimensionKey);
         this.changedPos.put(playerId, pos);
@@ -78,7 +79,11 @@ public class AgentListener implements Listener {
 
     @EventHandler
     public void onTickEnd(ServerTickEndEvent event) {
-        if (this.changedPos.isEmpty() && this.hiddenPlayers.isEmpty()) { // Pre-check to avoid allocating empty packets on main thread
+        if (this.changedPos.isEmpty() &&
+                this.hiddenPlayers.isEmpty() &&
+                this.teams.isEmpty()
+
+        ) { // Pre-check to avoid allocating empty packets on main thread
             return;
         }
         BackendTickMessage packet = new BackendTickMessage();
@@ -88,10 +93,14 @@ public class AgentListener implements Listener {
         if (!this.hiddenPlayers.isEmpty()) {
             packet.setPerPlayerStates(this.hiddenPlayers);
         }
+        if (!this.teams.isEmpty()){
+            packet.setTeams(this.teams);
+        }
 
         this.plugin.sendMetaPacket(packet);
 
         this.changedPos.clear();
         this.hiddenPlayers.clear();
+        this.teams.clear();
     }
 }

@@ -20,6 +20,9 @@ public interface ISonusPlayer extends IAudioSource {
 
     String getName();
 
+    @Nullable
+    String getTeam();
+
     Map<UUID, SonusPlayerState> getPerPlayerStates();
 
     @Nullable

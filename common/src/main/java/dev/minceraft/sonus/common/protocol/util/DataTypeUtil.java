@@ -2,6 +2,7 @@ package dev.minceraft.sonus.common.protocol.util;
 // Created by booky10 in Sonus (01:19 17.07.2025)
 
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
@@ -79,6 +80,10 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
             return reader.apply(buf);
         }
         return null;
+    }
+
+    public <R, C, V> Table<R, C, V> readTable(ByteBuf buf, BufReader<R> rowReader, BufReader<C> columnReader, BufReader<V> valueReader) {
+        
     }
 
     public <K, V> Map<K, V> readMap(ByteBuf buf, BufReader<K> keyReader, BufReader<V> valueReader) {
