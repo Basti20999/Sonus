@@ -21,7 +21,7 @@ public class BackendTickMessage implements IMetaMessage {
 
     private @Nullable Map<UUID, WorldVec3d> positions;
     private @Nullable Multimap<UUID, SonusPlayerState> perPlayerStates;
-    private @Nullable Map<UUID, String> teams;
+    private @Nullable Map<UUID, @Nullable String> teams;
 
     public BackendTickMessage() {
     }
@@ -33,7 +33,8 @@ public class BackendTickMessage implements IMetaMessage {
         this.perPlayerStates = DataTypeUtil.readIf(buf, buffer ->
                 DataTypeUtil.VAR_INT.readMultiMap(buffer, DataTypeUtil::readUniqueId, SonusPlayerState::read, HashMultimap::create));
         this.teams = DataTypeUtil.readIf(buf, buffer ->
-                DataTypeUtil.VAR_INT.readMap(buffer, DataTypeUtil::readUniqueId, Utf8String::read));
+                DataTypeUtil.VAR_INT.readMap(buffer, DataTypeUtil::readUniqueId, buff ->
+                        DataTypeUtil.readIf(buff, Utf8String::read)));
     }
 
     @Override
@@ -43,7 +44,8 @@ public class BackendTickMessage implements IMetaMessage {
         DataTypeUtil.writeNullable(buf, this.perPlayerStates, (buffer, states) ->
                 DataTypeUtil.VAR_INT.writeMultiMap(buffer, states, DataTypeUtil::writeUniqueId, SonusPlayerState::write));
         DataTypeUtil.writeNullable(buf, this.teams, (buffer, teams) ->
-                DataTypeUtil.VAR_INT.writeMap(buffer, teams, DataTypeUtil::writeUniqueId, Utf8String::write));
+                DataTypeUtil.VAR_INT.writeMap(buffer, teams, DataTypeUtil::writeUniqueId, (buff, string) ->
+                        DataTypeUtil.writeNullable(buff, string, Utf8String::write)));
     }
 
     @Override
@@ -70,7 +72,7 @@ public class BackendTickMessage implements IMetaMessage {
     }
 
     @Nullable
-    public Map<UUID, String> getTeams() {
+    public Map<UUID, @Nullable String> getTeams() {
         return this.teams;
     }
 

@@ -59,10 +59,10 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
         }
     }
 
-    public static <T> void writeNullable(ByteBuf buf, @Nullable T groupId, BiConsumer<ByteBuf, T> writer) {
-        if (groupId != null) {
+    public static <T> void writeNullable(ByteBuf buf, @Nullable T value, BiConsumer<ByteBuf, T> writer) {
+        if (value != null) {
             buf.writeBoolean(true);
-            writer.accept(buf, groupId);
+            writer.accept(buf, value);
         } else {
             buf.writeBoolean(false);
         }

@@ -9,6 +9,7 @@ import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.player.SonusPlayer;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Map;
@@ -44,6 +45,15 @@ public class AgentListener implements IMetaHandler {
                     continue;
                 }
                 player.setStates(entry.getValue());
+            }
+        }
+        if (message.getTeams() != null) {
+            for (Map.Entry<UUID, @Nullable String> entry : message.getTeams().entrySet()) {
+                SonusPlayer player = playerManager.getPlayer(entry.getKey());
+                if (player == null) {
+                    continue;
+                }
+                player.setTeam(entry.getValue());
             }
         }
     }

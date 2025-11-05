@@ -7,6 +7,7 @@ import com.google.common.collect.Multimap;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
@@ -18,11 +19,15 @@ import org.bukkit.event.player.PlayerHideEntityEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerShowEntityEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 @NullMarked
@@ -31,7 +36,9 @@ public class AgentListener implements Listener {
     private final SonusAgentPlugin plugin;
     private final Map<UUID, WorldVec3d> changedPos = new HashMap<>();
     private final Multimap<UUID, SonusPlayerState> hiddenPlayers = HashMultimap.create();
-    private final Map<UUID, String> teams = new HashMap<>();
+
+    private final Map<UUID, @Nullable String> teams = new HashMap<>();
+    private final Map<UUID, @Nullable String> teamsDiff = new HashMap<>();
 
     public AgentListener(SonusAgentPlugin plugin) {
         this.plugin = plugin;
@@ -77,15 +84,31 @@ public class AgentListener implements Listener {
         this.changedPos.put(playerId, pos);
     }
 
+    private void tickTeams() {
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Team playerTeam = scoreboard.getPlayerTeam(player);
+            String name = playerTeam == null ? null : playerTeam.getName();
+
+            String old = this.teams.put(player.getUniqueId(), name);
+            if (!Objects.equals(old, name)) {
+                this.teamsDiff.put(player.getUniqueId(), name);
+            }
+        }
+    }
+
     @EventHandler
     public void onTickEnd(ServerTickEndEvent event) {
         if (this.changedPos.isEmpty() &&
                 this.hiddenPlayers.isEmpty() &&
-                this.teams.isEmpty()
+                this.teamsDiff.isEmpty()
 
         ) { // Pre-check to avoid allocating empty packets on main thread
             return;
         }
+
+        this.tickTeams();
+
         BackendTickMessage packet = new BackendTickMessage();
         if (!this.changedPos.isEmpty()) {
             packet.setPositions(this.changedPos);
@@ -93,14 +116,14 @@ public class AgentListener implements Listener {
         if (!this.hiddenPlayers.isEmpty()) {
             packet.setPerPlayerStates(this.hiddenPlayers);
         }
-        if (!this.teams.isEmpty()){
-            packet.setTeams(this.teams);
+        if (!this.teamsDiff.isEmpty()) {
+            packet.setTeams(this.teamsDiff);
         }
 
         this.plugin.sendMetaPacket(packet);
 
         this.changedPos.clear();
         this.hiddenPlayers.clear();
-        this.teams.clear();
+        this.teamsDiff.clear();
     }
 }

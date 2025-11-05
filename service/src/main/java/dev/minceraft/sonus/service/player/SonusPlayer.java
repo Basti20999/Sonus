@@ -188,6 +188,10 @@ public final class SonusPlayer implements ISonusPlayer {
         return this.team;
     }
 
+    public void setTeam(@Nullable String team) {
+        this.team = team;
+    }
+
     @Override
     @Nullable
     public SonusAdapter getAdapter() {
