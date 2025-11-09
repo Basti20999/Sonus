@@ -17,6 +17,7 @@ import dev.minceraft.sonus.service.processing.AudioProcessor;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.util.TriState;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -57,6 +58,9 @@ public final class SonusPlayer implements ISonusPlayer {
         if (this.muted) {
             return;
         }
+        if (!this.platform.hasPermission("sonus.voice.speak", TriState.TRUE)) {
+            return;
+        }
 
         // Prevents sequence number regression, e.g. after a reconnect
         if (audio.sequenceNumber() > this.sequenceNumber.get()) {
@@ -89,6 +93,9 @@ public final class SonusPlayer implements ISonusPlayer {
 
     private boolean canHear(IAudioSource source) {
         if (this.deafened) {
+            return false;
+        }
+        if (!this.platform.hasPermission("sonus.voice.hear", TriState.TRUE)) {
             return false;
         }
         IRoom customRoom = this.getPrimaryRoom();
@@ -295,6 +302,11 @@ public final class SonusPlayer implements ISonusPlayer {
     @Override
     public void updateState() {
         this.service.getEventManager().onPlayerStateUpdate(this);
+    }
+
+    @Override
+    public boolean hasPermission(String permission, TriState defaultValue) {
+        return this.platform.hasPermission(permission, defaultValue);
     }
 
     public void setStates(Collection<SonusPlayerState> value) {

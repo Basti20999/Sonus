@@ -12,6 +12,7 @@ import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -79,6 +80,9 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
     private SvcConnection initConnection(RequestSecretSvcPacket packet, ISonusPlayer player) {
         if (!VersionManager.SUPPORTED_VERSIONS.contains(packet.getCompatibilityVersion())) {
             return null; // Incompatible version
+        }
+        if (!player.hasPermission("sonus.connect.svc", TriState.TRUE)) {
+            return null;
         }
         return new SvcConnection(this.protocolAdapter, player);
     }

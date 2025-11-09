@@ -4,6 +4,7 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.AbstractPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
+import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -65,6 +66,9 @@ public class PlasmoSessionManager {
     public PlasmoConnection createConnection(UUID playerId) {
         ISonusPlayer player = this.adapter.getService().getPlayerManager().getPlayer(playerId);
         if (player == null) {
+            return null;
+        }
+        if (!player.hasPermission("sonus.connect.plasmo", TriState.TRUE)) {
             return null;
         }
         PlasmoConnection plasmoConnection = new PlasmoConnection(this.adapter, player);

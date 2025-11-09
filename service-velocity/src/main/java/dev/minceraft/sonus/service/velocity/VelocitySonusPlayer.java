@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.service.velocity;
 
+import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -9,6 +10,7 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -66,5 +68,14 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
                 .showHat(true) // Force showing hats
                 .tabList(tabList)
                 .build());
+    }
+
+    @Override
+    public boolean hasPermission(String permission, TriState defaultValue) {
+        Tristate permissionValue = this.player.getPermissionValue(permission);
+        if (defaultValue != TriState.NOT_SET && permissionValue == Tristate.UNDEFINED) {
+            return defaultValue == TriState.TRUE;
+        }
+        return permissionValue.asBoolean();
     }
 }
