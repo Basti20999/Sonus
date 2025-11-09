@@ -1,5 +1,8 @@
 package dev.minceraft.sonus.service.velocity;
 
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -22,6 +25,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 @NullMarked
@@ -29,6 +33,19 @@ public class ServicePlatformVelocity implements IServicePlatform {
 
     private final ProxyServer server;
     private final Path dataPath;
+    private final LoadingCache<UUID, IServer> serverCache = Caffeine.newBuilder()
+            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .build(new CacheLoader<>() {
+                @Override
+                public @Nullable IServer load(UUID uuid) throws Exception {
+                    for (IServer iServer : ServicePlatformVelocity.this.getServers()) {
+                        if (iServer.getUniqueId().equals(uuid)) {
+                            return iServer;
+                        }
+                    }
+                    return null;
+                }
+            });
     private @MonotonicNonNull VelocitySonusService velocityPlugin;
 
     @Inject
@@ -63,6 +80,11 @@ public class ServicePlatformVelocity implements IServicePlatform {
             result.add(new VelocityServer(server.getServerInfo()));
         }
         return result;
+    }
+
+    @Override
+    public IServer getServer(UUID uniqueId) {
+        return this.serverCache.get(uniqueId);
     }
 
     @Override

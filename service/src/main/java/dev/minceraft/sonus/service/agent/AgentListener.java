@@ -5,7 +5,9 @@ import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
+import dev.minceraft.sonus.protocol.meta.servicebound.UpdateRoomDefinitionMessage;
 import dev.minceraft.sonus.service.SonusService;
+import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.player.SonusPlayer;
 import org.jspecify.annotations.NullMarked;
@@ -19,9 +21,11 @@ import java.util.UUID;
 public class AgentListener implements IMetaHandler {
 
     private final SonusService service;
+    private final IServer server;
 
-    public AgentListener(SonusService service) {
+    public AgentListener(SonusService service, IServer server) {
         this.service = service;
+        this.server = server;
     }
 
     @Override
@@ -56,5 +60,10 @@ public class AgentListener implements IMetaHandler {
                 player.setTeam(entry.getValue());
             }
         }
+    }
+
+    @Override
+    public void handleUpdateRoomDefinition(UpdateRoomDefinitionMessage message) {
+        this.service.getRoomManager().updateRoomDefinition(this.server.getUniqueId(), message.getDefinition());
     }
 }

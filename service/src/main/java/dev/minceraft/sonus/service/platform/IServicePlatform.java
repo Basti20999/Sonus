@@ -21,5 +21,7 @@ public interface IServicePlatform {
 
     Set<IServer> getServers();
 
+    IServer getServer(UUID uniqueId);
+
     AbstractRoom provideRoom(IServer server);
 }

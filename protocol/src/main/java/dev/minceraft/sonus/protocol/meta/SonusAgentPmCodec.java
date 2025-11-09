@@ -13,11 +13,11 @@ import java.util.Set;
 public class SonusAgentPmCodec extends AbstractPluginMessageCodec {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
-    private final IMetaHandler handler;
+    private final IAgentManager agentManager;
 
-    public SonusAgentPmCodec(Set<Key> supportedChannels, IMetaHandler handler) {
+    public SonusAgentPmCodec(Set<Key> supportedChannels, IAgentManager agentManager) {
         super(supportedChannels);
-        this.handler = handler;
+        this.agentManager = agentManager;
     }
 
     @Override
@@ -30,6 +30,6 @@ public class SonusAgentPmCodec extends AbstractPluginMessageCodec {
         if (msg == null) {
             return;
         }
-        msg.handle(this.handler);
+        msg.handle(this.agentManager.getAgentListener(player.getServerId()));
     }
 }

@@ -3,6 +3,7 @@ package dev.minceraft.sonus.common.service;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.rooms.RoomAudioType;
+import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
@@ -23,4 +24,6 @@ public interface ISonusRoomManager {
     void removeRoom(IRoom room);
 
     void leavePrimaryRoom(ISonusPlayer player);
+
+    void updateRoomDefinition(UUID serverId, RoomDefinition definition);
 }

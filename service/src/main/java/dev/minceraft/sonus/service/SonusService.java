@@ -10,7 +10,6 @@ import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.common.service.ISonusScheduler;
 import dev.minceraft.sonus.service.adapter.AdapterManager;
 import dev.minceraft.sonus.service.agent.AgentManager;
-import dev.minceraft.sonus.service.meta.MetaDecoder;
 import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.player.PlayerManager;
@@ -28,7 +27,6 @@ public final class SonusService implements ISonusService {
 
     private final IServicePlatform platform;
     private final PlayerManager players = new PlayerManager(this);
-    private final MetaDecoder metaDecoder = new MetaDecoder(this);
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
     private final UdpServer udpServer = new UdpServer(this);
     private final SonusEventManager eventManager = new SonusEventManager(this);
@@ -69,10 +67,6 @@ public final class SonusService implements ISonusService {
 
     public IServicePlatform getPlatform() {
         return this.platform;
-    }
-
-    public MetaDecoder getMetaDecoder() {
-        return this.metaDecoder;
     }
 
     @Override

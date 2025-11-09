@@ -4,6 +4,7 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.rooms.RoomAudioType;
 import dev.minceraft.sonus.common.rooms.RoomType;
+import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IServer;
@@ -43,7 +44,8 @@ public class SonusRoomManager implements ISonusRoomManager {
                     continue;
                 }
                 LOGGER.info("Creating room for server {} ({})", server.getName(), server.getUniqueId());
-                AbstractRoom room = this.service.getPlatform().provideRoom(server);
+                AbstractRoom room = new DefinedRoom(this.service, server.getUniqueId(),
+                        RoomType.SPECIAL_SERVER_OWNED, new RoomDefinition());
                 this.rooms.put(room.getId(), room);
             }
             Set<UUID> currentServers = new HashSet<>(servers.size());
@@ -135,5 +137,14 @@ public class SonusRoomManager implements ISonusRoomManager {
             this.rooms.remove(room.getId());
         }
         this.service.getEventManager().onGroupRemove(room);
+    }
+
+    @Override
+    public void updateRoomDefinition(UUID serverId, RoomDefinition definition) {
+        IRoom room = this.getRoom(serverId);
+        if (!(room instanceof DefinedRoom definedRoom)) {
+            return;
+        }
+        definedRoom.updateDefinition(definition);
     }
 }
