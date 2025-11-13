@@ -6,7 +6,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
+import dev.minceraft.sonus.protocol.meta.servicebound.UpdateRoomDefinitionMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -16,6 +18,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerHideEntityEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerShowEntityEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
@@ -39,9 +42,15 @@ public class AgentListener implements Listener {
 
     private final Map<UUID, @Nullable String> teams = new HashMap<>();
     private final Map<UUID, @Nullable String> teamsDiff = new HashMap<>();
+    private boolean roomDefinitionSent = false;
 
     public AgentListener(SonusAgentPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        this.sendRoomDefinition();
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -99,6 +108,7 @@ public class AgentListener implements Listener {
 
     @EventHandler
     public void onTickEnd(ServerTickEndEvent event) {
+        this.tickTeams();
         if (this.changedPos.isEmpty() &&
                 this.hiddenPlayers.isEmpty() &&
                 this.teamsDiff.isEmpty()
@@ -106,8 +116,6 @@ public class AgentListener implements Listener {
         ) { // Pre-check to avoid allocating empty packets on main thread
             return;
         }
-
-        this.tickTeams();
 
         BackendTickMessage packet = new BackendTickMessage();
         if (!this.changedPos.isEmpty()) {
@@ -125,5 +133,20 @@ public class AgentListener implements Listener {
         this.changedPos.clear();
         this.hiddenPlayers.clear();
         this.teamsDiff.clear();
+    }
+
+    private void sendRoomDefinition() {
+        RoomDefinition roomDefinition = this.plugin.getRoomDefinition();
+        if (roomDefinition == null) {
+            return;
+        }
+        if (this.roomDefinitionSent) {
+            return;
+        }
+        UpdateRoomDefinitionMessage packet = new UpdateRoomDefinitionMessage();
+        packet.setDefinition(roomDefinition);
+        this.plugin.sendMetaPacket(packet);
+
+        this.roomDefinitionSent = true;
     }
 }

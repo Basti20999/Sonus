@@ -1,6 +1,8 @@
 package dev.minceraft.sonus.common.config;
 
 import dev.minceraft.sonus.common.config.serializer.AddressSerializer;
+import dev.minceraft.sonus.common.config.serializer.RoomDefinitionSerializer;
+import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.yaml.NodeStyle;
@@ -32,7 +34,9 @@ public class YamlConfigHolder<T> {
         this.path = path;
         this.loader = CONFIG_BUILDER.path(path)
                 .defaultOptions(opts -> opts.serializers(builder -> builder
-                        .register(InetSocketAddress.class, AddressSerializer.INSTANCE)))
+                        .register(InetSocketAddress.class, AddressSerializer.INSTANCE)
+                        .register(RoomDefinition.class, RoomDefinitionSerializer.INSTANCE)
+                ))
                 .build();
         this.config = this.reloadConfig();
     }

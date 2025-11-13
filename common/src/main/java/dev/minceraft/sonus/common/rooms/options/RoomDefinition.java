@@ -14,6 +14,8 @@ import java.util.UUID;
 
 public final class RoomDefinition {
 
+    public static final String NULL_TEAM = "@null";
+
     private final Table<UUID, UUID, RelationState> staticOverrides = HashBasedTable.create();
     private final Table<String, String, RelationState> teamOverrides = HashBasedTable.create();
     private RelationState defaultState = RelationState.SPATIAL;
@@ -47,7 +49,7 @@ public final class RoomDefinition {
 
     public RoomDefinition setTeam(String senderTeam, String receiverTeam, @Nullable RelationState state) {
         if (state != null) {
-            this.teamOverrides.put(senderTeam, receiverTeam, null);
+            this.teamOverrides.put(senderTeam, receiverTeam, state);
         } else {
             this.teamOverrides.remove(senderTeam, receiverTeam);
         }
@@ -55,13 +57,13 @@ public final class RoomDefinition {
         return this;
     }
 
+    public RelationState getDefault() {
+        return this.defaultState;
+    }
+
     public RoomDefinition setDefault(RelationState state) {
         this.defaultState = state;
         return this;
-    }
-
-    public RelationState getDefault() {
-        return this.defaultState;
     }
 
     public RelationState getState(IAudioSource sender, ISonusPlayer receiver) {
@@ -75,7 +77,15 @@ public final class RoomDefinition {
         }
         // check for team relation
         if (sender instanceof ISonusPlayer playerSender) {
-            RelationState teamState = this.teamOverrides.get(playerSender.getTeam(), receiver.getTeam());
+            String senderTeam = playerSender.getTeam();
+            if (senderTeam == null) {
+                senderTeam = NULL_TEAM;
+            }
+            String receiverTeam = receiver.getTeam();
+            if (receiverTeam == null) {
+                receiverTeam = NULL_TEAM;
+            }
+            RelationState teamState = this.teamOverrides.get(senderTeam, receiverTeam);
             if (teamState != null) {
                 return teamState;
             }
@@ -94,6 +104,14 @@ public final class RoomDefinition {
             return true;
         }
         return false;
+    }
+
+    public Table<String, String, RelationState> getTeamOverrides() {
+        return this.teamOverrides;
+    }
+
+    public Table<UUID, UUID, RelationState> getStaticOverrides() {
+        return this.staticOverrides;
     }
 
     public enum RelationState {

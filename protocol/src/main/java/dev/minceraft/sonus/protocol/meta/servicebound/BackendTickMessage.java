@@ -76,7 +76,7 @@ public class BackendTickMessage implements IMetaMessage {
         return this.teams;
     }
 
-    public void setTeams(@Nullable Map<UUID, String> teams) {
+    public void setTeams(@Nullable Map<UUID, @Nullable String> teams) {
         this.teams = teams;
     }
 }
