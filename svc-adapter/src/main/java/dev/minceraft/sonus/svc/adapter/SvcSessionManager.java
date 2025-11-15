@@ -11,12 +11,16 @@ import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStatesSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.RemoveGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
+import net.kyori.adventure.util.TriState;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 
 public class SvcSessionManager {
 
@@ -47,9 +51,10 @@ public class SvcSessionManager {
         statesPacket.setStates(this.getPlayerStates(connection));
         connection.sendPacket(statesPacket);
 
+        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, TriState.NOT_SET);
         for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
             AddGroupSvcPacket packet = new AddGroupSvcPacket();
-            packet.setGroup(new SonusClientGroup(room));
+            packet.setGroup(new SonusClientGroup(room, bypassPassword));
             connection.sendPacket(packet);
         }
     }
@@ -60,10 +65,17 @@ public class SvcSessionManager {
 
     public void broadcastPacket(AbstractSvcPacket<?> packet) {
         for (SvcConnection conn : this.connections.values()) {
-            if (!conn.isConnected()) {
-                continue;
+            if (conn.isConnected()) {
+                conn.sendPacket(packet);
             }
-            conn.sendPacket(packet);
+        }
+    }
+
+    public void broadcastPacket(Function<SvcConnection, AbstractSvcPacket<?>> packet) {
+        for (SvcConnection conn : this.connections.values()) {
+            if (conn.isConnected()) {
+                conn.sendPacket(packet.apply(conn));
+            }
         }
     }
 
@@ -94,10 +106,13 @@ public class SvcSessionManager {
     }
 
     public void broadcastNewGroup(IRoom room) {
-        AddGroupSvcPacket packet = new AddGroupSvcPacket();
-        SonusClientGroup group = new SonusClientGroup(room);
-        packet.setGroup(group);
-        this.broadcastPacket(packet);
+        this.broadcastPacket(connection -> {
+            boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, TriState.NOT_SET);
+            AddGroupSvcPacket packet = new AddGroupSvcPacket();
+            SonusClientGroup group = new SonusClientGroup(room, bypassPassword);
+            packet.setGroup(group);
+            return packet;
+        });
     }
 
     public void broadcastRemoveGroup(IRoom room) {

@@ -26,10 +26,10 @@ public class SonusClientGroup {
         this.type = type;
     }
 
-    public SonusClientGroup(IRoom room) {
+    public SonusClientGroup(IRoom room, boolean bypassPassword) {
         this.name = room.getName();
         this.groupId = room.getId();
-        this.password = room.getPassword() != null;
+        this.password = room.getPassword() != null && !bypassPassword;
         this.persistent = room.getRoomType() == RoomType.SPECIAL_SERVER_OWNED;
         this.hidden = room.getRoomType() == RoomType.SPECIAL_SERVER_OWNED;
         this.type = SonusGroupType.fromSonus(room.getRoomAudioType());

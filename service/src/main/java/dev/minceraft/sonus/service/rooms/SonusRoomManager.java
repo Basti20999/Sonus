@@ -8,6 +8,7 @@ import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IServer;
+import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 
 public class SonusRoomManager implements ISonusRoomManager {
 
@@ -76,23 +79,25 @@ public class SonusRoomManager implements ISonusRoomManager {
         if (room == null) {
             return null;
         }
-        if (!Objects.equals(room.getPassword(), password)) {
-            return null;
+        // check password
+        if (!player.hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, TriState.NOT_SET)) {
+            if (!Objects.equals(room.getPassword(), password)) {
+                return null;
+            }
         }
         player.joinRoom(room);
-
         return room;
     }
 
     @Override
     public boolean joinRoom(ISonusPlayer player, UUID roomId, @Nullable String password) {
-        IRoom room = joinRoom0(player, roomId, password);
+        IRoom room = this.joinRoom0(player, roomId, password);
         return room != null;
     }
 
     @Override
     public boolean joinPrimaryRoom(ISonusPlayer player, UUID roomId, @Nullable String password) {
-        IRoom room = joinRoom0(player, roomId, password);
+        IRoom room = this.joinRoom0(player, roomId, password);
         if (room != null) {
             player.setPrimaryRoom(room);
             player.updateState();

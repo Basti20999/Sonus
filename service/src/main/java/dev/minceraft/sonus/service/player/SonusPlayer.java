@@ -29,6 +29,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
+
 @NullMarked
 public final class SonusPlayer implements ISonusPlayer {
 
@@ -58,7 +61,7 @@ public final class SonusPlayer implements ISonusPlayer {
         if (this.muted) {
             return;
         }
-        if (!this.platform.hasPermission("sonus.voice.speak", TriState.TRUE)) {
+        if (!this.platform.hasPermission(PERMISSION_VOICE_SPEAK, TriState.TRUE)) {
             return;
         }
 
@@ -95,7 +98,7 @@ public final class SonusPlayer implements ISonusPlayer {
         if (this.deafened) {
             return false;
         }
-        if (!this.platform.hasPermission("sonus.voice.hear", TriState.TRUE)) {
+        if (!this.platform.hasPermission(PERMISSION_VOICE_LISTEN, TriState.TRUE)) {
             return false;
         }
         IRoom customRoom = this.getPrimaryRoom();

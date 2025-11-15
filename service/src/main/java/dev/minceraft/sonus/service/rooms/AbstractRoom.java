@@ -51,20 +51,12 @@ public abstract class AbstractRoom implements IRoom {
 
     @Override
     public boolean addMember(ISonusPlayer player) {
-        if (this.members.containsKey(player.getUniqueId())) {
-            return false; // Already in the room
-        }
-        this.members.put(player.getUniqueId(), player);
-        return true;
+        return this.members.putIfAbsent(player.getUniqueId(), player) == null;
     }
 
     @Override
     public boolean removeMember(ISonusPlayer player) {
-        if (!this.members.containsKey(player.getUniqueId())) {
-            return false; // Not in the room
-        }
-        this.members.remove(player.getUniqueId());
-        return true;
+        return this.members.remove(player.getUniqueId()) != null;
     }
 
     @Override

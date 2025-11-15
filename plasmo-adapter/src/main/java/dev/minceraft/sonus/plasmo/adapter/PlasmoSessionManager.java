@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_CONNECT_PLASMO;
+
 @NullMarked
 public class PlasmoSessionManager {
 
@@ -68,7 +70,7 @@ public class PlasmoSessionManager {
         if (player == null) {
             return null;
         }
-        if (!player.hasPermission("sonus.connect.plasmo", TriState.TRUE)) {
+        if (!player.hasPermission(PERMISSION_CONNECT_PLASMO, TriState.TRUE)) {
             return null;
         }
         PlasmoConnection plasmoConnection = new PlasmoConnection(this.adapter, player);

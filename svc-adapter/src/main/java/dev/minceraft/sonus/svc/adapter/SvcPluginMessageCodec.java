@@ -18,6 +18,8 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_CONNECT_SVC;
+
 @NullMarked
 public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
 
@@ -81,7 +83,7 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
         if (!VersionManager.SUPPORTED_VERSIONS.contains(packet.getCompatibilityVersion())) {
             return null; // Incompatible version
         }
-        if (!player.hasPermission("sonus.connect.svc", TriState.TRUE)) {
+        if (!player.hasPermission(PERMISSION_CONNECT_SVC, TriState.TRUE)) {
             return null;
         }
         return new SvcConnection(this.protocolAdapter, player);
