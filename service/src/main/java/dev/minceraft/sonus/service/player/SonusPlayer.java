@@ -2,6 +2,7 @@ package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
@@ -23,7 +24,6 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -40,19 +40,30 @@ public final class SonusPlayer implements ISonusPlayer {
 
     private final SonusService service;
     private final IPlatformPlayer platform;
+    private @Nullable SonusAdapter sonusAdapter;
+
+    // keep track of which rooms this player is in
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
-    private final Map<UUID, SonusPlayerState> perPlayerStates = new HashMap<>();
-    private final AtomicLong sequenceNumber = new AtomicLong();
-    private @MonotonicNonNull AudioProcessor processor;
-    private @MonotonicNonNull AgcNode agcNode;
     private @Nullable IRoom serverRoom;
     private @Nullable IRoom primaryRoom;
+
+    // visibility states of other players
+    private Map<UUID, SonusPlayerState> perPlayerStates = Map.of();
+
+    // audio input sequence number
+    private final AtomicLong sequenceNumber = new AtomicLong();
+    // automatic gain control
+    private @MonotonicNonNull AudioProcessor processor;
+    private @MonotonicNonNull AgcNode agcNode;
+
+    // metadata sent by the backend server agent
     private @Nullable WorldVec3d position;
-    private @Nullable SonusAdapter sonusAdapter;
+    private @Nullable String team;
+
+    // player state
     private boolean connected;
     private boolean muted;
     private boolean deafened;
-    private @Nullable String team;
 
     public SonusPlayer(SonusService service, IPlatformPlayer platform) {
         this.service = service;
@@ -61,53 +72,89 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void handleAudioInput(SonusAudio audio) {
-        if (this.muted) {
-            return;
-        }
-        if (!this.platform.hasPermission(PERMISSION_VOICE_SPEAK, TriState.TRUE)) {
+        if (this.muted || !this.platform.hasPermission(PERMISSION_VOICE_SPEAK, TriState.TRUE)) {
             return;
         }
 
         // Prevents sequence number regression, e.g. after a reconnect
-        if (audio.sequenceNumber() > this.sequenceNumber.get()) {
-            this.sequenceNumber.set(audio.sequenceNumber());
-        }
-        audio = audio.withSequenceNumber(this.sequenceNumber.getAndIncrement());
+        long sequence = this.sequenceNumber.updateAndGet(
+                num -> Math.max(num, audio.sequenceNumber()) + 1L);
+        SonusAudio sequencedAudio = audio.withSequenceNumber(sequence);
 
-        if (this.service.getConfig().agcEnabled()) {
-            if (this.agcNode == null) {
-                this.agcNode = new AgcNode();
-            }
-            if (this.processor == null) {
-                this.processor = new AudioProcessor(service);
-            }
-            byte[] process = this.processor.process(audio.data(), this.agcNode);
-            audio = audio.withData(process);
-        }
+        SonusAudio processedAudio = this.processAudioInput(sequencedAudio);
+        this.broadcastAudioInput(processedAudio);
+    }
 
-        IRoom customRoom = this.getPrimaryRoom();
-        if (customRoom != null) {
-            if (customRoom.getRoomAudioType() != RoomAudioType.OPEN) {
-                customRoom.sendAudio(this, audio);
-                return;
-            }
+    private SonusAudio processAudioInput(SonusAudio audio) {
+        if (!this.service.getConfig().agcEnabled()) {
+            return audio;
         }
+        // do automatic gain control on input audio to prevent destruction of ears
+        if (this.agcNode == null) {
+            this.agcNode = new AgcNode();
+        }
+        if (this.processor == null) {
+            this.processor = new AudioProcessor(this.service);
+        }
+        return audio.withData(this.processor.process(audio.data(), this.agcNode));
+    }
+
+    private void broadcastAudioInput(SonusAudio audio) {
+        // first, process all rooms which are configured to prevent audio input
+        // being passed to other rooms
+        boolean preventSpeakToOthers = false;
         for (IRoom room : this.voiceRooms.values()) {
-            room.sendAudio(this, audio);
+            if (!room.getRoomAudioType().isSpeakToOthers()) {
+                room.sendAudio(this, audio);
+                preventSpeakToOthers = true;
+            }
+        }
+        // if no rooms exist which prevent audio input being passed, send audio to all rooms
+        if (!preventSpeakToOthers) {
+            for (IRoom room : this.voiceRooms.values()) {
+                room.sendAudio(this, audio);
+            }
         }
     }
 
-    private boolean canHear(IAudioSource source) {
-        if (this.deafened) {
+    private boolean canHear(IAudioSource source, boolean spatial) {
+        if (this.deafened || !this.platform.hasPermission(PERMISSION_VOICE_LISTEN, TriState.TRUE)) {
             return false;
         }
-        if (!this.platform.hasPermission(PERMISSION_VOICE_LISTEN, TriState.TRUE)) {
-            return false;
+        IRoom primaryRoom = this.getPrimaryRoom();
+        if (primaryRoom != null) {
+            // if this player is in an isolated room, the player won't be
+            // able to listen to player-audio from outside of this room
+            if (primaryRoom.getRoomAudioType() == RoomAudioType.ISOLATED
+                    && source instanceof ISonusPlayer other
+                    && other.getPrimaryRoom() != primaryRoom) {
+                return false;
+            }
         }
-        IRoom customRoom = this.getPrimaryRoom();
-        if (customRoom != null) {
-            if (customRoom.getRoomAudioType() == RoomAudioType.ISOLATED && source instanceof ISonusPlayer other) {
-                return other.getPrimaryRoom() == customRoom;
+        if (spatial) {
+            // if this is spatial audio, check the server matches
+            if (!Objects.equals(source.getServerId(), this.getServerId())) {
+                return false;
+            }
+            WorldVec3d thisPosition = this.getPosition();
+            WorldVec3d thatPosition = source.getPosition();
+            if (thisPosition != null && thatPosition != null) {
+                if (!thisPosition.getDimension().equals(thatPosition.getDimension())) {
+                    return false; // dimensions don't match
+                }
+                double voiceRange = this.service.getConfig().getVoiceChatRange();
+                if (thisPosition.distanceSquared(thatPosition) >= voiceRange * voiceRange) {
+                    return false; // too far away
+                }
+            }
+        }
+        // check if player is hidden
+        SonusPlayerState state = this.perPlayerStates.get(source.getSenderId());
+        if (state != null) {
+            if (state.tablistHidden()) {
+                return false; // player is completely hidden
+            } else if (spatial && state.hidden()) {
+                return false; // player is hidden for spatial audio
             }
         }
         return true;
@@ -115,21 +162,21 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void sendStaticAudio(IAudioSource source, SonusAudio audio) {
-        if (this.sonusAdapter != null && this.canHear(source)) {
+        if (this.sonusAdapter != null && this.canHear(source, false)) {
             this.sonusAdapter.sendStaticAudio(this, source, audio);
         }
     }
 
     @Override
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position) {
-        if (this.sonusAdapter != null && this.canHear(source)) {
+        if (this.sonusAdapter != null && this.canHear(source, true)) {
             this.sonusAdapter.sendSpatialAudio(this, source, audio, position);
         }
     }
 
     @Override
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio) {
-        if (this.sonusAdapter != null && this.canHear(source)) {
+        if (this.sonusAdapter != null && this.canHear(source, true)) {
             this.sonusAdapter.sendSpatialAudio(this, source, audio);
         }
     }
@@ -274,14 +321,6 @@ public final class SonusPlayer implements ISonusPlayer {
         return this.voiceRooms;
     }
 
-    public @Nullable SonusAdapter getVoiceAdapter() {
-        return this.sonusAdapter;
-    }
-
-    public void setVoiceAdapter(@Nullable SonusAdapter sonusAdapter) {
-        this.sonusAdapter = sonusAdapter;
-    }
-
     @Override
     public boolean isMuted() {
         return this.muted;
@@ -348,11 +387,12 @@ public final class SonusPlayer implements ISonusPlayer {
         return this.platform.hasPermission(permission, defaultValue);
     }
 
-    public void setStates(Collection<SonusPlayerState> value) {
-        this.perPlayerStates.clear();
-        for (SonusPlayerState state : value) {
-            this.perPlayerStates.put(state.playerId(), state);
+    public void setStates(Collection<SonusPlayerState> states) {
+        ImmutableMap.Builder<UUID, SonusPlayerState> statesMap = ImmutableMap.builderWithExpectedSize(states.size());
+        for (SonusPlayerState state : states) {
+            statesMap.put(state.playerId(), state);
         }
+        this.perPlayerStates = statesMap.build();
     }
 
     public void handleQuit() {

@@ -2,8 +2,24 @@ package dev.minceraft.sonus.common.rooms;
 
 public enum RoomAudioType {
 
-    OPEN, // Players who are not in your room can hear you, and you can hear them
-    NORMAL, // Players who are not in your room cannot hear you, but you can hear them
-    ISOLATED, // Players who are not in your room cannot hear you, and you cannot hear them either
+    OPEN(true, true),
+    NORMAL(false, true),
+    ISOLATED(false, false),
+    ;
 
+    private final boolean speakToOthers;
+    private final boolean listenToOthers;
+
+    RoomAudioType(boolean speakToOthers, boolean listenToOthers) {
+        this.speakToOthers = speakToOthers;
+        this.listenToOthers = listenToOthers;
+    }
+
+    public boolean isSpeakToOthers() {
+        return this.speakToOthers;
+    }
+
+    public boolean isListenToOthers() {
+        return this.listenToOthers;
+    }
 }

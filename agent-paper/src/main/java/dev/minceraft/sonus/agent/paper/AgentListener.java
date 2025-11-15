@@ -72,19 +72,20 @@ public class AgentListener implements Listener {
 
     @EventHandler
     public void onHide(PlayerHideEntityEvent event) {
-        this.setVisibility(event.getPlayer().getUniqueId(), event.getEntity(), true);
+        this.setVisibility(event.getPlayer().getUniqueId(), event.getEntity(),
+                true, true);
     }
 
     @EventHandler
     public void onShow(PlayerShowEntityEvent event) {
-        this.setVisibility(event.getPlayer().getUniqueId(), event.getEntity(), false);
+        this.setVisibility(event.getPlayer().getUniqueId(), event.getEntity(),
+                false, false);
     }
 
-    private void setVisibility(UUID playerId, Entity target, boolean hidden) {
-        if (!(target instanceof Player)) {
-            return;
+    private void setVisibility(UUID playerId, Entity target, boolean tablistHidden, boolean hidden) {
+        if (target instanceof Player) {
+            this.hiddenPlayers.put(playerId, new SonusPlayerState(target.getUniqueId(), tablistHidden, hidden));
         }
-        this.hiddenPlayers.put(playerId, new SonusPlayerState(target.getUniqueId(), hidden));
     }
 
     private void onChangePos(UUID playerId, Location location) {
