@@ -43,7 +43,6 @@ public final class PlayerManager implements IPlayerManager {
                 this.players.put(playerId, player);
             }
         }
-
         return player;
     }
 
@@ -57,18 +56,17 @@ public final class PlayerManager implements IPlayerManager {
         if (player == null) {
             return;
         }
-        player.setConnected(false); // Mark as disconnected, prevents packet sending
+        player.setConnected(false); // prevent packet sending
         player.setMuted(true);
         player.setDeafened(true);
-        this.service.getEventManager().onPlayerStateUpdate(player);
+        player.updateState(); // broadcast update
 
-        IRoom customRoom = player.getPrimaryRoom();
-        if (customRoom == null) {
-            return;
-        }
-        for (ISonusPlayer member : customRoom.getMembers()) {
-            member.ensureTabListed(player);
-            player.ensureTabListed(member);
+        IRoom primaryRoom = player.getPrimaryRoom();
+        if (primaryRoom != null) {
+            for (ISonusPlayer member : primaryRoom.getMembers()) {
+                member.ensureTabListed(player);
+                player.ensureTabListed(member);
+            }
         }
     }
 }

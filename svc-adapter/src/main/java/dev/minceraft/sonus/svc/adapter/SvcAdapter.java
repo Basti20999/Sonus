@@ -9,7 +9,6 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
-import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
 import dev.minceraft.sonus.svc.protocol.voice.GroupSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.LocationSoundSvcPacket;
@@ -20,40 +19,37 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class SvcAdapter implements SonusAdapter {
 
-    private @MonotonicNonNull SvcSessionManager sessionManager;
-    private @MonotonicNonNull SvcSonusListener serviceListener;
+    private @MonotonicNonNull SvcSessionManager sessions;
     private @MonotonicNonNull SvcProtocolAdapter protocolAdapter;
     private @MonotonicNonNull ISonusService service;
 
     @Override
     public void init(ISonusService service) {
         this.service = service;
-        this.sessionManager = new SvcSessionManager(this);
-        this.serviceListener = new SvcSonusListener(this);
+        this.sessions = new SvcSessionManager(this);
         this.protocolAdapter = new SvcProtocolAdapter(this);
 
-        this.service.getEventManager().registerListener(this.serviceListener);
+        this.service.getEventManager().registerListener(new SvcSonusListener(this));
 
         VersionManager.logSupportedVersions();
     }
 
     @Override
     public void sendStaticAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
-        SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
-
         GroupSoundSvcPacket packet = new GroupSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
         packet.setData(audio.data());
         packet.setSequenceNumber(audio.sequenceNumber());
 
-        connection.sendPacket(packet);
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection != null) {
+            connection.sendPacket(packet);
+        }
     }
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio, Vec3d pos) {
-        SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
-
         LocationSoundSvcPacket packet = new LocationSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
@@ -62,22 +58,25 @@ public class SvcAdapter implements SonusAdapter {
         packet.setLocation(pos);
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
 
-        connection.sendPacket(packet);
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection != null) {
+            connection.sendPacket(packet);
+        }
     }
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
-        SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
-
         PlayerSoundSvcPacket packet = new PlayerSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
         packet.setData(audio.data());
         packet.setSequenceNumber(audio.sequenceNumber());
-
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
 
-        connection.sendPacket(packet);
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection != null) {
+            connection.sendPacket(packet);
+        }
     }
 
     @Override
@@ -85,21 +84,11 @@ public class SvcAdapter implements SonusAdapter {
         return this.protocolAdapter;
     }
 
-    public SvcPlayerState buildPlayerState(ISonusPlayer player) {
-        return new SvcPlayerState(
-                player.getUniqueId(),
-                player.getName(),
-                player.isDeafened(),
-                !player.isConnected(),
-                player.getPrimaryRoom() == null ? null : player.getPrimaryRoom().getId()
-        );
-    }
-
     public ISonusService getService() {
         return this.service;
     }
 
-    public SvcSessionManager getSessionManager() {
-        return this.sessionManager;
+    public SvcSessionManager getSessions() {
+        return this.sessions;
     }
 }

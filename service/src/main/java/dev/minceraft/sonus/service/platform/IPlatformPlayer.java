@@ -17,7 +17,7 @@ public interface IPlatformPlayer {
     @Nullable
     UUID getServerId();
 
-    String getName();
+    String getName(@Nullable IPlatformPlayer viewer);
 
     void sendPluginMessage(Key key, ByteBuf data);
 

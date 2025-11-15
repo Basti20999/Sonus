@@ -47,7 +47,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
         this.connection.setConnected(true);
         this.connection.getPlayer().setMuted(false);
         this.connection.getPlayer().setDeafened(false);
-        this.protocolAdapter.getAdapter().getSessionManager().onConnectionEstablished(this.connection);
+        this.protocolAdapter.getAdapter().getSessions().onConnectionEstablished(this.connection);
 
         this.connection.sendPacket(new ConnectionCheckAckSvcPacket());
 

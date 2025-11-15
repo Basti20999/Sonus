@@ -11,7 +11,6 @@ import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
-import dev.minceraft.sonus.common.rooms.RoomAudioType;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.processing.AudioProcessor;
@@ -124,8 +123,8 @@ public final class SonusPlayer implements ISonusPlayer {
         IRoom primaryRoom = this.getPrimaryRoom();
         if (primaryRoom != null) {
             // if this player is in an isolated room, the player won't be
-            // able to listen to player-audio from outside of this room
-            if (primaryRoom.getRoomAudioType() == RoomAudioType.ISOLATED
+            // able to listen to player audio from outside of this room
+            if (!primaryRoom.getRoomAudioType().isListenToOthers()
                     && source instanceof ISonusPlayer other
                     && other.getPrimaryRoom() != primaryRoom) {
                 return false;
@@ -278,8 +277,9 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     @Override
-    public String getName() {
-        return this.platform.getName();
+    public String getName(@Nullable ISonusPlayer viewer) {
+        IPlatformPlayer platformViewer = viewer != null ? ((SonusPlayer) viewer).platform : null;
+        return this.platform.getName(platformViewer);
     }
 
     @Override
@@ -360,11 +360,6 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     @Override
-    public Map<UUID, SonusPlayerState> getPerPlayerStates() {
-        return this.perPlayerStates;
-    }
-
-    @Override
     public void handleConnect() {
         // switch server room
         UUID serverId = this.getServerId();
@@ -385,6 +380,21 @@ public final class SonusPlayer implements ISonusPlayer {
     @Override
     public boolean hasPermission(String permission, TriState defaultValue) {
         return this.platform.hasPermission(permission, defaultValue);
+    }
+
+    @Override
+    public boolean canSee(ISonusPlayer target) {
+        // if the target is in a primary room, this player should be able to
+        // see them in the group selection; we therefore need to send status updates
+        if (target.getPrimaryRoom() == null) {
+            // if the target isn't in a primary room and the server doesn't match, don't send updates
+            if (!Objects.equals(this.getServerId(), target.getServerId())) {
+                return false;
+            }
+        }
+        // check whether the player is fully hidden or not
+        SonusPlayerState state = this.perPlayerStates.get(target.getUniqueId());
+        return state != null && !state.tablistHidden();
     }
 
     public void setStates(Collection<SonusPlayerState> states) {

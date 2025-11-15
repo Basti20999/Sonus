@@ -10,8 +10,6 @@ import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 @NullMarked
@@ -19,12 +17,14 @@ public interface ISonusPlayer extends IAudioSource {
 
     UUID getUniqueId();
 
-    String getName();
+    String getName(@Nullable ISonusPlayer viewer);
+
+    default String getName() {
+        return this.getName(null);
+    }
 
     @Nullable
     String getTeam();
-
-    Map<UUID, SonusPlayerState> getPerPlayerStates();
 
     @Nullable
     SonusAdapter getAdapter();
@@ -77,8 +77,5 @@ public interface ISonusPlayer extends IAudioSource {
 
     boolean hasPermission(String permission, TriState defaultValue);
 
-    default boolean shouldSee(ISonusPlayer target) {
-        return target.getPrimaryRoom() != null ||
-                Objects.requireNonNull(this.getServerId()).equals(target.getServerId()); // Server ID should never be null here
-    }
+    boolean canSee(ISonusPlayer target);
 }

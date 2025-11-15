@@ -39,7 +39,7 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
             return;
         }
 
-        SvcSessionManager sessionManager = this.protocolAdapter.getAdapter().getSessionManager();
+        SvcSessionManager sessionManager = this.protocolAdapter.getAdapter().getSessions();
         SvcConnection connection = sessionManager.getConnection(player.getUniqueId());
 
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(packet, channel);

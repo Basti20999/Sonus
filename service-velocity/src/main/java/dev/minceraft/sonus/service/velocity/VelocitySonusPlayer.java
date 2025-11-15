@@ -41,7 +41,7 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     }
 
     @Override
-    public String getName() {
+    public String getName(@Nullable IPlatformPlayer viewer) {
         return this.player.getUsername();
     }
 
