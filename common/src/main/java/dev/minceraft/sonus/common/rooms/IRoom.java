@@ -33,11 +33,17 @@ public interface IRoom extends IAudioSource {
 
     RoomAudioType getRoomAudioType();
 
-    RoomType getRoomType();
-
     void setRoomAudioType(RoomAudioType type);
 
     void sendAudio(@Nullable IAudioSource source, SonusAudio audio);
+
+    default boolean checkDiscarded(@Nullable Set<UUID> serverIds) {
+        return false; // never discarded by default
+    }
+
+    default boolean isVisible() {
+        return false; // don't show rooms in list by default
+    }
 
     @Override
     default UUID getSenderId() {

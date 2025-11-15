@@ -25,10 +25,13 @@ import org.jspecify.annotations.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
 
@@ -132,23 +135,39 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     @Override
+    public boolean canAccessRoom(IRoom room, @Nullable String password) {
+        // check password
+        if (!this.hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, TriState.NOT_SET)) {
+            if (!Objects.equals(room.getPassword(), password)) {
+                return false; // wrong password (and no bypass permission)
+            }
+        }
+        return true; // allow join
+    }
+
+    @Override
     public void joinRoom(IRoom room) {
         Preconditions.checkNotNull(room, "Room cannot be null");
-        if (this.voiceRooms.containsKey(room.getSenderId())) {
-            return; // Already in the room
+        if (this.voiceRooms.putIfAbsent(room.getSenderId(), room) == null) {
+            room.addMember(this);
         }
-        this.voiceRooms.put(room.getSenderId(), room);
-        room.addMember(this);
     }
 
     @Override
     public void leaveRoom(IRoom room) {
         Preconditions.checkNotNull(room, "Room cannot be null");
-        if (!this.voiceRooms.containsKey(room.getSenderId())) {
-            return; // Not in the room
+        if (this.voiceRooms.remove(room.getSenderId()) == null) {
+            return; // wasn't in room
         }
-        this.voiceRooms.remove(room.getSenderId());
         room.removeMember(this);
+        if (this.primaryRoom == room) {
+            this.primaryRoom = null;
+            this.updateState();
+        }
+        if (this.serverRoom == room) {
+            this.serverRoom = null;
+            this.updateState();
+        }
     }
 
     @Override
@@ -158,10 +177,22 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void setServerRoom(@Nullable IRoom room) {
-        if (this.serverRoom != null) {
-            this.serverRoom.removeMember(this);
+        if (this.primaryRoom == room) {
+            return; // nothing to do
         }
+        // properly leave previous room
+        IRoom prevRoom = this.serverRoom;
+        if (prevRoom != null) {
+            this.serverRoom = null;
+            this.leaveRoom(prevRoom);
+        }
+        // enter new room
         this.serverRoom = room;
+        if (room != null) {
+            this.joinRoom(room);
+        }
+        // trigger state update
+        this.updateState();
     }
 
     @Override
@@ -171,10 +202,22 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void setPrimaryRoom(@Nullable IRoom room) {
-        if (this.primaryRoom != null) {
-            this.primaryRoom.removeMember(this);
+        if (this.primaryRoom == room) {
+            return; // nothing to do
         }
+        // properly leave previous room
+        IRoom prevRoom = this.primaryRoom;
+        if (prevRoom != null) {
+            this.primaryRoom = null;
+            this.leaveRoom(prevRoom);
+        }
+        // enter new room
         this.primaryRoom = room;
+        if (room != null) {
+            this.joinRoom(room);
+        }
+        // trigger state update
+        this.updateState();
     }
 
     @Override
@@ -256,7 +299,10 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void setDeafened(boolean deafened) {
-        this.deafened = deafened;
+        if (this.deafened != deafened) {
+            this.deafened = deafened;
+            this.updateState();
+        }
     }
 
     @Override
@@ -281,20 +327,10 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void handleConnect() {
-        this.setServerRoom(null);
-
+        // switch server room
         UUID serverId = this.getServerId();
-        if (serverId == null) {
-            return;
-        }
-        IRoom room = this.service.getRoomManager().getRoom(serverId);
-        if (room == null) {
-            return;
-        }
+        IRoom room = serverId != null ? this.service.getRoomManager().getRoom(serverId) : null;
         this.setServerRoom(room);
-        this.joinRoom(room);
-
-        this.service.getEventManager().onPlayerStateUpdate(this);
     }
 
     @Override
@@ -320,11 +356,8 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     public void handleQuit() {
-        if (this.primaryRoom != null) {
-            this.primaryRoom.removeMember(this);
-            this.setPrimaryRoom(null);
-        }
-        for (IRoom room : this.voiceRooms.values()) {
+        // leave all rooms (includes primary + server rooms)
+        for (IRoom room : Set.copyOf(this.voiceRooms.values())) {
             this.leaveRoom(room);
         }
     }

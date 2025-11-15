@@ -30,7 +30,6 @@ public final class PlayerManager implements IPlayerManager {
             return false;
         }
         removed.handleQuit();
-
         return true;
     }
 

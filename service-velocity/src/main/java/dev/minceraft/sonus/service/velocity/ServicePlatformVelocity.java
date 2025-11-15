@@ -7,12 +7,12 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import dev.minceraft.sonus.common.rooms.RoomType;
+import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.rooms.AbstractRoom;
-import dev.minceraft.sonus.service.rooms.SpatialRoom;
+import dev.minceraft.sonus.service.rooms.ServerRoom;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.key.Key;
@@ -89,7 +89,7 @@ public class ServicePlatformVelocity implements IServicePlatform {
 
     @Override
     public AbstractRoom provideRoom(IServer server) {
-        return new SpatialRoom(this.velocityPlugin.getService(), server.getUniqueId(), RoomType.SPECIAL_SERVER_OWNED);
+        return new ServerRoom(this.velocityPlugin.getService(), server, new RoomDefinition());
     }
 
     public ServicePlatformVelocity connectPlugin(VelocitySonusService velocityPlugin) {

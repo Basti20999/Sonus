@@ -37,6 +37,8 @@ public interface ISonusPlayer extends IAudioSource {
 
     void sendSpatialAudio(IAudioSource source, SonusAudio audio);
 
+    boolean canAccessRoom(IRoom room, @Nullable String password);
+
     void joinRoom(IRoom room);
 
     void leaveRoom(IRoom room);

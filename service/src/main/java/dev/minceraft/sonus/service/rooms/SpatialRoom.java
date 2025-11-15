@@ -5,7 +5,6 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
-import dev.minceraft.sonus.common.rooms.RoomType;
 import dev.minceraft.sonus.service.SonusService;
 import org.jspecify.annotations.NullMarked;
 
@@ -17,14 +16,14 @@ public class SpatialRoom extends AbstractRoom {
 
     private double maxDistanceSquared;
 
-    public SpatialRoom(SonusService service, UUID roomId, RoomType roomType) {
-        super(service, roomId, roomType);
+    public SpatialRoom(SonusService service, UUID roomId) {
+        super(service, roomId);
+        // TODO what the fuck is this @finn?
         service.getConfigHolder().addReloadHookAndRun(config -> {
             this.maxDistanceSquared = config.getVoiceChatRange();
             this.maxDistanceSquared *= this.maxDistanceSquared;
         });
     }
-
 
     @Override
     protected void sendAudio0(IAudioSource source, SonusAudio audio) {

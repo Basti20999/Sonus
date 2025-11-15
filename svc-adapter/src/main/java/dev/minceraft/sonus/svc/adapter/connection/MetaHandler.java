@@ -14,6 +14,7 @@ import dev.minceraft.sonus.svc.protocol.meta.SecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.UpdateStateSvcPacket;
 
 import java.net.InetSocketAddress;
+import java.util.UUID;
 
 public class MetaHandler implements IMetaSvcHandler {
 
@@ -25,36 +26,38 @@ public class MetaHandler implements IMetaSvcHandler {
         this.connection = connection;
     }
 
-    @Override
-    public void handleCreateGroupPacket(CreateGroupSvcPacket packet) {
-        ISonusRoomManager roomManager = this.protocolAdapter.getAdapter().getService().getRoomManager();
-        IRoom room = roomManager.createStaticPrimaryRoom(packet.getName(), packet.getPassword(), packet.getType().toSonus());
-        roomManager.joinPrimaryRoom(this.connection.getPlayer(), room.getId(), packet.getPassword());
+    private void tryJoinRoom(UUID roomId, String password) {
+        IRoom room = this.protocolAdapter.getAdapter().getService().getRoomManager().getRoom(roomId);
+        boolean success = room != null && this.connection.getPlayer().canAccessRoom(room, password);
+        if (success) {
+            // if player can access room, update primary room
+            this.connection.getPlayer().setPrimaryRoom(room);
+        }
 
+        // send response
         JoinedGroupSvcPacket response = new JoinedGroupSvcPacket();
-        response.setGroupId(room.getId());
-        this.connection.sendPacket(response);
-    }
-
-    @Override
-    public void handleJoinGroupPacket(JoinGroupSvcPacket packet) {
-        ISonusRoomManager roomManager = this.protocolAdapter.getAdapter().getService().getRoomManager();
-        boolean success = roomManager.joinPrimaryRoom(this.connection.getPlayer(), packet.getGroupId(), packet.getPassword());
-
-        JoinedGroupSvcPacket response = new JoinedGroupSvcPacket();
-        response.setGroupId(success ? packet.getGroupId() : null);
+        response.setGroupId(success ? roomId : null);
         response.setWrongPassword(!success);
         this.connection.sendPacket(response);
     }
 
     @Override
-    public void handleLeaveGroupPacket(LeaveGroupSvcPacket packet) {
-        IRoom customRoom = this.connection.getPlayer().getPrimaryRoom();
-        if (customRoom == null) {
-            return; // Not in a custom room
-        }
-        this.protocolAdapter.getAdapter().getService().getRoomManager().leavePrimaryRoom(this.connection.getPlayer());
+    public void handleCreateGroupPacket(CreateGroupSvcPacket packet) {
+        ISonusRoomManager rooms = this.protocolAdapter.getAdapter().getService().getRoomManager();
+        IRoom room = rooms.createStaticRoom(packet.getName(), packet.getPassword(),
+                packet.getType().toSonus(), false);
+        this.tryJoinRoom(room.getId(), packet.getPassword());
+    }
 
+    @Override
+    public void handleJoinGroupPacket(JoinGroupSvcPacket packet) {
+        this.tryJoinRoom(packet.getGroupId(), packet.getPassword());
+    }
+
+    @Override
+    public void handleLeaveGroupPacket(LeaveGroupSvcPacket packet) {
+        this.connection.getPlayer().setPrimaryRoom(null);
+        // send response
         JoinedGroupSvcPacket response = new JoinedGroupSvcPacket();
         response.setGroupId(null);
         this.connection.sendPacket(response);
@@ -84,9 +87,6 @@ public class MetaHandler implements IMetaSvcHandler {
 
     @Override
     public void handleUpdateStatePacket(UpdateStateSvcPacket packet) {
-        if (!this.connection.setDisabled(packet.isDisabled())) {
-            return;
-        }
-        this.protocolAdapter.getAdapter().getService().getEventManager().onPlayerStateUpdate(this.connection.getPlayer());
+        this.connection.setDisabled(packet.isDisabled());
     }
 }
