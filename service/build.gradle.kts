@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     alias(libs.plugins.gradleup.shadow)
 }
@@ -26,13 +28,7 @@ dependencies {
     implementation(projects.plasmoAdapter)
 }
 
-tasks {
-    assemble {
-        dependsOn(shadowJar)
-    }
-    shadowJar {
-        mergeServiceFiles()
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        archiveBaseName = rootProject.name
-    }
+tasks.withType<ShadowJar> {
+    mergeServiceFiles()
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }

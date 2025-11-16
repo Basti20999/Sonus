@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 
 plugins {
@@ -22,20 +23,10 @@ configure<BukkitPluginDescription> {
 tasks {
     runServer {
         runDirectory = project.layout.projectDirectory.dir("run")
-
         minecraftVersion("1.21.8")
     }
 
-    shadowJar {
-
-        archiveBaseName = rootProject.name
-        archiveClassifier = "paper"
-        destinationDirectory = rootProject.layout.buildDirectory.dir("libs")
-
-        relocate("org.bstats", "de.pianoman911.playerculling.bstats")
-    }
-
-    assemble {
-        dependsOn(shadowJar)
+    withType<ShadowJar> {
+        relocate("org.bstats", "dev.minceraft.sonus.agent.paper.bstats")
     }
 }
