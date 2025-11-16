@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.service.velocity;
 
-import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
@@ -14,7 +13,6 @@ import dev.minceraft.sonus.service.platform.IServicePlatform;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.key.Key;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -24,31 +22,30 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-@Singleton
 @NullMarked
+@Singleton
 public class ServicePlatformVelocity implements IServicePlatform {
 
     private final ProxyServer server;
     private final Path dataPath;
-    private final LoadingCache<UUID, IServer> serverCache = Caffeine.newBuilder()
-            .expireAfterAccess(10, TimeUnit.MINUTES)
-            .build(new CacheLoader<>() {
-                @Override
-                public @Nullable IServer load(UUID uuid) throws Exception {
-                    for (IServer iServer : ServicePlatformVelocity.this.getServers()) {
-                        if (iServer.getUniqueId().equals(uuid)) {
-                            return iServer;
-                        }
-                    }
-                    return null;
-                }
-            });
-    private @MonotonicNonNull VelocitySonusService velocityPlugin;
+
+    private final LoadingCache<UUID, @Nullable IServer> serverCache;
 
     @Inject
     public ServicePlatformVelocity(ProxyServer server, @DataDirectory Path dataPath) {
         this.server = server;
         this.dataPath = dataPath;
+
+        this.serverCache = Caffeine.newBuilder()
+                .expireAfterAccess(10, TimeUnit.MINUTES)
+                .build(serverId -> {
+                    for (RegisteredServer velServer : server.getAllServers()) {
+                        if (serverId.equals(VelocityServer.generateUniqueId(velServer.getServerInfo()))) {
+                            return new VelocityServer(velServer.getServerInfo());
+                        }
+                    }
+                    return null;
+                });
     }
 
     @Override
@@ -80,11 +77,10 @@ public class ServicePlatformVelocity implements IServicePlatform {
 
     @Override
     public IServer getServer(UUID uniqueId) {
-        return this.serverCache.get(uniqueId);
-    }
-
-    public ServicePlatformVelocity connectPlugin(VelocitySonusService velocityPlugin) {
-        this.velocityPlugin = velocityPlugin;
-        return this;
+        IServer server = this.serverCache.get(uniqueId);
+        if (server == null) {
+            throw new IllegalStateException("Can't find server with id " + uniqueId);
+        }
+        return server;
     }
 }

@@ -170,20 +170,4 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
     public void setAllowRecording(boolean allowRecording) {
         this.allowRecording = allowRecording;
     }
-
-    @Override
-    public String toString() {
-        return "SecretSvcPacket{" +
-                "secret=" + secret +
-                ", serverPort=" + serverPort +
-                ", playerId=" + playerId +
-                ", codec=" + codec +
-                ", mtuSize=" + mtuSize +
-                ", voiceChatDistance=" + voiceChatDistance +
-                ", keepAlive=" + keepAlive +
-                ", groupsEnabled=" + groupsEnabled +
-                ", voiceHost='" + voiceHost + '\'' +
-                ", allowRecording=" + allowRecording +
-                '}';
-    }
 }

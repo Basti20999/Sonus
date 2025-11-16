@@ -66,12 +66,4 @@ public class JoinedGroupSvcPacket extends SvcMetaPacket<JoinedGroupSvcPacket> {
     public void setWrongPassword(boolean wrongPassword) {
         this.wrongPassword = wrongPassword;
     }
-
-    @Override
-    public String toString() {
-        return "JoinedGroupSvcPacket{" +
-                "groupId=" + groupId +
-                ", wrongPassword=" + wrongPassword +
-                '}';
-    }
 }

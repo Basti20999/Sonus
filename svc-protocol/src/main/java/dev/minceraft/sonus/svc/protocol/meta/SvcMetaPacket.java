@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.svc.protocol.meta;
 
 
+import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.codec.IJsonCodec;
 import dev.minceraft.sonus.common.version.Versioned;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
@@ -23,5 +24,12 @@ public abstract class SvcMetaPacket<T extends SvcMetaPacket<?>> extends Abstract
 
     public Versioned<Key> getPluginMessageChannel() {
         return this.pluginMessageChannel;
+    }
+
+    @Override
+    public String toString() {
+        JsonObject re = new JsonObject();
+        this.encode(re);
+        return this.getClass().getSimpleName() + re;
     }
 }

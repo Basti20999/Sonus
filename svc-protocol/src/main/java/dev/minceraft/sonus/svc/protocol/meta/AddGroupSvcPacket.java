@@ -48,11 +48,4 @@ public class AddGroupSvcPacket extends SvcMetaPacket<AddGroupSvcPacket> {
     public void setGroup(SonusClientGroup group) {
         this.group = group;
     }
-
-    @Override
-    public String toString() {
-        return "AddGroupSvcPacket{" +
-                "group=" + group +
-                '}';
-    }
 }

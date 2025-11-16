@@ -12,7 +12,6 @@ import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;

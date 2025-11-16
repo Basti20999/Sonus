@@ -48,11 +48,4 @@ public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> {
     public void setState(SvcPlayerState state) {
         this.state = state;
     }
-
-    @Override
-    public String toString() {
-        return "PlayerStateSvcPacket{" +
-                "state=" + state +
-                '}';
-    }
 }
