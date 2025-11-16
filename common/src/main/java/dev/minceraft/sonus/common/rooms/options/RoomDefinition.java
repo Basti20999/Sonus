@@ -15,6 +15,7 @@ import java.util.UUID;
 public final class RoomDefinition {
 
     public static final String NULL_TEAM = "@null";
+    public static final String FALLBACK_TEAM = "@fallback";
 
     private final Table<UUID, UUID, RelationState> staticOverrides = HashBasedTable.create();
     private final Table<String, String, RelationState> teamOverrides = HashBasedTable.create();
@@ -86,6 +87,10 @@ public final class RoomDefinition {
                 receiverTeam = NULL_TEAM;
             }
             RelationState teamState = this.teamOverrides.get(senderTeam, receiverTeam);
+            if (teamState != null) {
+                return teamState;
+            }
+            teamState = this.teamOverrides.get(senderTeam, FALLBACK_TEAM);
             if (teamState != null) {
                 return teamState;
             }
