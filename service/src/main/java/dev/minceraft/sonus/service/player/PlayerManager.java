@@ -56,6 +56,7 @@ public final class PlayerManager implements IPlayerManager {
         if (player == null) {
             return;
         }
+        player.setStates(Map.of()); // reset player states on server switch
         player.setConnected(false); // prevent packet sending
         player.setMuted(true);
         player.setDeafened(true);

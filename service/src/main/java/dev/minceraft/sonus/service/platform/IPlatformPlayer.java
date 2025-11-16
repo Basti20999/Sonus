@@ -22,4 +22,6 @@ public interface IPlatformPlayer {
     void ensureTabListed(IPlatformPlayer target);
 
     boolean hasPermission(String permission, boolean defaultValue);
+
+    boolean canSeeFallback(IPlatformPlayer target);
 }

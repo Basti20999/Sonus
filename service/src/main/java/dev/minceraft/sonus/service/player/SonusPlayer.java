@@ -117,6 +117,8 @@ public final class SonusPlayer implements ISonusPlayer {
     private boolean canHear(IAudioSource source, boolean spatial) {
         if (this.deafened || !this.platform.hasPermission(PERMISSION_VOICE_LISTEN, true)) {
             return false;
+        } else if (this == source) {
+            return false; // never make players listen to themselves
         }
         IRoom primaryRoom = this.getPrimaryRoom();
         if (primaryRoom != null) {
@@ -147,12 +149,15 @@ public final class SonusPlayer implements ISonusPlayer {
         }
         // check if player is hidden
         SonusPlayerState state = this.perPlayerStates.get(source.getSenderId());
-        if (state != null) {
-            if (state.tablistHidden()) {
-                return false; // player is completely hidden
-            } else if (spatial && state.hidden()) {
-                return false; // player is hidden for spatial audio
+        if (state == null) {
+            if (source instanceof SonusPlayer sonusSource) {
+                // call platform-specific fallback when there is no state set
+                return this.platform.canSeeFallback(sonusSource.platform);
             }
+        } else if (state.tablistHidden()) {
+            return false; // player is completely hidden
+        } else if (spatial && state.hidden()) {
+            return false; // player is hidden for spatial audio
         }
         return true;
     }
@@ -396,7 +401,10 @@ public final class SonusPlayer implements ISonusPlayer {
         // check whether the player is fully hidden or not; if no state is set, default to hidden,
         // to not expose vanished players in groups in server switch
         SonusPlayerState state = this.perPlayerStates.get(target.getUniqueId());
-        return state != null && !state.tablistHidden();
+        if (state != null) {
+            return !state.tablistHidden();
+        }
+        return this.platform.canSeeFallback(((SonusPlayer) target).platform);
     }
 
     @ApiStatus.Internal

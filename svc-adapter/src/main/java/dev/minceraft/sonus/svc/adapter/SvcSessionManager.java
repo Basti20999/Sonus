@@ -8,10 +8,10 @@ import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
 import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.JoinedGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.PlayerStatesSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
-import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -51,6 +51,14 @@ public class SvcSessionManager {
     }
 
     public void onConnectionEstablished(SvcConnection connection) {
+        // send group initialization packets for everything
+        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
+        for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
+            AddGroupSvcPacket packet = new AddGroupSvcPacket();
+            packet.setGroup(new SonusClientGroup(room, bypassPassword));
+            connection.sendPacket(packet);
+        }
+
         // broadcast new player state to everyone else
         connection.getPlayer().updateState();
 
@@ -59,11 +67,12 @@ public class SvcSessionManager {
         statesPacket.setStates(this.buildBulkPlayerStates(connection.getPlayer()));
         connection.sendPacket(statesPacket);
 
-        // send group initialization packets for everything
-        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
-        for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
-            AddGroupSvcPacket packet = new AddGroupSvcPacket();
-            packet.setGroup(new SonusClientGroup(room, bypassPassword));
+        // primary room is still set, tell the player it's in a group
+        IRoom primaryRoom = connection.getPlayer().getPrimaryRoom();
+        if (primaryRoom != null) {
+            JoinedGroupSvcPacket packet = new JoinedGroupSvcPacket();
+            packet.setGroupId(primaryRoom.getId());
+            packet.setWrongPassword(false);
             connection.sendPacket(packet);
         }
     }
