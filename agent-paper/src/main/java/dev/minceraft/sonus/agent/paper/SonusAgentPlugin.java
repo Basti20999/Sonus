@@ -8,7 +8,7 @@ import dev.minceraft.sonus.protocol.meta.MetaRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 import java.nio.file.Files;
@@ -23,10 +23,14 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(new AgentListener(this), this);
+        Bukkit.getPluginManager().registerEvents(this.createAgentListener(), this);
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, PLUGIN_MESSAGE_CHANNEL);
 
         this.loadRoomDefinition();
+    }
+
+    protected AgentListener createAgentListener() {
+        return new AgentListener(this);
     }
 
     public void sendMetaPacket(IMetaMessage packet) {
@@ -42,18 +46,13 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     public void loadRoomDefinition() {
         Path definitionPath = this.getDataPath().resolve("room-definition.yml");
-        if (!Files.exists(definitionPath)) {
-            return; // Ignore if not present
+        if (Files.exists(definitionPath)) {
+            this.getLogger().info("Loading room definition from file...");
+            this.roomDefinition = new YamlConfigHolder<>(RoomDefinition.class, definitionPath);
         }
-        this.getLogger().info("Loading room definition...");
-        this.roomDefinition = new YamlConfigHolder<>(RoomDefinition.class, definitionPath);
     }
 
-    @Nullable
-    public RoomDefinition getRoomDefinition() {
-        if (this.roomDefinition == null) {
-            return null;
-        }
-        return this.roomDefinition.getDelegate();
+    public @Nullable RoomDefinition getRoomDefinition() {
+        return this.roomDefinition == null ? null : this.roomDefinition.getDelegate();
     }
 }

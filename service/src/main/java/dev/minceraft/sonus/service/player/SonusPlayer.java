@@ -150,9 +150,9 @@ public final class SonusPlayer implements ISonusPlayer {
                 // call platform-specific fallback when there is no state set
                 return this.platform.canSeeFallback(sonusSource.platform);
             }
-        } else if (state.tablistHidden()) {
-            return false; // player is completely hidden
-        } else if (spatial && state.hidden()) {
+        } else if (!spatial && state.staticHidden()) {
+            return false; // player is hidden for static audio
+        } else if (spatial && state.spatialHidden()) {
             return false; // player is hidden for spatial audio
         }
         return true;
@@ -409,11 +409,10 @@ public final class SonusPlayer implements ISonusPlayer {
                 return false;
             }
         }
-        // check whether the player is fully hidden or not; if no state is set, default to hidden,
-        // to not expose vanished players in groups in server switch
+        // check whether the player is hidden or not; if no state is set, ask platform for fallback
         SonusPlayerState state = this.perPlayerStates.get(target.getUniqueId());
         if (state != null) {
-            return !state.tablistHidden();
+            return !state.staticHidden() || !state.spatialHidden();
         }
         return this.platform.canSeeFallback(((SonusPlayer) target).platform);
     }

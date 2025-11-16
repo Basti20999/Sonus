@@ -60,12 +60,12 @@ public class AgentListener implements Listener {
         this.plugin = plugin;
     }
 
-    public static SonusPlayerState buildState(Player player, Player target) {
-        boolean fullyHidden = !player.canSee(target);
-        boolean hidden = fullyHidden
+    protected SonusPlayerState buildState(Player player, Player target) {
+        boolean staticHidden = !player.canSee(target);
+        boolean spatialHidden = staticHidden
                 || target.getGameMode() == GameMode.SPECTATOR
                 && player.getGameMode() != GameMode.SPECTATOR;
-        return new SonusPlayerState(target.getUniqueId(), fullyHidden, hidden);
+        return new SonusPlayerState(target.getUniqueId(), staticHidden, spatialHidden);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -84,9 +84,9 @@ public class AgentListener implements Listener {
             }
             UUID targetId = target.getUniqueId();
             playerRow.computeIfAbsent(targetId,
-                    __ -> buildState(player, target));
+                    __ -> this.buildState(player, target));
             playerColumn.computeIfAbsent(targetId,
-                    __ -> buildState(target, player));
+                    __ -> this.buildState(target, player));
         }
         this.playerStateUpdates.row(playerId).putAll(playerRow);
         this.playerStateUpdates.column(playerId).putAll(playerColumn);
@@ -174,7 +174,7 @@ public class AgentListener implements Listener {
         while (it.hasNext()) {
             Map.Entry<Player, Player> entry = it.next();
             it.remove();
-            SonusPlayerState state = buildState(entry.getKey(), entry.getValue());
+            SonusPlayerState state = this.buildState(entry.getKey(), entry.getValue());
             this.playerStates.put(entry.getKey().getUniqueId(), state.playerId(), state);
             this.playerStateUpdates.put(entry.getKey().getUniqueId(), state.playerId(), state);
             this.dirtyPlayerMeta = true;

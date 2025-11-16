@@ -3,6 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     alias(libs.plugins.gradleup.shadow)
 }
+
 dependencies {
     api(projects.protocol)
     api(libs.speex4j)
