@@ -22,6 +22,7 @@ import org.bukkit.event.player.PlayerHideEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.event.player.PlayerShowEntityEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scoreboard.Scoreboard;
@@ -36,6 +37,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+
+import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
 
 @NullMarked
 public class AgentListener implements Listener {
@@ -67,10 +70,6 @@ public class AgentListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
-        // try fire room definition for this server room to service, as
-        // we don't have a connection to the service if there is no player connected
-        this.sendRoomDefinition();
-
         // specify initial player position
         Player player = event.getPlayer();
         this.onChangePos(player.getUniqueId(), player.getLocation());
@@ -103,6 +102,11 @@ public class AgentListener implements Listener {
         this.playerStateUpdates.rowMap().remove(playerId);
         this.playerStateUpdates.columnMap().remove(playerId);
         this.teams.remove(playerId);
+
+        // re-send room definition to service if everyone quits
+        if (Bukkit.getOnlinePlayers().size() <= 1) {
+            this.dirtyRoomDefinition = true;
+        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -212,11 +216,23 @@ public class AgentListener implements Listener {
         if (roomDefinition == null) {
             return;
         }
-        if (!this.dirtyRoomDefinition) {
-            this.dirtyRoomDefinition = true;
+        if (this.dirtyRoomDefinition) {
+            this.dirtyRoomDefinition = false;
+            this.plugin.getLogger().info("Sending sonus room definition to service");
+
             UpdateRoomDefinitionMessage packet = new UpdateRoomDefinitionMessage();
             packet.setDefinition(roomDefinition);
             this.plugin.sendMetaPacket(packet);
+        }
+    }
+
+    // try to send room definition only after a channel has been registered
+    @EventHandler
+    public void onAgentChannelRegistration(PlayerRegisterChannelEvent event) {
+        if (PLUGIN_MESSAGE_CHANNEL.equals(event.getChannel())) {
+            // try fire room definition for this server room to service, as
+            // we don't have a connection to the service if there is no player connected
+            this.sendRoomDefinition();
         }
     }
 }
