@@ -8,7 +8,11 @@ plugins {
 dependencies {
     compileOnly(libs.velocity)
     annotationProcessor(libs.velocity)
-    implementation(projects.service)
+
+    compileOnly(projects.service)
+    runtimeOnly(projects.service) {
+        targetConfiguration = "shadow"
+    }
 }
 
 tasks {
@@ -18,7 +22,7 @@ tasks {
     }
 
     withType<ShadowJar> {
-        mergeServiceFiles()
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        // velocity already includes netty dependencies, so exclude them
+        exclude("io/netty/**")
     }
 }
