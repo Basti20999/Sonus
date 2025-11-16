@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -53,11 +54,15 @@ public class ServicePlatformVelocity implements IServicePlatform {
         return this.dataPath;
     }
 
+    public IPlatformPlayer getPlayer(Player player) {
+        return new VelocitySonusPlayer(this.server, player);
+    }
+
     @Override
-    @Nullable
-    public IPlatformPlayer getPlayer(UUID uniqueId) {
+    public @Nullable IPlatformPlayer getPlayer(UUID uniqueId) {
         return this.server.getPlayer(uniqueId)
-                .map(player -> new VelocitySonusPlayer(this.server, player)).orElse(null);
+                .map(this::getPlayer)
+                .orElse(null);
     }
 
     @Override

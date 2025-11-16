@@ -6,7 +6,6 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
@@ -56,7 +55,7 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     }
 
     @Override
-    public void ensureTabListed(ISonusPlayer target) {
+    public void ensureTabListed(IPlatformPlayer target) {
         TabList tabList = this.player.getTabList();
         if (tabList.getEntry(target.getUniqueId()).isPresent()) {
             return; // Already present

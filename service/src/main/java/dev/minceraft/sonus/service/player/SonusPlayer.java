@@ -16,7 +16,6 @@ import dev.minceraft.sonus.service.processing.AudioProcessor;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.util.TriState;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
@@ -368,7 +367,7 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void ensureTabListed(ISonusPlayer target) {
-        this.platform.ensureTabListed(target);
+        this.platform.ensureTabListed(((SonusPlayer) target).platform);
     }
 
     @Override
@@ -404,6 +403,7 @@ public final class SonusPlayer implements ISonusPlayer {
     public void setStates(Map<UUID, SonusPlayerState> states) {
         if (!states.equals(this.perPlayerStates)) {
             this.perPlayerStates = Map.copyOf(states);
+            System.out.println("[" + this.getName() + "] STATES UPDATE: " + states);
         }
     }
 

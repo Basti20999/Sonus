@@ -8,9 +8,8 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-import dev.minceraft.sonus.common.protocol.tcp.MessageSource;
 import dev.minceraft.sonus.service.SonusService;
-import dev.minceraft.sonus.service.player.SonusPlayer;
+import dev.minceraft.sonus.service.agent.PluginMessageSourceImpl;
 import net.kyori.adventure.key.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,26 +48,20 @@ public class VelocityListener {
     }
 
     @Subscribe
-    public void onPluginMessageReceived(PluginMessageEvent event) {
+    public void onPluginMessage(PluginMessageEvent event) {
         Key channel = ((MinecraftChannelIdentifier) event.getIdentifier()).asKey();
-        Player target;
-        MessageSource source;
+        ServicePlatformVelocity platform = (ServicePlatformVelocity) this.service.getPlatform();
+
+        PluginMessageSourceImpl source;
         if (event.getSource() instanceof Player player) {
-            target = player;
-            source = MessageSource.PLAYER;
+            source = new PluginMessageSourceImpl.Player(platform.getPlayer(player));
         } else if (event.getTarget() instanceof Player player) {
-            target = player;
-            source = MessageSource.SERVER;
+            source = new PluginMessageSourceImpl.Server(platform.getPlayer(player));
         } else {
             throw new IllegalStateException("Plugin message event source or target is not a player");
         }
-        SonusPlayer player = this.service.getPlayerManager().getPlayer(target.getUniqueId());
-        if (player == null) {
-            LOGGER.info("Received plugin message for player {}({}) but they can't be registered in Sonus", target.getUsername(), target.getUniqueId());
-            return;
-        }
 
-        if (this.service.getPluginMessenger().handleMessage(channel, source, player, event.getData())) {
+        if (this.service.getPluginMessenger().handleMessage(channel, source, event.getData())) {
             event.setResult(PluginMessageEvent.ForwardResult.handled());
         }
     }

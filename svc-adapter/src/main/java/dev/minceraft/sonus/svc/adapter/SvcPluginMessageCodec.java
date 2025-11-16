@@ -1,8 +1,9 @@
 package dev.minceraft.sonus.svc.adapter;
 
+import dev.minceraft.sonus.common.IPlayerManager;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
-import dev.minceraft.sonus.common.protocol.tcp.MessageSource;
+import dev.minceraft.sonus.common.protocol.tcp.IPluginMessageSource;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.meta.RequestSecretSvcPacket;
@@ -32,25 +33,18 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
     }
 
     @Override
-    public void handle(ByteBuf packet, Key channel, MessageSource source, ISonusPlayer player) {
-        if (source == MessageSource.SERVER) {
-            LOGGER.warn("{} was sent a packet from the server", player.getName());
+    public void handle(ByteBuf packet, Key channel, IPluginMessageSource source) {
+        if (!(source instanceof IPluginMessageSource.Player)) {
             return;
         }
 
         SvcSessionManager sessionManager = this.protocolAdapter.getAdapter().getSessions();
-        SvcConnection connection = sessionManager.getConnection(player.getUniqueId());
+        SvcConnection connection = sessionManager.getConnection(source.getPlayerId());
 
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(packet, channel);
         SvcMetaPacket<? extends SvcMetaPacket<?>> metaPacket;
         try {
-            int version;
-            if (connection == null) {
-                version = VersionManager.OLDEST_VERSION;
-            } else {
-                version = connection.getVersion();
-            }
-
+            int version = connection == null ? VersionManager.OLDEST_VERSION : connection.getVersion();
             metaPacket = SvcMetaPacketRegistry.BUF_REGISTRY.read(data, new SvcMetaPacketRegistry.SvcMetaContext(version));
         } finally {
             data.recycle();
@@ -60,30 +54,34 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
         }
 
         if (connection == null) {
-            if (metaPacket instanceof RequestSecretSvcPacket secret) { // Initial connection
-                connection = this.initConnection(secret, player);
-                sessionManager.addConnection(connection);
+            if (metaPacket instanceof RequestSecretSvcPacket secret) {
+                // initialize connection when client requests secret
+                IPlayerManager players = this.protocolAdapter.getAdapter().getService().getPlayerManager();
+                connection = this.initConnection(secret, players.getPlayer(source.getPlayerId()));
+
+                if (connection != null) {
+                    // add connection to session if initialized
+                    sessionManager.addConnection(connection);
+                } else {
+                    return; // initialization wasn't successful
+                }
             } else {
-                // No connection found for the player, handle accordingly
-                return;
+                return; // first packet needs to be a request
             }
         } else if (metaPacket instanceof RequestSecretSvcPacket) {
-            LOGGER.warn("Received RequestSecretSvcPacket for player {} but connection already exists. Ignoring.", player.getUniqueId());
+            LOGGER.warn("Duplicate SVC connection request received by {}", source.getPlayerId());
             return;
         }
-        if (connection == null) { // Incompatible version or failed to initialize connection
-            return;
-        }
+        // handle metadata packet
+        System.out.println("[" + connection.getPlayer().getName() + "] INCOMING: " + metaPacket);
         metaPacket.handle(connection.getMetaHandler());
     }
 
-    @Nullable
-    private SvcConnection initConnection(RequestSecretSvcPacket packet, ISonusPlayer player) {
+    private @Nullable SvcConnection initConnection(RequestSecretSvcPacket packet, @Nullable ISonusPlayer player) {
         if (!VersionManager.SUPPORTED_VERSIONS.contains(packet.getCompatibilityVersion())) {
-            return null; // Incompatible version
-        }
-        if (!player.hasPermission(PERMISSION_CONNECT_SVC, true)) {
-            return null;
+            return null; // incompatible version
+        } else if (player == null || !player.hasPermission(PERMISSION_CONNECT_SVC, true)) {
+            return null; // no player instance present or no permission to connect via SVC
         }
         return new SvcConnection(this.protocolAdapter, player);
     }

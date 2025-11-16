@@ -71,6 +71,7 @@ public class SvcConnection {
     }
 
     private void sendTcpPacket(SvcMetaPacket<?> packet) {
+        System.out.println("[" + this.player.getName() + "] OUTGOING: " + packet);
         Key channel = packet.getPluginMessageChannel().getForVersion(this.version);
         if (channel == null) {
             return;
