@@ -196,9 +196,6 @@ public class AgentListener implements Listener {
         }
         if (!this.playerStateUpdates.isEmpty()) {
             packet.setPerPlayerStates(this.playerStateUpdates);
-            for (Map.Entry<UUID, Map<UUID, SonusPlayerState>> row : this.playerStateUpdates.rowMap().entrySet()) {
-                System.out.println("[" + Bukkit.getPlayer(row.getKey()).getName() + "] " + row.getValue());
-            }
         }
         if (!this.teamUpdates.isEmpty()) {
             packet.setTeams(this.teamUpdates);
@@ -220,7 +217,6 @@ public class AgentListener implements Listener {
             UpdateRoomDefinitionMessage packet = new UpdateRoomDefinitionMessage();
             packet.setDefinition(roomDefinition);
             this.plugin.sendMetaPacket(packet);
-            System.out.println("ROOM DEF SENT");
         }
     }
 }

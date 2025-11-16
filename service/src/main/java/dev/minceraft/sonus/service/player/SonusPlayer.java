@@ -416,7 +416,6 @@ public final class SonusPlayer implements ISonusPlayer {
     public void setStates(Map<UUID, SonusPlayerState> states) {
         if (!states.equals(this.perPlayerStates)) {
             this.perPlayerStates = Map.copyOf(states);
-            System.out.println("[" + this.getName() + "] STATES UPDATE: " + states);
         }
     }
 

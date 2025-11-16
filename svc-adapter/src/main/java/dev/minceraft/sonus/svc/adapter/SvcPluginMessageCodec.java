@@ -73,7 +73,6 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
             return;
         }
         // handle metadata packet
-        System.out.println("[" + connection.getPlayer().getName() + "] INCOMING: " + metaPacket);
         metaPacket.handle(connection.getMetaHandler());
     }
 
