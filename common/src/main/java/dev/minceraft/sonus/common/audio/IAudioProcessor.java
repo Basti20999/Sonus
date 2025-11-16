@@ -4,9 +4,12 @@ package dev.minceraft.sonus.common.audio;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public interface IAudioProcessor {
+public interface IAudioProcessor extends AutoCloseable {
 
     short[] decode(byte[] data);
 
     byte[] encode(short[] pcm);
+
+    @Override
+    void close();
 }

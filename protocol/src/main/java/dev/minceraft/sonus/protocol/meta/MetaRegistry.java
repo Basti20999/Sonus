@@ -6,7 +6,7 @@ import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.UpdateRoomDefinitionMessage;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.PooledByteBufAllocator;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
@@ -24,7 +24,7 @@ public final class MetaRegistry {
     }
 
     public static byte[] write(IMetaMessage message) {
-        ByteBuf buf = Unpooled.buffer();
+        ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
         try {
             REGISTRY.write(buf, message);
             byte[] data = new byte[buf.readableBytes()];

@@ -48,7 +48,7 @@ public final class SonusPlayer implements ISonusPlayer {
     // visibility states of other players
     private Map<UUID, SonusPlayerState> perPlayerStates = Map.of();
 
-    private final AtomicLong sequenceNumber = new AtomicLong(); // audio input sequence number
+    private final AtomicLong sequenceNumber = new AtomicLong(-1L); // audio input sequence number
     private @MonotonicNonNull AgcNode agcNode; // automatic gain control
 
     // metadata sent by the backend server agent
@@ -80,6 +80,9 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     private void processAudioInput(SonusAudio audio) {
+        if (audio.data().length == 0) {
+            return; // don't process zero-length audio
+        }
         if (this.service.getConfig().agcEnabled()) {
             // do automatic gain control on input audio to prevent destruction of ears
             if (this.agcNode == null) {

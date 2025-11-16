@@ -13,9 +13,4 @@ public record SonusAudio(short[] data, long sequenceNumber) {
     public SonusAudio withSequenceNumber(long sequenceNumber) {
         return new SonusAudio(this.data, sequenceNumber);
     }
-
-    public SonusAudio withData(short[] data) {
-        return new SonusAudio(data, this.sequenceNumber);
-    }
-
 }

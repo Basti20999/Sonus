@@ -13,9 +13,12 @@ import dev.minceraft.sonus.svc.protocol.voice.PingSvcPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 public class VoiceHandler implements IVoiceSvcHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
+    private static final UUID MIC_CHANNEL_ID = new UUID(9018035903106730674L, -6405133132459802568L);
 
     private final SvcProtocolAdapter protocolAdapter;
     private final SvcConnection connection;
@@ -61,13 +64,13 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     @Override
     public void handleMicPacket(MicSvcPacket packet) {
-        short[] pcm = this.connection.getProcessor().decode(packet.getData());
+        short[] pcm = this.connection.getProcessor(MIC_CHANNEL_ID).decode(packet.getData());
         SonusAudio data = new SonusAudio(pcm, packet.getSequenceNumber());
         this.connection.getPlayer().handleAudioInput(data);
     }
 
     @Override
     public void handlePingPacket(PingSvcPacket packet) {
-        // TODO: handle ping packet
+        // NO-OP, we never send ping packets
     }
 }

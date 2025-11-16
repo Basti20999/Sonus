@@ -17,10 +17,12 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
-public class SvcConnection {
+public class SvcConnection implements AutoCloseable {
 
     private final SvcProtocolAdapter protocolAdapter;
     private final ISonusPlayer player;
@@ -30,7 +32,7 @@ public class SvcConnection {
     private final MetaHandler metaHandler;
 
     private @Nullable SvcPlayerCipherCodec cipher;
-    private final IAudioProcessor processor;
+    private final Map<UUID, IAudioProcessor> processors = new ConcurrentHashMap<>();
 
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
@@ -40,8 +42,6 @@ public class SvcConnection {
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
         this.protocolAdapter = protocolAdapter;
         this.player = player;
-
-        this.processor = protocolAdapter.getAdapter().getService().createAudioProcessor();
         this.voiceHandler = new VoiceHandler(this.protocolAdapter, this);
         this.metaHandler = new MetaHandler(this.protocolAdapter, this);
         this.player.setAdapter(protocolAdapter.getAdapter());
@@ -156,7 +156,16 @@ public class SvcConnection {
         this.cipher = new SvcPlayerCipherCodec(this, this.protocolAdapter.getSvcCodec(), this.secret);
     }
 
-    public IAudioProcessor getProcessor() {
-        return this.processor;
+    public IAudioProcessor getProcessor(UUID channelId) {
+        return this.processors.computeIfAbsent(channelId, __ ->
+                this.protocolAdapter.getAdapter().getService().createAudioProcessor());
+    }
+
+    @Override
+    public void close() {
+        this.processors.values().removeIf(processor -> {
+            processor.close();
+            return true;
+        });
     }
 }

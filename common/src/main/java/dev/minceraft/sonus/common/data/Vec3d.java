@@ -45,4 +45,9 @@ public class Vec3d {
         double dz = this.z - listenerPos.getZ();
         return dx * dx + dy * dy + dz * dz;
     }
+
+    @Override
+    public String toString() {
+        return "Vec3d[" + this.x + ", " + this.y + ", " + this.z + ']';
+    }
 }
