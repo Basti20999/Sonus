@@ -43,18 +43,18 @@ import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
 @NullMarked
 public class AgentListener implements Listener {
 
-    private final SonusAgentPlugin plugin;
+    protected final SonusAgentPlugin plugin;
 
-    private final Map<UUID, WorldVec3d> positionUpdates = new HashMap<>();
-    private final Table<UUID, UUID, SonusPlayerState> playerStates = HashBasedTable.create();
-    private final Table<UUID, UUID, SonusPlayerState> playerStateUpdates = HashBasedTable.create();
-    private final Set<Map.Entry<Player, Player>> visibilityChanges = new HashSet<>();
+    protected final Map<UUID, WorldVec3d> positionUpdates = new HashMap<>();
+    protected final Table<UUID, UUID, SonusPlayerState> playerStates = HashBasedTable.create();
+    protected final Table<UUID, UUID, SonusPlayerState> playerStateUpdates = HashBasedTable.create();
+    protected final Set<Map.Entry<Player, Player>> visibilityChanges = new HashSet<>();
 
-    private final Map<UUID, @Nullable String> teams = new HashMap<>();
-    private final Map<UUID, @Nullable String> teamUpdates = new HashMap<>();
+    protected final Map<UUID, @Nullable String> teams = new HashMap<>();
+    protected final Map<UUID, @Nullable String> teamUpdates = new HashMap<>();
 
-    private boolean dirtyPlayerMeta = true;
-    private boolean dirtyRoomDefinition = true;
+    protected boolean dirtyPlayerMeta = true;
+    protected boolean dirtyRoomDefinition = true;
 
     public AgentListener(SonusAgentPlugin plugin) {
         this.plugin = plugin;
@@ -68,6 +68,10 @@ public class AgentListener implements Listener {
         return new SonusPlayerState(target.getUniqueId(), staticHidden, spatialHidden);
     }
 
+    protected boolean isPlayerIgnored(Player player) {
+        return false;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         // specify initial player position
@@ -79,7 +83,7 @@ public class AgentListener implements Listener {
         Map<UUID, SonusPlayerState> playerRow = this.playerStates.row(playerId);
         Map<UUID, SonusPlayerState> playerColumn = this.playerStates.column(playerId);
         for (Player target : Bukkit.getOnlinePlayers()) {
-            if (player == target) {
+            if (player == target || this.isPlayerIgnored(target)) {
                 continue;
             }
             UUID targetId = target.getUniqueId();
@@ -104,7 +108,15 @@ public class AgentListener implements Listener {
         this.teams.remove(playerId);
 
         // re-send room definition to service if everyone quits
-        if (Bukkit.getOnlinePlayers().size() <= 1) {
+        int playerCount = 0;
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!this.isPlayerIgnored(player)) {
+                if (++playerCount > 1) {
+                    break;
+                }
+            }
+        }
+        if (playerCount <= 1) {
             this.dirtyRoomDefinition = true;
         }
     }
@@ -128,8 +140,10 @@ public class AgentListener implements Listener {
                 || player.getGameMode() == GameMode.SPECTATOR) {
             // TODO better solution for this
             for (Player target : Bukkit.getOnlinePlayers()) {
-                this.visibilityChanges.add(Map.entry(player, target));
-                this.visibilityChanges.add(Map.entry(target, player));
+                if (player != target && !this.isPlayerIgnored(target)) {
+                    this.visibilityChanges.add(Map.entry(player, target));
+                    this.visibilityChanges.add(Map.entry(target, player));
+                }
             }
         }
     }
@@ -158,6 +172,9 @@ public class AgentListener implements Listener {
     public void tickTeams() {
         Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
         for (Player player : Bukkit.getOnlinePlayers()) {
+            if (this.isPlayerIgnored(player)) {
+                continue;
+            }
             Team playerTeam = scoreboard.getPlayerTeam(player);
             String name = playerTeam == null ? null : playerTeam.getName();
 
