@@ -63,6 +63,7 @@ public class SvcAdapter implements SonusAdapter {
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setLocation(pos);
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
+        connection.sendPacket(packet);
     }
 
     @Override
@@ -78,6 +79,7 @@ public class SvcAdapter implements SonusAdapter {
         packet.setData(connection.getProcessor(source.getSenderId()).encode(audio.data()));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
+        connection.sendPacket(packet);
     }
 
     @Override
