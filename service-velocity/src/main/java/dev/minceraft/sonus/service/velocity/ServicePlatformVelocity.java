@@ -3,6 +3,7 @@ package dev.minceraft.sonus.service.velocity;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -74,12 +75,11 @@ public class ServicePlatformVelocity implements IServicePlatform {
     @Override
     public Set<IServer> getServers() {
         Collection<RegisteredServer> registered = this.server.getAllServers();
-        Set<IServer> result = new HashSet<>(registered.size());
-
+        ImmutableSet.Builder<IServer> result = ImmutableSet.builderWithExpectedSize(registered.size());
         for (RegisteredServer server : registered) {
             result.add(new VelocityServer(server.getServerInfo()));
         }
-        return result;
+        return result.build();
     }
 
     @Override

@@ -26,10 +26,9 @@ public final class AdapterManager {
     }
 
     public void init() {
-        LOGGER.info("Try to init {} adapters", this.adapters.size());
         for (SonusAdapter adapter : this.adapters) {
             try {
-                LOGGER.info("Init {}", adapter.getClass().getSimpleName());
+                LOGGER.info("Initializing {} adapter...", adapter.getClass().getSimpleName());
                 adapter.init(this.service);
                 VoiceProtocolAdapter proto = adapter.getProtocolAdapter();
                 this.adaptersByMagic[proto.getMagicByte() & 0xFF] = proto;

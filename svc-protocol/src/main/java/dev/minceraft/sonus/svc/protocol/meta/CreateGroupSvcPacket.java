@@ -31,7 +31,7 @@ public class CreateGroupSvcPacket extends SvcMetaPacket<CreateGroupSvcPacket> {
     @Override
     public void decode(ByteBuf buf) {
         this.name = Utf8String.read(buf, 512);
-        this.password = DataTypeUtil.readIf(buf, b -> Utf8String.read(b, 512));
+        this.password = DataTypeUtil.readNullable(buf, b -> Utf8String.read(b, 512));
         this.type = SonusGroupType.values()[buf.readShort()];
     }
 

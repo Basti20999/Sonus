@@ -28,7 +28,7 @@ public class JoinedGroupSvcPacket extends SvcMetaPacket<JoinedGroupSvcPacket> {
 
     @Override
     public void decode(ByteBuf buf) {
-        this.groupId = DataTypeUtil.readIf(buf, DataTypeUtil::readUniqueId);
+        this.groupId = DataTypeUtil.readNullable(buf, DataTypeUtil::readUniqueId);
         this.wrongPassword = buf.readBoolean();
     }
 

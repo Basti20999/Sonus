@@ -7,6 +7,10 @@ import java.util.UUID;
 
 public record SonusPlayerState(UUID playerId, boolean tablistHidden, boolean hidden) {
 
+    public SonusPlayerState(UUID playerId, boolean hidden) {
+        this(playerId, hidden, hidden);
+    }
+
     public void write(ByteBuf buf) {
         DataTypeUtil.writeUniqueId(buf, this.playerId);
         buf.writeBoolean(this.tablistHidden);

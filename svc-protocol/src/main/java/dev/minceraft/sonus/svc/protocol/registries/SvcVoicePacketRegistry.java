@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.registries;
 
-
 import dev.minceraft.sonus.common.protocol.registry.SimpleRegistry;
 import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateAckSvcPacket;
@@ -32,7 +31,7 @@ public final class SvcVoicePacketRegistry {
                     .register(AuthenticateSvcPacket.class, AuthenticateSvcPacket::new)
                     .register(AuthenticateAckSvcPacket.class, AuthenticateAckSvcPacket::new)
                     .register(PingSvcPacket.class, PingSvcPacket::new)
-                    .register(KeepAliveSvcPacket.class, KeepAliveSvcPacket::new)
+                    .register(KeepAliveSvcPacket.class, () -> KeepAliveSvcPacket.INSTANCE)
                     .register(ConnectionCheckSvcPacket.class, ConnectionCheckSvcPacket::new)
                     .register(ConnectionCheckAckSvcPacket.class, ConnectionCheckAckSvcPacket::new)
                     .build();

@@ -13,7 +13,7 @@ public class VelocityServer implements IServer {
 
     public VelocityServer(ServerInfo server) {
         this.server = server;
-        this.uniqueId = UUID.nameUUIDFromBytes(server.getName().getBytes(StandardCharsets.UTF_8));
+        this.uniqueId = UUID.nameUUIDFromBytes(("VeloServer:" + server.getName()).getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

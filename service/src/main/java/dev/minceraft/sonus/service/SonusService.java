@@ -42,26 +42,16 @@ public final class SonusService implements ISonusService {
     }
 
     public void init() {
-        LOGGER.info("Initializing Sonus Service...");
-
-        LOGGER.info("Reloading configuration...");
+        LOGGER.info("Initializing sonus service...");
         this.config.reloadConfig();
-
-        LOGGER.info("Initializing Adapters...");
         this.adapters.init();
-
-        LOGGER.info("Initializing Room Manager...");
         this.roomManager.init();
-
-        LOGGER.info("Initializing agent handlers...");
         this.agentManager.init();
-
-        LOGGER.info("Initializing udp server...");
         this.udpServer.bind();
     }
 
     public void shutdown() {
-        LOGGER.info("Shutting down Sonus Service...");
+        LOGGER.info("Shutting down sonus service...");
         this.udpServer.shutdown();
     }
 

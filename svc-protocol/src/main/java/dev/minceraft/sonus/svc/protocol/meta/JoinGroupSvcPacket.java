@@ -30,7 +30,7 @@ public class JoinGroupSvcPacket extends SvcMetaPacket<JoinGroupSvcPacket> {
     @Override
     public void decode(ByteBuf buf) {
         this.groupId = DataTypeUtil.readUniqueId(buf);
-        this.password = DataTypeUtil.readIf(buf, b -> Utf8String.read(b, 512));
+        this.password = DataTypeUtil.readNullable(buf, b -> Utf8String.read(b, 512));
     }
 
     @Override

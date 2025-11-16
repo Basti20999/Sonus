@@ -12,7 +12,7 @@ dependencies {
 }
 
 configure<BukkitPluginDescription> {
-    name = "sonusagent"
+    name = "SonusAgent"
     authors = listOf("pianoman911", "booky10")
     website = "https://minceraft.dev/sonus"
     apiVersion = "1.13"

@@ -52,27 +52,26 @@ public class UdpServer implements IUdpServer {
                     }
                 })
                 .bind(config.getBind());
-        LOGGER.info("Binding sonus udp server on {}", config.getBind());
+
         CompletableFuture.runAsync(() -> {
             future.awaitUninterruptibly();
             this.channel = future.channel();
 
             Throwable error = future.cause();
             if (error != null) {
-                LOGGER.error("Error while binding sonus udp server", error);
+                LOGGER.error("Error while binding sonus server", error);
             } else {
-                LOGGER.info("Sonus udp server bound on {} and broadcasting remote {}", config.getBind(), config.getHost());
+                LOGGER.info("Sonus server bound on {} (host {})", config.getBind(), config.getHost());
             }
         });
     }
 
     public void shutdown() {
-        LOGGER.info("Shutting down Sonus UDP server...");
+        LOGGER.info("Shutting down sonus server...");
         if (this.channel != null) {
             this.channel.close().awaitUninterruptibly();
         }
         this.bossGroup.shutdownGracefully().awaitUninterruptibly();
-        LOGGER.info("Sonus UDP server shut down.");
     }
 
     @Override
@@ -95,7 +94,7 @@ public class UdpServer implements IUdpServer {
         if (this.channel != null) {
             this.channel.writeAndFlush(data);
         } else {
-            LOGGER.warn("Cannot send packet, UDP server is not bound yet.");
+            LOGGER.warn("Cannot send packet, server hasn't booted yet");
         }
     }
 }

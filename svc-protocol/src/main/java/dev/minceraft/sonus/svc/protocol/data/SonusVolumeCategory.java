@@ -29,8 +29,8 @@ public class SonusVolumeCategory {
     public SonusVolumeCategory(ByteBuf buf) {
         this.id = Utf8String.read(buf, 16);
         this.name = Utf8String.read(buf, 16);
-        this.description = DataTypeUtil.readIf(buf, Utf8String::read);
-        this.icon = DataTypeUtil.readIf(buf, SonusVolumeCategory::readIconBytes);
+        this.description = DataTypeUtil.readNullable(buf, Utf8String::read);
+        this.icon = DataTypeUtil.readNullable(buf, SonusVolumeCategory::readIconBytes);
     }
 
     public SonusVolumeCategory(JsonObject json) {

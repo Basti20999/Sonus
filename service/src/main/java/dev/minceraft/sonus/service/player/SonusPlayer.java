@@ -2,7 +2,6 @@ package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
@@ -19,10 +18,10 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.util.TriState;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -384,6 +383,9 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public boolean canSee(ISonusPlayer target) {
+        if (this == target) {
+            return true; // the player can always view themselves, regardless of what happens
+        }
         // if the target is in a primary room, this player should be able to
         // see them in the group selection; we therefore need to send status updates
         if (target.getPrimaryRoom() == null) {
@@ -392,17 +394,17 @@ public final class SonusPlayer implements ISonusPlayer {
                 return false;
             }
         }
-        // check whether the player is fully hidden or not
+        // check whether the player is fully hidden or not; if no state is set, default to hidden,
+        // to not expose vanished players in groups in server switch
         SonusPlayerState state = this.perPlayerStates.get(target.getUniqueId());
         return state != null && !state.tablistHidden();
     }
 
-    public void setStates(Collection<SonusPlayerState> states) {
-        ImmutableMap.Builder<UUID, SonusPlayerState> statesMap = ImmutableMap.builderWithExpectedSize(states.size());
-        for (SonusPlayerState state : states) {
-            statesMap.put(state.playerId(), state);
+    @ApiStatus.Internal
+    public void setStates(Map<UUID, SonusPlayerState> states) {
+        if (!states.equals(this.perPlayerStates)) {
+            this.perPlayerStates = Map.copyOf(states);
         }
-        this.perPlayerStates = statesMap.build();
     }
 
     public void handleQuit() {

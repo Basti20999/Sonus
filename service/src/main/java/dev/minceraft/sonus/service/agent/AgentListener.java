@@ -1,6 +1,6 @@
 package dev.minceraft.sonus.service.agent;
 
-import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
@@ -13,7 +13,6 @@ import dev.minceraft.sonus.service.player.SonusPlayer;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,8 +31,9 @@ public class AgentListener implements IMetaHandler {
     public void handleBackendTick(BackendTickMessage message) {
         PlayerManager playerManager = this.service.getPlayerManager();
 
-        if (message.getPositions() != null) {
-            for (Map.Entry<UUID, WorldVec3d> entry : message.getPositions().entrySet()) {
+        Map<UUID, WorldVec3d> positions = message.getPositions();
+        if (positions != null) {
+            for (Map.Entry<UUID, WorldVec3d> entry : positions.entrySet()) {
                 SonusPlayer player = playerManager.getPlayer(entry.getKey());
                 if (player == null) {
                     continue;
@@ -41,18 +41,18 @@ public class AgentListener implements IMetaHandler {
                 player.setPosition(entry.getValue());
             }
         }
-        if (message.getPerPlayerStates() != null) {
-            Multimap<UUID, SonusPlayerState> states = message.getPerPlayerStates();
-            for (Map.Entry<UUID, Collection<SonusPlayerState>> entry : states.asMap().entrySet()) {
-                SonusPlayer player = playerManager.getPlayer(entry.getKey());
-                if (player == null) {
-                    continue;
+        Table<UUID, UUID, SonusPlayerState> perPlayerStates = message.getPerPlayerStates();
+        if (perPlayerStates != null) {
+            for (Map.Entry<UUID, Map<UUID, SonusPlayerState>> row : perPlayerStates.rowMap().entrySet()) {
+                SonusPlayer player = playerManager.getPlayer(row.getKey());
+                if (player != null) {
+                    player.setStates(row.getValue());
                 }
-                player.setStates(entry.getValue());
             }
         }
-        if (message.getTeams() != null) {
-            for (Map.Entry<UUID, @Nullable String> entry : message.getTeams().entrySet()) {
+        Map<UUID, @Nullable String> teams = message.getTeams();
+        if (teams != null) {
+            for (Map.Entry<UUID, @Nullable String> entry : teams.entrySet()) {
                 SonusPlayer player = playerManager.getPlayer(entry.getKey());
                 if (player == null) {
                     continue;

@@ -30,7 +30,7 @@ public class SvcPlayerState {
         this.disconnected = buf.readBoolean();
         this.playerId = new UUID(buf.readLong(), buf.readLong());
         this.name = Utf8String.read(buf);
-        this.groupId = DataTypeUtil.readIf(buf, DataTypeUtil::readUniqueId);
+        this.groupId = DataTypeUtil.readNullable(buf, DataTypeUtil::readUniqueId);
     }
 
     public SvcPlayerState(JsonObject json) {

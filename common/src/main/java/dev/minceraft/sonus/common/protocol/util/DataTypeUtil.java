@@ -77,7 +77,7 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
         }
     }
 
-    public static <T> @Nullable T readIf(ByteBuf buf, Function<ByteBuf, T> reader) {
+    public static <T> @Nullable T readNullable(ByteBuf buf, Function<ByteBuf, T> reader) {
         if (buf.readBoolean()) {
             return reader.apply(buf);
         }

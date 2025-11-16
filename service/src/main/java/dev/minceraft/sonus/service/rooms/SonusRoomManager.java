@@ -41,7 +41,7 @@ public class SonusRoomManager implements ISonusRoomManager {
         for (IServer server : servers) {
             // construct room if it doesn't exist already
             this.rooms.computeIfAbsent(server.getUniqueId(), serverId -> {
-                LOGGER.info("Creating room for server {} ({})", server.getName(), serverId);
+                LOGGER.info("Creating room for server {} ({})...", server.getName(), serverId);
                 return new ServerRoom(this.service, server, new RoomDefinition());
             });
             serverIds.add(server.getUniqueId());
