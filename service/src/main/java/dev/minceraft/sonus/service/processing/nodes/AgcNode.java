@@ -8,7 +8,7 @@ import dev.minceraft.sonus.service.processing.AudioPipelineNode;
 
 import java.io.IOException;
 
-public final class AgcNode implements AudioPipelineNode {
+public final class AgcNode implements AudioPipelineNode, AutoCloseable {
 
     private static final int TARGET = dbSample(-5d); // -5 dBFS
 
@@ -38,5 +38,12 @@ public final class AgcNode implements AudioPipelineNode {
     @Override
     public void process(SonusAudio audio) {
         this.agc.agc(audio.data());
+    }
+
+    @Override
+    public void close() {
+        try (this.agc) {
+            // NO-OP
+        }
     }
 }

@@ -33,7 +33,7 @@ import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
 
 @NullMarked
-public final class SonusPlayer implements ISonusPlayer {
+public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
 
     private final SonusService service;
     private final IPlatformPlayer platform;
@@ -428,6 +428,13 @@ public final class SonusPlayer implements ISonusPlayer {
         // leave all rooms (includes primary + server rooms)
         for (IRoom room : Set.copyOf(this.voiceRooms.values())) {
             this.leaveRoom(room);
+        }
+    }
+
+    @Override
+    public void close() {
+        try (AgcNode ignoredAgcNode = this.agcNode) {
+            // NO-OP
         }
     }
 }

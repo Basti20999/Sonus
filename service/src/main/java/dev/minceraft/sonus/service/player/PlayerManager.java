@@ -23,12 +23,13 @@ public final class PlayerManager implements IPlayerManager {
     }
 
     public boolean unregisterPlayer(UUID playerId) {
-        SonusPlayer removed = this.players.remove(playerId);
-        if (removed == null) {
-            return false;
+        try (SonusPlayer removed = this.players.remove(playerId)) {
+            if (removed == null) {
+                return false;
+            }
+            removed.handleQuit();
+            return true;
         }
-        removed.handleQuit();
-        return true;
     }
 
     @Override
