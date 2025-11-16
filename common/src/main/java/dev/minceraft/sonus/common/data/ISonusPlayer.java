@@ -75,7 +75,7 @@ public interface ISonusPlayer extends IAudioSource {
 
     void updateState();
 
-    boolean hasPermission(String permission, TriState defaultValue);
+    boolean hasPermission(String permission, boolean defaultValue);
 
     boolean canSee(ISonusPlayer target);
 }

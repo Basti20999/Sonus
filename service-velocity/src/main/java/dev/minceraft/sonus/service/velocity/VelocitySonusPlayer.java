@@ -10,7 +10,6 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -75,11 +74,11 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     }
 
     @Override
-    public boolean hasPermission(String permission, TriState defaultValue) {
+    public boolean hasPermission(String permission, boolean defaultValue) {
         Tristate permissionValue = this.player.getPermissionValue(permission);
-        if (defaultValue != TriState.NOT_SET && permissionValue == Tristate.UNDEFINED) {
-            return defaultValue == TriState.TRUE;
+        if (permissionValue != Tristate.UNDEFINED) {
+            return permissionValue.asBoolean();
         }
-        return permissionValue.asBoolean();
+        return defaultValue;
     }
 }

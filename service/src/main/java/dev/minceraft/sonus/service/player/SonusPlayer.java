@@ -70,7 +70,7 @@ public final class SonusPlayer implements ISonusPlayer {
 
     @Override
     public void handleAudioInput(SonusAudio audio) {
-        if (this.muted || !this.platform.hasPermission(PERMISSION_VOICE_SPEAK, TriState.TRUE)) {
+        if (this.muted || !this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
             return;
         }
 
@@ -116,7 +116,7 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     private boolean canHear(IAudioSource source, boolean spatial) {
-        if (this.deafened || !this.platform.hasPermission(PERMISSION_VOICE_LISTEN, TriState.TRUE)) {
+        if (this.deafened || !this.platform.hasPermission(PERMISSION_VOICE_LISTEN, true)) {
             return false;
         }
         IRoom primaryRoom = this.getPrimaryRoom();
@@ -182,7 +182,7 @@ public final class SonusPlayer implements ISonusPlayer {
     @Override
     public boolean canAccessRoom(IRoom room, @Nullable String password) {
         // check password
-        if (!this.hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, TriState.NOT_SET)) {
+        if (!this.hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false)) {
             if (!Objects.equals(room.getPassword(), password)) {
                 return false; // wrong password (and no bypass permission)
             }
@@ -377,7 +377,7 @@ public final class SonusPlayer implements ISonusPlayer {
     }
 
     @Override
-    public boolean hasPermission(String permission, TriState defaultValue) {
+    public boolean hasPermission(String permission, boolean defaultValue) {
         return this.platform.hasPermission(permission, defaultValue);
     }
 

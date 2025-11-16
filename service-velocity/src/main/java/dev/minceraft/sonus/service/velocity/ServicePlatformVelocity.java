@@ -8,12 +8,9 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
-import dev.minceraft.sonus.service.rooms.AbstractRoom;
-import dev.minceraft.sonus.service.rooms.ServerRoom;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.key.Key;
@@ -23,7 +20,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -85,11 +81,6 @@ public class ServicePlatformVelocity implements IServicePlatform {
     @Override
     public IServer getServer(UUID uniqueId) {
         return this.serverCache.get(uniqueId);
-    }
-
-    @Override
-    public AbstractRoom provideRoom(IServer server) {
-        return new ServerRoom(this.velocityPlugin.getService(), server, new RoomDefinition());
     }
 
     public ServicePlatformVelocity connectPlugin(VelocitySonusService velocityPlugin) {

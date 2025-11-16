@@ -64,7 +64,7 @@ public class SvcSonusListener implements ISonusServiceEvents {
     @Override
     public void onGroupCreate(IRoom room) {
         this.adapter.getSessions().broadcast(connection -> {
-            boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, TriState.NOT_SET);
+            boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
             AddGroupSvcPacket packet = new AddGroupSvcPacket();
             SonusClientGroup group = new SonusClientGroup(room, bypassPassword);
             packet.setGroup(group);

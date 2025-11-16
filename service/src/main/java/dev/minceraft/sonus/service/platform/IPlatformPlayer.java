@@ -3,7 +3,6 @@ package dev.minceraft.sonus.service.platform;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -23,5 +22,5 @@ public interface IPlatformPlayer {
 
     void ensureTabListed(ISonusPlayer target);
 
-    boolean hasPermission(String permission, TriState defaultValue);
+    boolean hasPermission(String permission, boolean defaultValue);
 }

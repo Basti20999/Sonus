@@ -83,7 +83,7 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
         if (!VersionManager.SUPPORTED_VERSIONS.contains(packet.getCompatibilityVersion())) {
             return null; // Incompatible version
         }
-        if (!player.hasPermission(PERMISSION_CONNECT_SVC, TriState.TRUE)) {
+        if (!player.hasPermission(PERMISSION_CONNECT_SVC, true)) {
             return null;
         }
         return new SvcConnection(this.protocolAdapter, player);

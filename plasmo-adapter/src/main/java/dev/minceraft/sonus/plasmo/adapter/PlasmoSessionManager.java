@@ -70,7 +70,7 @@ public class PlasmoSessionManager {
         if (player == null) {
             return null;
         }
-        if (!player.hasPermission(PERMISSION_CONNECT_PLASMO, TriState.TRUE)) {
+        if (!player.hasPermission(PERMISSION_CONNECT_PLASMO, true)) {
             return null;
         }
         PlasmoConnection plasmoConnection = new PlasmoConnection(this.adapter, player);

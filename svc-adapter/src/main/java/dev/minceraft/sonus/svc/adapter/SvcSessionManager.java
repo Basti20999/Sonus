@@ -60,7 +60,7 @@ public class SvcSessionManager {
         connection.sendPacket(statesPacket);
 
         // send group initialization packets for everything
-        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, TriState.NOT_SET);
+        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
         for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
             AddGroupSvcPacket packet = new AddGroupSvcPacket();
             packet.setGroup(new SonusClientGroup(room, bypassPassword));
