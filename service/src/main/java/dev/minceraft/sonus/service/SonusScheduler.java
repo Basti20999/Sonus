@@ -27,6 +27,10 @@ public class SonusScheduler implements ISonusScheduler {
         return new ScheduledTask(scheduledFuture);
     }
 
+    public void shutdown() {
+        this.scheduler.shutdownNow();
+    }
+
     private record WrappedRunnable(Runnable runnable) implements Runnable {
 
         @Override
