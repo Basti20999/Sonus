@@ -42,6 +42,7 @@ public final class SonusPlayer implements ISonusPlayer {
     // keep track of which rooms this player is in
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
     private @Nullable IRoom serverRoom;
+    private @Nullable IRoom prevPrimaryRoom; // hack to fix state updates
     private @Nullable IRoom primaryRoom;
 
     // visibility states of other players
@@ -211,7 +212,9 @@ public final class SonusPlayer implements ISonusPlayer {
         room.removeMember(this);
         if (this.primaryRoom == room) {
             this.primaryRoom = null;
+            this.prevPrimaryRoom = room;
             this.updateState();
+            this.prevPrimaryRoom = null;
         }
         if (this.serverRoom == room) {
             this.serverRoom = null;
@@ -261,12 +264,14 @@ public final class SonusPlayer implements ISonusPlayer {
             this.leaveRoom(prevRoom);
         }
         // enter new room
+        this.prevPrimaryRoom = prevRoom;
         this.primaryRoom = room;
         if (room != null) {
             this.joinRoom(room);
         }
         // trigger state update
         this.updateState();
+        this.prevPrimaryRoom = null;
     }
 
     @Override
@@ -392,7 +397,7 @@ public final class SonusPlayer implements ISonusPlayer {
         }
         // if the target is in a primary room, this player should be able to
         // see them in the group selection; we therefore need to send status updates
-        if (target.getPrimaryRoom() == null) {
+        if (target.getPrimaryRoom() == null && ((SonusPlayer) target).prevPrimaryRoom != this.primaryRoom) {
             // if the target isn't in a primary room and the server doesn't match, don't send updates
             if (!Objects.equals(this.getServerId(), target.getServerId())) {
                 return false;
