@@ -3,59 +3,49 @@ package dev.minceraft.sonus.service.network;
 
 import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.IoHandlerFactory;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollDatagramChannel;
-import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.kqueue.KQueue;
 import io.netty.channel.kqueue.KQueueDatagramChannel;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.kqueue.KQueueIoHandler;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.incubator.channel.uring.IOUring;
-import io.netty.incubator.channel.uring.IOUringDatagramChannel;
-import io.netty.incubator.channel.uring.IOUringEventLoopGroup;
+import io.netty.channel.uring.IoUring;
+import io.netty.channel.uring.IoUringDatagramChannel;
+import io.netty.channel.uring.IoUringIoHandler;
 import io.netty.util.concurrent.FastThreadLocalThread;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 @NullMarked
 public enum TransportType {
 
-    NIO("nio",
-            factory -> new NioEventLoopGroup(0, factory),
-            NioDatagramChannel::new
-    ),
-    EPOLL("epoll",
-            factory -> new EpollEventLoopGroup(0, factory),
-            EpollDatagramChannel::new
-    ),
-    IO_URING("io_uring",
-            factory -> new IOUringEventLoopGroup(0, factory),
-            IOUringDatagramChannel::new
-    ),
-    KQUEUE("kqueue",
-            factory -> new KQueueEventLoopGroup(0, factory),
-            KQueueDatagramChannel::new
-    ),
+    NIO("nio", NioIoHandler::newFactory, NioDatagramChannel::new),
+    EPOLL("epoll", EpollIoHandler::newFactory, EpollDatagramChannel::new),
+    IO_URING("io_uring", IoUringIoHandler::newFactory, IoUringDatagramChannel::new),
+    KQUEUE("kqueue", KQueueIoHandler::newFactory, KQueueDatagramChannel::new),
     ;
 
     private static final boolean NO_IO_URING = Boolean.getBoolean("sonus.network.no_io_uring");
 
     private final String displayName;
-    private final Function<ThreadFactory, EventLoopGroup> groupConstructor;
+    private final Supplier<IoHandlerFactory> ioHandlerCtor;
     private final ChannelFactory<? extends DatagramChannel> channelFactory;
 
     TransportType(
             String displayName,
-            Function<ThreadFactory, EventLoopGroup> groupConstructor,
+            Supplier<IoHandlerFactory> ioHandlerCtor,
             ChannelFactory<? extends DatagramChannel> channelFactory
     ) {
         this.displayName = displayName;
-        this.groupConstructor = groupConstructor;
+        this.ioHandlerCtor = ioHandlerCtor;
         this.channelFactory = channelFactory;
     }
 
@@ -66,7 +56,7 @@ public enum TransportType {
     }
 
     public static TransportType get() {
-        if (!NO_IO_URING && IOUring.isAvailable()) {
+        if (!NO_IO_URING && IoUring.isAvailable()) {
             return IO_URING;
         } else if (Epoll.isAvailable()) {
             return EPOLL;
@@ -78,7 +68,8 @@ public enum TransportType {
     }
 
     public EventLoopGroup createGroup(String type) {
-        return this.groupConstructor.apply(createThreadFactory(this.displayName, type));
+        ThreadFactory threadFactory = createThreadFactory(this.displayName, type);
+        return new MultiThreadIoEventLoopGroup(0, threadFactory, this.ioHandlerCtor.get());
     }
 
     public ChannelFactory<? extends DatagramChannel> getChannelFactory() {

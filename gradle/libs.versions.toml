@@ -8,8 +8,7 @@ runtask = "2.3.1"
 leangen = "2.0.1"
 jspecify = "1.0.0"
 checkerqual = "3.49.5"
-netty = "4.1.123.Final"
-iouring = "0.0.24.Final"
+netty = "4.2.7.Final"
 adventure = "4.23.0"
 slf4j = "2.0.17"
 guava = "33.4.8-jre"
@@ -54,7 +53,7 @@ configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref 
 netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
 netty-transport-epoll = { module = "io.netty:netty-transport-native-epoll", version.ref = "netty" }
-netty-transport-iouring = { module = "io.netty.incubator:netty-incubator-transport-native-io_uring", version.ref = "iouring" }
+netty-transport-iouring = { module = "io.netty:netty-transport-native-io_uring", version.ref = "netty" }
 netty-transport-kqueue = { module = "io.netty:netty-transport-native-kqueue", version.ref = "netty" }
 
 # paper agent
