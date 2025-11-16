@@ -29,6 +29,7 @@ public class DefinedRoom extends AbstractRoom {
             switch (state) {
                 case STATIC -> receiver.sendStaticAudio(source, audio);
                 case SPATIAL -> receiver.sendSpatialAudio(source, audio);
+                case SPATIAL_NORMALIZED -> receiver.sendSpatialNormedAudio(source, audio);
             }
         }
     }

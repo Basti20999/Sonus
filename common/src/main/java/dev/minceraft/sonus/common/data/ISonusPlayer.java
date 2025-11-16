@@ -6,7 +6,6 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -36,6 +35,8 @@ public interface ISonusPlayer extends IAudioSource {
     void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position);
 
     void sendSpatialAudio(IAudioSource source, SonusAudio audio);
+
+    void sendSpatialNormedAudio(IAudioSource source, SonusAudio audio);
 
     boolean canAccessRoom(IRoom room, @Nullable String password);
 

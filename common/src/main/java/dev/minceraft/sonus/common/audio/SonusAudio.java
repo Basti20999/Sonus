@@ -4,9 +4,9 @@ package dev.minceraft.sonus.common.audio;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public record SonusAudio(byte[] data, long sequenceNumber) {
+public record SonusAudio(short[] data, long sequenceNumber) {
 
-    public SonusAudio(byte[] data) {
+    public SonusAudio(short[] data) {
         this(data, -1L);
     }
 
@@ -14,7 +14,7 @@ public record SonusAudio(byte[] data, long sequenceNumber) {
         return new SonusAudio(this.data, sequenceNumber);
     }
 
-    public SonusAudio withData(byte[] data) {
+    public SonusAudio withData(short[] data) {
         return new SonusAudio(data, this.sequenceNumber);
     }
 

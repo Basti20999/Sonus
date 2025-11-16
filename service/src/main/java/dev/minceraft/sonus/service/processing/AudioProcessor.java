@@ -4,11 +4,14 @@ import de.maxhenkel.opus4j.OpusDecoder;
 import de.maxhenkel.opus4j.OpusEncoder;
 import de.maxhenkel.opus4j.UnknownPlatformException;
 import dev.minceraft.sonus.common.SonusConstants;
+import dev.minceraft.sonus.common.audio.IAudioProcessor;
 import dev.minceraft.sonus.service.SonusService;
+import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 
-public class AudioProcessor {
+@NullMarked
+public final class AudioProcessor implements IAudioProcessor {
 
     private final OpusDecoder decoder;
     private final OpusEncoder encoder;
@@ -25,17 +28,13 @@ public class AudioProcessor {
         }
     }
 
+    @Override
     public short[] decode(byte[] data) {
         return this.decoder.decode(data);
     }
 
+    @Override
     public byte[] encode(short[] pcm) {
         return this.encoder.encode(pcm);
-    }
-
-    public byte[] process(byte[] input, AudioPipelineNode node) {
-        short[] decoded = this.decode(input);
-        short[] processed = node.process(decoded);
-        return this.encode(processed);
     }
 }

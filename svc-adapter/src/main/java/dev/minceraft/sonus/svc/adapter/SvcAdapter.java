@@ -36,47 +36,48 @@ public class SvcAdapter implements SonusAdapter {
 
     @Override
     public void sendStaticAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
+
         GroupSoundSvcPacket packet = new GroupSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
-        packet.setData(audio.data());
+        packet.setData(connection.getProcessor().encode(audio.data()));
         packet.setSequenceNumber(audio.sequenceNumber());
-
-        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
-        if (connection != null) {
-            connection.sendPacket(packet);
-        }
+        connection.sendPacket(packet);
     }
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio, Vec3d pos) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
+
         LocationSoundSvcPacket packet = new LocationSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
-        packet.setData(audio.data());
+        packet.setData(connection.getProcessor().encode(audio.data()));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setLocation(pos);
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
-
-        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
-        if (connection != null) {
-            connection.sendPacket(packet);
-        }
     }
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
+
         PlayerSoundSvcPacket packet = new PlayerSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
-        packet.setData(audio.data());
+        packet.setData(connection.getProcessor().encode(audio.data()));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
-
-        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
-        if (connection != null) {
-            connection.sendPacket(packet);
-        }
     }
 
     @Override

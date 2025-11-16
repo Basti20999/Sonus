@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
+import dev.minceraft.sonus.common.audio.IAudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
@@ -24,9 +25,13 @@ public class SvcConnection {
     private final SvcProtocolAdapter protocolAdapter;
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
+
     private final VoiceHandler voiceHandler;
     private final MetaHandler metaHandler;
+
     private @Nullable SvcPlayerCipherCodec cipher;
+    private final IAudioProcessor processor;
+
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
     private long lastKeepAlive = System.currentTimeMillis();
@@ -35,6 +40,8 @@ public class SvcConnection {
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
         this.protocolAdapter = protocolAdapter;
         this.player = player;
+
+        this.processor = protocolAdapter.getAdapter().getService().createAudioProcessor();
         this.voiceHandler = new VoiceHandler(this.protocolAdapter, this);
         this.metaHandler = new MetaHandler(this.protocolAdapter, this);
         this.player.setAdapter(protocolAdapter.getAdapter());
@@ -147,5 +154,9 @@ public class SvcConnection {
         this.version = version;
         // Cipher depends on the version, so we need to recreate it
         this.cipher = new SvcPlayerCipherCodec(this, this.protocolAdapter.getSvcCodec(), this.secret);
+    }
+
+    public IAudioProcessor getProcessor() {
+        return this.processor;
     }
 }

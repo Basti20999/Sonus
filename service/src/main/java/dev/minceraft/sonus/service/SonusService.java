@@ -3,6 +3,7 @@ package dev.minceraft.sonus.service;
 
 import dev.minceraft.sonus.common.ISonusConfig;
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.audio.IAudioProcessor;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
@@ -13,6 +14,7 @@ import dev.minceraft.sonus.service.agent.AgentManager;
 import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.player.PlayerManager;
+import dev.minceraft.sonus.service.processing.AudioProcessor;
 import dev.minceraft.sonus.service.rooms.SonusRoomManager;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
@@ -107,5 +109,10 @@ public final class SonusService implements ISonusService {
     @Override
     public PlayerManager getPlayerManager() {
         return this.players;
+    }
+
+    @Override
+    public IAudioProcessor createAudioProcessor() {
+        return new AudioProcessor(this);
     }
 }

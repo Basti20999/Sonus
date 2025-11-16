@@ -12,8 +12,8 @@ import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
-import dev.minceraft.sonus.service.processing.AudioProcessor;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
+import dev.minceraft.sonus.service.processing.util.SpatialNormProcessor;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -48,11 +48,8 @@ public final class SonusPlayer implements ISonusPlayer {
     // visibility states of other players
     private Map<UUID, SonusPlayerState> perPlayerStates = Map.of();
 
-    // audio input sequence number
-    private final AtomicLong sequenceNumber = new AtomicLong();
-    // automatic gain control
-    private @MonotonicNonNull AudioProcessor processor;
-    private @MonotonicNonNull AgcNode agcNode;
+    private final AtomicLong sequenceNumber = new AtomicLong(); // audio input sequence number
+    private @MonotonicNonNull AgcNode agcNode; // automatic gain control
 
     // metadata sent by the backend server agent
     private @Nullable WorldVec3d position;
@@ -78,23 +75,18 @@ public final class SonusPlayer implements ISonusPlayer {
         long sequence = this.sequenceNumber.updateAndGet(
                 num -> Math.max(num, audio.sequenceNumber()) + 1L);
         SonusAudio sequencedAudio = audio.withSequenceNumber(sequence);
-
-        SonusAudio processedAudio = this.processAudioInput(sequencedAudio);
-        this.broadcastAudioInput(processedAudio);
+        this.processAudioInput(sequencedAudio);
+        this.broadcastAudioInput(sequencedAudio);
     }
 
-    private SonusAudio processAudioInput(SonusAudio audio) {
-        if (!this.service.getConfig().agcEnabled()) {
-            return audio;
+    private void processAudioInput(SonusAudio audio) {
+        if (this.service.getConfig().agcEnabled()) {
+            // do automatic gain control on input audio to prevent destruction of ears
+            if (this.agcNode == null) {
+                this.agcNode = new AgcNode();
+            }
+            this.agcNode.process(audio);
         }
-        // do automatic gain control on input audio to prevent destruction of ears
-        if (this.agcNode == null) {
-            this.agcNode = new AgcNode();
-        }
-        if (this.processor == null) {
-            this.processor = new AudioProcessor(this.service);
-        }
-        return audio.withData(this.processor.process(audio.data(), this.agcNode));
     }
 
     private void broadcastAudioInput(SonusAudio audio) {
@@ -181,6 +173,17 @@ public final class SonusPlayer implements ISonusPlayer {
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio) {
         if (this.sonusAdapter != null && this.canHear(source, true)) {
             this.sonusAdapter.sendSpatialAudio(this, source, audio);
+        }
+    }
+
+    @Override
+    public void sendSpatialNormedAudio(IAudioSource source, SonusAudio audio) {
+        if (this.sonusAdapter == null || !this.canHear(source, true)) {
+            return;
+        }
+        WorldVec3d pos = SpatialNormProcessor.normalizeAudio(this.service, this, source, audio);
+        if (pos != null) { // if the position is null, the processor decided to cancel the audio packet
+            this.sonusAdapter.sendSpatialAudio(this, source, audio, pos);
         }
     }
 
