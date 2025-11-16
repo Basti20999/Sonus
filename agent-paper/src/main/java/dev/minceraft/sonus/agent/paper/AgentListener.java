@@ -76,7 +76,7 @@ public class AgentListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         // specify initial player position
         Player player = event.getPlayer();
-        this.onChangePos(player.getUniqueId(), player.getLocation());
+        this.onChangePos(player, player.getLocation());
 
         // set default player states for everything
         UUID playerId = player.getUniqueId();
@@ -129,7 +129,7 @@ public class AgentListener implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onMove(PlayerMoveEvent event) {
         if (event.hasChangedPosition()) {
-            this.onChangePos(event.getPlayer().getUniqueId(), event.getTo());
+            this.onChangePos(event.getPlayer(), event.getTo());
         }
     }
 
@@ -162,10 +162,11 @@ public class AgentListener implements Listener {
         }
     }
 
-    public void onChangePos(UUID playerId, Location location) {
+    public void onChangePos(Player player, Location location) {
         NamespacedKey dimensionKey = location.getWorld().getKey();
-        WorldVec3d pos = new WorldVec3d(location.getX(), location.getY(), location.getZ(), dimensionKey);
-        this.positionUpdates.put(playerId, pos);
+        double posY = location.getY() + player.getEyeHeight();
+        WorldVec3d pos = new WorldVec3d(location.getX(), posY, location.getZ(), dimensionKey);
+        this.positionUpdates.put(player.getUniqueId(), pos);
         this.dirtyPlayerMeta = true;
     }
 
