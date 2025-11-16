@@ -2,8 +2,6 @@ package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
 import dev.minceraft.sonus.common.IPlayerManager;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
-import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import org.jspecify.annotations.NullMarked;
@@ -62,11 +60,17 @@ public final class PlayerManager implements IPlayerManager {
         player.setDeafened(true);
         player.updateState(); // broadcast update
 
-        IRoom primaryRoom = player.getPrimaryRoom();
-        if (primaryRoom != null) {
-            for (ISonusPlayer member : primaryRoom.getMembers()) {
-                member.ensureTabListed(player);
-                player.ensureTabListed(member);
+        for (SonusPlayer target : this.players.values()) {
+            if (target.getPrimaryRoom() == null || target == player) {
+                continue; // no primary room set, ignore
+            }
+            // show skin of target for this player
+            if (player.canSee(target)) {
+                player.ensureTabListed(target);
+            }
+            // show skin of this player to target (if this player is in primary room)
+            if (player.getPrimaryRoom() != null && target.canSee(player)) {
+                target.ensureTabListed(player);
             }
         }
     }
