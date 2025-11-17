@@ -77,7 +77,7 @@ public final class PlayerManager implements IPlayerManager {
             return;
         }
         player.setStates(Map.of()); // reset player states on server switch
-        player.setConnected(false); // prevent packet sending
+        player.setConnected(false, false); // prevent packet sending
         player.setMuted(true);
         player.setDeafened(true);
         player.updateState(); // broadcast update

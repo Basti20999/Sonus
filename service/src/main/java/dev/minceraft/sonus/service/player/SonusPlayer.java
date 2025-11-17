@@ -10,12 +10,16 @@ import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.protocol.meta.IMetaMessage;
+import dev.minceraft.sonus.protocol.meta.MetaRegistry;
+import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import dev.minceraft.sonus.service.processing.util.SpatialNormProcessor;
 import dev.minceraft.sonus.service.server.SonusServer;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -33,6 +37,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
+import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
+import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL_KEY;
 
 @NullMarked
 public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
@@ -370,7 +376,30 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
 
     @Override
     public void setConnected(boolean connected) {
+        this.setConnected(connected, true);
+    }
+
+    public void setConnected(boolean connected, boolean sendToAgent) {
+        if (this.connected == connected) {
+            return; // no change
+        }
         this.connected = connected;
+        if (sendToAgent) {
+            PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();
+            packet.setPlayerId(this.getUniqueId());
+            packet.setConnected(connected);
+            this.sendMetaPacket(packet);
+        }
+    }
+
+    public void sendMetaPacket(IMetaMessage packet) {
+        ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
+        try {
+            MetaRegistry.REGISTRY.write(buf, packet);
+            this.sendPluginMessage(PLUGIN_MESSAGE_CHANNEL_KEY, buf.retain());
+        } finally {
+            buf.release();
+        }
     }
 
     @Override

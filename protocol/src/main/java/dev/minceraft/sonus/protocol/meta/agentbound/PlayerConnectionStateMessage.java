@@ -10,7 +10,6 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.UUID;
 
-// TODO fire this packet
 @NullMarked
 public class PlayerConnectionStateMessage implements IMetaMessage {
 
