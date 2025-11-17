@@ -21,7 +21,11 @@ public interface IAudioSource {
         return null;
     }
 
-    default @Nullable String getCategory() {
-        return null;
+    record Static(UUID senderId) implements IAudioSource {
+
+        @Override
+        public UUID getSenderId() {
+            return this.senderId;
+        }
     }
 }

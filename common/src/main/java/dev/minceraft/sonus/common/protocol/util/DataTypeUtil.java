@@ -7,6 +7,8 @@ import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jspecify.annotations.NullMarked;
 
@@ -82,6 +84,16 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
             return reader.apply(buf);
         }
         return null;
+    }
+
+    public static void writeComponentJson(ByteBuf buf, Component component) {
+        String componentJson = GsonComponentSerializer.gson().serialize(component);
+        Utf8String.write(buf, componentJson);
+    }
+
+    public static Component readComponentJson(ByteBuf buf) {
+        String componentJson = Utf8String.read(buf);
+        return GsonComponentSerializer.gson().deserialize(componentJson);
     }
 
     public <R, C, V> Table<R, C, V> readTable(ByteBuf buf, BufReader<R> rowReader, BufReader<C> columnReader, BufReader<V> valueReader) {

@@ -3,10 +3,13 @@ package dev.minceraft.sonus.common.adapter;
 
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.UUID;
 
 @NullMarked
 public interface SonusAdapter {
@@ -18,6 +21,10 @@ public interface SonusAdapter {
     void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio, Vec3d pos);
 
     void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio);
+
+    void registerCategory(ISonusPlayer player, AudioCategory category);
+
+    void unregisterCategory(ISonusPlayer player, UUID categoryId);
 
     VoiceProtocolAdapter getProtocolAdapter();
 }

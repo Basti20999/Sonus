@@ -1,12 +1,16 @@
 package dev.minceraft.sonus.svc.protocol.data;
 
 import com.google.gson.JsonObject;
+import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
+import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
+
+import java.util.function.Function;
 
 public class SonusVolumeCategory {
 
@@ -24,6 +28,14 @@ public class SonusVolumeCategory {
         this.name = name;
         this.description = description;
         this.icon = icon;
+    }
+
+    public SonusVolumeCategory(AudioCategory category, Function<Component, String> renderer) {
+        this.id = category.getUniqueId().toString();
+        this.name = renderer.apply(category.getName());
+        Component description = category.getDescription();
+        this.description = description != null ? renderer.apply(description) : null;
+        this.icon = null;
     }
 
     public SonusVolumeCategory(ByteBuf buf) {

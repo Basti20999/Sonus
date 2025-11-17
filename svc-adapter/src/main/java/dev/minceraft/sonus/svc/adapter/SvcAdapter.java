@@ -5,16 +5,22 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
+import dev.minceraft.sonus.svc.protocol.data.SonusVolumeCategory;
+import dev.minceraft.sonus.svc.protocol.meta.AddCategorySvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.RemoveCategorySvcPacket;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
 import dev.minceraft.sonus.svc.protocol.voice.GroupSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.LocationSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.PlayerSoundSvcPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.UUID;
 
 @NullMarked
 public class SvcAdapter implements SonusAdapter {
@@ -79,6 +85,28 @@ public class SvcAdapter implements SonusAdapter {
         packet.setData(connection.getProcessor(source.getSenderId()).encode(audio.data()));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
+        connection.sendPacket(packet);
+    }
+
+    @Override
+    public void registerCategory(ISonusPlayer player, AudioCategory category) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
+        AddCategorySvcPacket packet = new AddCategorySvcPacket();
+        packet.setCategory(new SonusVolumeCategory(category, player::renderPlainComponent));
+        connection.sendPacket(packet);
+    }
+
+    @Override
+    public void unregisterCategory(ISonusPlayer player, UUID categoryId) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
+        RemoveCategorySvcPacket packet = new RemoveCategorySvcPacket();
+        packet.setCategoryId(categoryId.toString());
         connection.sendPacket(packet);
     }
 

@@ -14,8 +14,10 @@ import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import dev.minceraft.sonus.service.processing.util.SpatialNormProcessor;
+import dev.minceraft.sonus.service.server.SonusServer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
@@ -59,6 +61,9 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     private boolean connected;
     private boolean muted;
     private boolean deafened;
+
+    // track server reference
+    private @Nullable SonusServer server;
 
     public SonusPlayer(SonusService service, IPlatformPlayer platform) {
         this.service = service;
@@ -389,6 +394,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     @Override
     public void updateState() {
         this.service.getEventManager().onPlayerStateUpdate(this);
+        this.updateServer();
     }
 
     @Override
@@ -417,6 +423,16 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
         return this.platform.canSeeFallback(((SonusPlayer) target).platform);
     }
 
+    @Override
+    public Component renderComponent(Component component) {
+        return this.platform.renderComponent(component);
+    }
+
+    @Override
+    public String renderPlainComponent(Component component) {
+        return this.platform.renderPlainComponent(component);
+    }
+
     @ApiStatus.Internal
     public void setStates(Map<UUID, SonusPlayerState> states) {
         if (!states.equals(this.perPlayerStates)) {
@@ -429,6 +445,27 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
         for (IRoom room : Set.copyOf(this.voiceRooms.values())) {
             this.leaveRoom(room);
         }
+        // invalidate server
+        this.updateServer(null);
+    }
+
+    public void updateServer() {
+        UUID serverId = this.platform.getServerId();
+        if (serverId != null) {
+            this.updateServer(this.service.getPlayerManager().getServer(serverId));
+        } else {
+            this.updateServer(null);
+        }
+    }
+
+    public void updateServer(@Nullable SonusServer server) {
+        if (server == this.server) {
+            return; // nothing changed
+        }
+        if (this.server != null) {
+            this.server.onQuit(this);
+        }
+        this.server = server;
     }
 
     @Override

@@ -3,7 +3,9 @@ package dev.minceraft.sonus.protocol.meta;
 
 import dev.minceraft.sonus.common.protocol.registry.SimpleRegistry;
 import dev.minceraft.sonus.common.protocol.util.VarInt;
+import dev.minceraft.sonus.protocol.meta.servicebound.AudioStreamMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
+import dev.minceraft.sonus.protocol.meta.servicebound.RegisterAudioCategoryMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.UpdateRoomDefinitionMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -18,6 +20,8 @@ public final class MetaRegistry {
                     .idCodec(VarInt::read, VarInt::write)
                     .register(BackendTickMessage.class, BackendTickMessage::new)
                     .register(UpdateRoomDefinitionMessage.class, UpdateRoomDefinitionMessage::new)
+                    .register(AudioStreamMessage.class, AudioStreamMessage::new)
+                    .register(RegisterAudioCategoryMessage.class, RegisterAudioCategoryMessage::new)
                     .build();
 
     private MetaRegistry() {
