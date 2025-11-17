@@ -119,6 +119,8 @@ public class AgentListener implements Listener {
         if (playerCount <= 1) {
             this.dirtyRoomDefinition = true;
         }
+
+        this.plugin.getApi().getConnectedPlayers().remove(playerId);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)

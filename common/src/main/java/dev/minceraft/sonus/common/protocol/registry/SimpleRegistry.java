@@ -15,8 +15,7 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> extends ContextedRe
         super(codec, idCodec, packets, idMapper);
     }
 
-    @Nullable
-    public T read(D data) {
+    public @Nullable T read(D data) {
         return this.read(data, null); // Pass null as context
     }
 
