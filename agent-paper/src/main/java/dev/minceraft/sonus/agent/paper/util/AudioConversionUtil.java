@@ -1,14 +1,20 @@
 package dev.minceraft.sonus.agent.paper.util;
 // Created by booky10 in TjcSonus (19:40 17.11.2024)
 
+import de.maxhenkel.lame4j.Mp3Decoder;
 import de.maxhenkel.lame4j.ShortArrayBuffer;
+import de.maxhenkel.lame4j.UnknownPlatformException;
 import org.joml.Math;
 import org.jspecify.annotations.NullMarked;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static dev.minceraft.sonus.common.SonusConstants.SAMPLE_RATE;
 
@@ -118,9 +124,40 @@ public final class AudioConversionUtil {
         return data;
     }
 
-    // inspired by https://github.com/henkelmax/simple-voice-chat/blob/20218b8d4169ec2af56c34a0aa07c2ee711a01e1/common/src/main/java/de/maxhenkel/voicechat/plugins/impl/mp3/Mp3DecoderImpl.java
+    public static short[] decodeMp3ToSonus(Path path, float volume) throws IOException, UnknownPlatformException {
+        int size = (int) Files.size(path);
+        try (InputStream input = Files.newInputStream(path)) {
+            return decodeMp3ToSonus(size, input, volume);
+        }
+    }
+
+    public static short[] decodeMp3ToSonus(InputStream input, float volume) throws IOException, UnknownPlatformException {
+        return decodeMp3ToSonus(input.available(), input, volume);
+    }
+
+    public static short[] decodeMp3ToSonus(int fileSize, InputStream input, float volume) throws IOException, UnknownPlatformException {
+        try (BufferedInputStream bufferedInput = new BufferedInputStream(input);
+             Mp3Decoder decoder = new Mp3Decoder(bufferedInput)) {
+            return decodeMp3ToSonus(fileSize, decoder, volume);
+        }
+    }
+
     public static short[] decodeMp3ToSonus(de.maxhenkel.lame4j.Mp3Decoder decoder, float volume) throws IOException {
-        ShortArrayBuffer buffer = new ShortArrayBuffer(2048);
+        return decodeMp3ToSonus(0, decoder, volume);
+    }
+
+    private static final int INITIAL_SAMPLE_COUNT = 2048;
+
+    // inspired by https://github.com/henkelmax/simple-voice-chat/blob/20218b8d4169ec2af56c34a0aa07c2ee711a01e1/common/src/main/java/de/maxhenkel/voicechat/plugins/impl/mp3/Mp3DecoderImpl.java
+    public static short[] decodeMp3ToSonus(int fileSize, de.maxhenkel.lame4j.Mp3Decoder decoder, float volume) throws IOException {
+        short[] firstFrame = decoder.decodeNextFrame();
+        if (firstFrame == null) {
+            throw new IllegalArgumentException("Failed to decode first mp3 frame from " + decoder);
+        }
+        // seems fine for some audios I tested, pre-allocates a bit more space
+        int estimatedSampleCount = fileSize > 0 ? (int) (fileSize / 9500d * decoder.getSampleRate()) : INITIAL_SAMPLE_COUNT;
+        ShortArrayBuffer buffer = new ShortArrayBuffer(estimatedSampleCount);
+        buffer.writeShorts(firstFrame);
         while (true) {
             short[] samples = decoder.decodeNextFrame();
             if (samples == null) {
