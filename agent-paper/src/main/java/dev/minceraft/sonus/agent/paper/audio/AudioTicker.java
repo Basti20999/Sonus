@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.agent.paper.audio;
 // Created by booky10 in Sonus (00:50 24.11.2025)
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.protocol.meta.servicebound.AudioStreamMessage.Frame;
@@ -28,15 +29,35 @@ public final class AudioTicker implements AutoCloseable {
     private long sequenceNumber = 0L;
 
     public AudioTicker(AudioSupplier delegate, AudioProcessor processor, int frameCount) {
+        Preconditions.checkArgument(frameCount > 0, "frameCount has to be positive");
         this.delegate = delegate;
         this.processor = processor;
         this.frameCount = frameCount;
     }
 
+    private void tickSingle() {
+        // faster for a single frame at once
+        short[] pcm = this.delegate.getAndTick();
+        if (pcm == null) {
+            this.frames = List.of();
+            return;
+        } else if (pcm.length != FRAME_SIZE) {
+            throw new IllegalStateException(this.delegate + " has provided unexpected PCM data length: " + Arrays.toString(pcm));
+        }
+        byte[] opus = this.processor.encode(pcm);
+        long seq = this.sequenceNumber++;
+        this.frames = List.of(new Frame(opus, seq));
+    }
+
     private synchronized void tick() {
+        if (this.frameCount == 1) {
+            this.tickSingle();
+            return;
+        }
         ImmutableList.Builder<Frame> frames = ImmutableList.builderWithExpectedSize(this.frameCount);
         for (int i = 0; i < this.frameCount; i++) {
-            short[] pcm = this.delegate.getAndTick();
+            // get with offset
+            short[] pcm = this.delegate.get(i);
             if (pcm == null) {
                 break; // end of stream
             } else if (pcm.length != FRAME_SIZE) {
@@ -45,6 +66,11 @@ public final class AudioTicker implements AutoCloseable {
             byte[] opus = this.processor.encode(pcm);
             long seq = this.sequenceNumber++;
             frames.add(new Frame(opus, seq));
+        }
+        // we may have some stuff we can't tick, so just get
+        // everything (from the future) and then tick everything afterward
+        for (int i = 0; i < this.frameCount; i++) {
+            this.delegate.tick();
         }
         this.frames = frames.build();
     }
