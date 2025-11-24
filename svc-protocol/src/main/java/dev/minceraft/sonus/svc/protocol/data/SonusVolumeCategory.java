@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.data;
 
+import com.google.common.primitives.Longs;
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
@@ -10,6 +11,7 @@ import io.netty.buffer.Unpooled;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
+import java.util.UUID;
 import java.util.function.Function;
 
 public class SonusVolumeCategory {
@@ -31,7 +33,7 @@ public class SonusVolumeCategory {
     }
 
     public SonusVolumeCategory(AudioCategory category, Function<Component, String> renderer) {
-        this.id = category.getUniqueId().toString();
+        this.id = generateId(category.getUniqueId());
         this.name = renderer.apply(category.getName());
         Component description = category.getDescription();
         this.description = description != null ? renderer.apply(description) : null;
@@ -56,6 +58,11 @@ public class SonusVolumeCategory {
         } else {
             this.icon = null;
         }
+    }
+
+    public static String generateId(UUID uniqueId) {
+        long combinedId = uniqueId.getMostSignificantBits() ^ uniqueId.getLeastSignificantBits();
+        return ByteBufUtil.hexDump(Longs.toByteArray(combinedId));
     }
 
     private static int[][] readIconBytes(ByteBuf buf) {

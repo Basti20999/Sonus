@@ -2,6 +2,7 @@ package dev.minceraft.sonus.agent.paper.audio;
 // Created by booky10 in TjcSonus (22:53 17.11.2024)
 
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import static dev.minceraft.sonus.common.SonusConstants.FRAME_SIZE;
 
@@ -9,33 +10,29 @@ import static dev.minceraft.sonus.common.SonusConstants.FRAME_SIZE;
 public class RadioAudioSupplier implements AudioSupplier {
 
     private final short[] audioData;
-    private final boolean alwaysTick;
-
-    private final short[] frame = new short[FRAME_SIZE];
     private int position;
 
-    public RadioAudioSupplier(short[] audioData, boolean alwaysTick) {
+    public RadioAudioSupplier(short[] audioData) {
         this.audioData = audioData;
-        this.alwaysTick = alwaysTick;
     }
 
+    @Override
     public void tick() {
         this.position = (this.position + FRAME_SIZE) % this.audioData.length;
     }
 
     @Override
-    public short[] get() {
-        if (this.alwaysTick) {
-            this.tick();
-        }
+    public short @Nullable [] get(int offset) {
+        int pos = offset == 0 ? this.position : (this.position + FRAME_SIZE * offset) % this.audioData.length;
+        short[] frame = THREAD_FRAME.get();
 
-        int maxAudio = this.audioData.length - this.position;
+        int maxAudio = this.audioData.length - pos;
         if (FRAME_SIZE > maxAudio) {
-            System.arraycopy(this.audioData, this.position, this.frame, 0, maxAudio);
-            System.arraycopy(this.audioData, 0, this.frame, maxAudio, FRAME_SIZE - maxAudio);
+            System.arraycopy(this.audioData, pos, frame, 0, maxAudio);
+            System.arraycopy(this.audioData, 0, frame, maxAudio, FRAME_SIZE - maxAudio);
         } else {
-            System.arraycopy(this.audioData, this.position, this.frame, 0, FRAME_SIZE);
+            System.arraycopy(this.audioData, pos, frame, 0, FRAME_SIZE);
         }
-        return this.frame;
+        return frame;
     }
 }

@@ -41,35 +41,56 @@ public class FadingAudioSupplier implements AudioSupplier {
     }
 
     @Override
-    public short @Nullable [] get() {
+    public void tick() {
+        if (!this.active.get()) {
+            return;
+        }
+        this.delegate.tick();
+        // tick fade step
+        if (this.totalFadeTicks != 0) {
+            // intentionally reset after a frame has passed with the total fade being done
+            if (this.fadeTicks >= this.totalFadeTicks) {
+                this.totalFadeTicks = 0;
+                this.sourceVolume = this.targetVolume;
+            } else {
+                this.fadeTicks++;
+            }
+        }
+    }
+
+    @Override
+    public short @Nullable [] get(int offset) {
         if (!this.active.get()) {
             return null;
         }
-        if (this.totalFadeTicks == 0 && this.sourceVolume == 1f) {
-            return this.delegate.get();
+        int fadeTicks = this.fadeTicks + offset;
+        int totalFadeTicks = this.totalFadeTicks;
+        float sourceVolume = this.sourceVolume;
+        if (fadeTicks >= totalFadeTicks) {
+            totalFadeTicks = 0;
+            sourceVolume = this.targetVolume;
         }
-        if (this.totalFadeTicks == 0) {
-            if (this.sourceVolume == 0f) {
+        if (totalFadeTicks == 0 && sourceVolume == 1f) {
+            return this.delegate.get(offset);
+        }
+        if (totalFadeTicks == 0) {
+            if (sourceVolume == 0f) {
                 return EMPTY_FRAME;
             }
-            short[] samples = this.delegate.get();
+            short[] samples = this.delegate.get(offset);
             if (samples == null) {
                 return null; // pass on cancel signal
             }
-            return AudioConversionUtil.adjustVolume(samples.clone(), this.sourceVolume);
+            return AudioConversionUtil.adjustVolume(samples.clone(), sourceVolume);
         }
-        short[] samples = this.delegate.get();
+        short[] samples = this.delegate.get(offset);
         if (samples == null) {
             return null;
         }
-        float preFadeProgress = this.fadeTicks++ / (float) this.totalFadeTicks;
-        float preVolume = Math.lerp(preFadeProgress, this.sourceVolume, this.targetVolume);
-        float postFadeProgress = this.fadeTicks / (float) this.totalFadeTicks;
-        float postVolume = Math.lerp(postFadeProgress, this.sourceVolume, this.targetVolume);
-        if (this.fadeTicks >= this.totalFadeTicks) {
-            this.totalFadeTicks = 0;
-            this.sourceVolume = this.targetVolume;
-        }
+        float preFadeProgress = fadeTicks / (float) totalFadeTicks;
+        float preVolume = Math.lerp(preFadeProgress, sourceVolume, this.targetVolume);
+        float postFadeProgress = (fadeTicks + 1) / (float) totalFadeTicks;
+        float postVolume = Math.lerp(postFadeProgress, sourceVolume, this.targetVolume);
         return AudioConversionUtil.adjustVolumeLerp(
                 samples.clone(), preVolume, postVolume);
     }

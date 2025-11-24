@@ -106,7 +106,7 @@ public class SvcAdapter implements SonusAdapter {
             return; // no svc session found
         }
         RemoveCategorySvcPacket packet = new RemoveCategorySvcPacket();
-        packet.setCategoryId(categoryId.toString());
+        packet.setCategoryId(SonusVolumeCategory.generateId(categoryId));
         connection.sendPacket(packet);
     }
 

@@ -36,7 +36,7 @@ public final class AudioTicker implements AutoCloseable {
     private synchronized void tick() {
         ImmutableList.Builder<Frame> frames = ImmutableList.builderWithExpectedSize(this.frameCount);
         for (int i = 0; i < this.frameCount; i++) {
-            short[] pcm = this.delegate.get();
+            short[] pcm = this.delegate.getAndTick();
             if (pcm == null) {
                 break; // end of stream
             } else if (pcm.length != FRAME_SIZE) {
@@ -67,8 +67,8 @@ public final class AudioTicker implements AutoCloseable {
 
     @ApiStatus.Internal
     public void waitNextTick() {
-        long wait = this.nextTick - System.nanoTime();
-        if (wait > 0L) {
+        long wait;
+        while ((wait = this.nextTick - System.nanoTime()) > 0L) {
             LockSupport.parkNanos(wait);
         }
     }
