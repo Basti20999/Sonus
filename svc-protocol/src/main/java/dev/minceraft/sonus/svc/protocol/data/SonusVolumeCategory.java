@@ -44,7 +44,13 @@ public class SonusVolumeCategory {
     public SonusVolumeCategory(ByteBuf buf, SvcPacketContext ctx) {
         this.id = Utf8String.read(buf, 16);
         this.name = Utf8String.read(buf, 16);
+        if (ctx.version() >= 19) {
+            DataTypeUtil.readNullable(buf, Utf8String::read); // discard name translation key
+        }
         this.description = DataTypeUtil.readNullable(buf, Utf8String::read);
+        if (ctx.version() >= 19) {
+            DataTypeUtil.readNullable(buf, Utf8String::read); // discard description translation key
+        }
         this.icon = DataTypeUtil.readNullable(buf, SonusVolumeCategory::readIconBytes);
     }
 
@@ -106,7 +112,13 @@ public class SonusVolumeCategory {
     public void encode(ByteBuf buf, SvcPacketContext ctx) {
         Utf8String.write(buf, this.id);
         Utf8String.write(buf, this.name);
+        if (ctx.version() >= 19) {
+            buf.writeBoolean(false); // name translation key
+        }
         DataTypeUtil.writeNullable(buf, this.description, Utf8String::write);
+        if (ctx.version() >= 19) {
+            buf.writeBoolean(false); // description translation key
+        }
         DataTypeUtil.writeNullableIf(buf, this.icon, i -> i[0] != null, SonusVolumeCategory::writeIconBytes);
     }
 
