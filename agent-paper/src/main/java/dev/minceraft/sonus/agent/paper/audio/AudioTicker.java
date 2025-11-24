@@ -57,7 +57,7 @@ public final class AudioTicker implements AutoCloseable {
         if (now >= this.nextTick) {
             synchronized (this) {
                 if (now >= this.nextTick) {
-                    this.nextTick += FRAME_INTERVAL_NANOS * this.frameCount;
+                    this.nextTick += FRAME_INTERVAL_NANOS * this.frameCount - 500_000L;
                     this.tick();
                 }
             }
