@@ -1,13 +1,13 @@
 package dev.minceraft.sonus.agent.paper.util;
 // Created by booky10 in TjcSonus (19:40 17.11.2024)
 
+import de.maxhenkel.lame4j.ShortArrayBuffer;
 import org.joml.Math;
 import org.jspecify.annotations.NullMarked;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-
 import java.io.IOException;
 
 import static dev.minceraft.sonus.common.SonusConstants.SAMPLE_RATE;
@@ -116,5 +116,21 @@ public final class AudioConversionUtil {
             data[i * 2 + 1] = (byte) ((s >> 8) & 0xFF);
         }
         return data;
+    }
+
+    // inspired by https://github.com/henkelmax/simple-voice-chat/blob/20218b8d4169ec2af56c34a0aa07c2ee711a01e1/common/src/main/java/de/maxhenkel/voicechat/plugins/impl/mp3/Mp3DecoderImpl.java
+    public static short[] decodeMp3ToSonus(de.maxhenkel.lame4j.Mp3Decoder decoder, float volume) throws IOException {
+        ShortArrayBuffer buffer = new ShortArrayBuffer(2048);
+        while (true) {
+            short[] samples = decoder.decodeNextFrame();
+            if (samples == null) {
+                break;
+            }
+            buffer.writeShorts(samples);
+        }
+        AudioFormat audioFormat = decoder.createAudioFormat();
+        assert audioFormat != null; // we have parsed the InputStream, this shouldn't be null
+        // convert decoded mp3 pcm data to sonus format
+        return convertToSonus(buffer.toShortArray(), volume, audioFormat);
     }
 }
