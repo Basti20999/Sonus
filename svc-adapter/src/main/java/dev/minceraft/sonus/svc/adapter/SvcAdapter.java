@@ -50,6 +50,7 @@ public class SvcAdapter implements SonusAdapter {
         GroupSoundSvcPacket packet = new GroupSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
+        packet.setCategory(SonusVolumeCategory.generateId(source.getCategoryId()));
         packet.setData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         connection.sendPacket(packet);
@@ -65,6 +66,7 @@ public class SvcAdapter implements SonusAdapter {
         LocationSoundSvcPacket packet = new LocationSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
+        packet.setCategory(SonusVolumeCategory.generateId(source.getCategoryId()));
         packet.setData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setLocation(pos);
@@ -82,6 +84,7 @@ public class SvcAdapter implements SonusAdapter {
         PlayerSoundSvcPacket packet = new PlayerSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
+        packet.setCategory(SonusVolumeCategory.generateId(source.getCategoryId()));
         packet.setData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());

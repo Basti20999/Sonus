@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
@@ -69,7 +70,11 @@ public class SonusVolumeCategory {
     private static final char[] CHARSET = "abcdefghijklmnopqrstuvwxyz_".toCharArray();
     private static final int BASE = CHARSET.length;
 
-    public static String generateId(UUID uniqueId) {
+    @Contract("null -> null; !null -> !null")
+    public static @Nullable String generateId(@Nullable UUID uniqueId) {
+        if (uniqueId == null) {
+            return null;
+        }
         long l = uniqueId.getMostSignificantBits() ^ uniqueId.getLeastSignificantBits();
         // just do a constant two chars per byte, much easier
         StringBuilder builder = new StringBuilder(Long.BYTES * 2);
