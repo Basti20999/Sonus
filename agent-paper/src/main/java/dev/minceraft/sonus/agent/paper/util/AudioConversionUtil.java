@@ -44,7 +44,7 @@ public final class AudioConversionUtil {
         }
         for (int i = 0, len = audioSamples.length; i < len; ++i) {
             float progress = i / (float) audioSamples.length;
-            float volume = Math.lerp(progress, volumeMin, volumeMax);
+            float volume = Math.lerp(volumeMin, volumeMax, progress);
             audioSamples[i] = (short) (audioSamples[i] * volume);
         }
         return audioSamples;

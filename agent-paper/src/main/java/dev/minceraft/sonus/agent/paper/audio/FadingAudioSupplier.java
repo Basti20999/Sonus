@@ -66,7 +66,7 @@ public class FadingAudioSupplier implements AudioSupplier {
         int fadeTicks = this.fadeTicks + offset;
         int totalFadeTicks = this.totalFadeTicks;
         float sourceVolume = this.sourceVolume;
-        if (fadeTicks >= totalFadeTicks) {
+        if (totalFadeTicks != 0 && fadeTicks >= totalFadeTicks) {
             totalFadeTicks = 0;
             sourceVolume = this.targetVolume;
         }
@@ -88,9 +88,9 @@ public class FadingAudioSupplier implements AudioSupplier {
             return null;
         }
         float preFadeProgress = fadeTicks / (float) totalFadeTicks;
-        float preVolume = Math.lerp(preFadeProgress, sourceVolume, this.targetVolume);
+        float preVolume = Math.lerp(sourceVolume, this.targetVolume, preFadeProgress);
         float postFadeProgress = (fadeTicks + 1) / (float) totalFadeTicks;
-        float postVolume = Math.lerp(postFadeProgress, sourceVolume, this.targetVolume);
+        float postVolume = Math.lerp(sourceVolume, this.targetVolume, postFadeProgress);
         return AudioConversionUtil.adjustVolumeLerp(
                 samples.clone(), preVolume, postVolume);
     }
