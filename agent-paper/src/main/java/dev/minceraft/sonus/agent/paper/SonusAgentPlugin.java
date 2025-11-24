@@ -61,6 +61,9 @@ public class SonusAgentPlugin extends JavaPlugin {
     public boolean sendMetaPacket(IMetaMessage packet) {
         byte[] data = MetaRegistry.write(packet);
         for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!player.isConnected()) {
+                continue; // not connected
+            }
             // send to first player who has our agent messaging channel registered
             if (player.getListeningPluginChannels().contains(PLUGIN_MESSAGE_CHANNEL)) {
                 player.sendPluginMessage(this, PLUGIN_MESSAGE_CHANNEL, data);
