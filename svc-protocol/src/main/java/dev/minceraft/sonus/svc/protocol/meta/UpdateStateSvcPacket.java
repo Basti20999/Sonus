@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.svc.protocol.meta;
 
 import com.google.gson.JsonObject;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
@@ -15,12 +16,12 @@ public class UpdateStateSvcPacket extends SvcMetaPacket<UpdateStateSvcPacket> {
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         buf.writeBoolean(this.disabled);
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.disabled = buf.readBoolean();
     }
 

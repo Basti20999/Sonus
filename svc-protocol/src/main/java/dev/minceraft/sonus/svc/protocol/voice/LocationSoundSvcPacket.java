@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.protocol.voice;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -17,7 +18,7 @@ public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacke
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         // what the fuck happened here with the field order? We can't use proper inheritance.
         DataTypeUtil.writeUniqueId(buf, this.channelId);
         DataTypeUtil.writeUniqueId(buf, this.sender);
@@ -37,7 +38,7 @@ public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacke
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.channelId = DataTypeUtil.readUniqueId(buf);
         this.sender = DataTypeUtil.readUniqueId(buf);
         this.location = Vec3d.read(buf); // local field

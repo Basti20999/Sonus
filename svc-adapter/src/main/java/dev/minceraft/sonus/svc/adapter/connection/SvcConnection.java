@@ -8,6 +8,7 @@ import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcPlayerCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
@@ -37,7 +38,7 @@ public class SvcConnection implements AutoCloseable {
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
     private long lastKeepAlive = System.currentTimeMillis();
-    private int version = -1;
+    private SvcPacketContext ctx = SvcPacketContext.INITIAL;
 
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
         this.protocolAdapter = protocolAdapter;
@@ -78,14 +79,13 @@ public class SvcConnection implements AutoCloseable {
     }
 
     private void sendTcpPacket(SvcMetaPacket<?> packet) {
-        Key channel = packet.getPluginMessageChannel().getForVersion(this.version);
+        Key channel = packet.getPluginMessageChannel().getForVersion(this.ctx.version());
         if (channel == null) {
             return;
         }
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(channel);
         try {
-            SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet, new SvcMetaPacketRegistry.SvcMetaContext(this.version));
-
+            SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet, this.ctx);
             this.player.sendPluginMessage(data.getSecond(), data.getFirst().retain());
         } finally {
             data.recycle();
@@ -147,13 +147,17 @@ public class SvcConnection implements AutoCloseable {
     }
 
     public int getVersion() {
-        return this.version;
+        return this.ctx.version();
     }
 
     public void setVersion(int version) {
-        this.version = version;
+        this.ctx = this.ctx.withVersion(version);
         // Cipher depends on the version, so we need to recreate it
         this.cipher = new SvcPlayerCipherCodec(this, this.protocolAdapter.getSvcCodec(), this.secret);
+    }
+
+    public SvcPacketContext getContext() {
+        return this.ctx;
     }
 
     public AudioProcessor getProcessor(UUID channelId) {

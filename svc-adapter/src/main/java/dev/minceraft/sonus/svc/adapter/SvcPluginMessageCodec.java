@@ -6,6 +6,7 @@ import dev.minceraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
 import dev.minceraft.sonus.common.protocol.tcp.IPluginMessageSource;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.RequestSecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
@@ -44,8 +45,8 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(packet, channel);
         SvcMetaPacket<? extends SvcMetaPacket<?>> metaPacket;
         try {
-            int version = connection == null ? VersionManager.OLDEST_VERSION : connection.getVersion();
-            metaPacket = SvcMetaPacketRegistry.BUF_REGISTRY.read(data, new SvcMetaPacketRegistry.SvcMetaContext(version));
+            SvcPacketContext ctx = connection != null ? connection.getContext() : SvcPacketContext.INITIAL;
+            metaPacket = SvcMetaPacketRegistry.BUF_REGISTRY.read(data, ctx);
         } finally {
             data.recycle();
         }

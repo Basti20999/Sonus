@@ -2,6 +2,7 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 
 import com.google.gson.JsonObject;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
@@ -16,12 +17,12 @@ public class RequestSecretSvcPacket extends SvcMetaPacket<RequestSecretSvcPacket
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         buf.writeInt(this.compatibilityVersion);
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.compatibilityVersion = buf.readInt();
     }
 

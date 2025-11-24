@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.protocol.meta;
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.data.SonusGroupType;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
@@ -22,14 +23,14 @@ public class CreateGroupSvcPacket extends SvcMetaPacket<CreateGroupSvcPacket> {
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         Utf8String.write(buf, this.name);
         DataTypeUtil.writeNullable(buf, this.password, Utf8String::write);
         buf.writeShort(this.type.ordinal());
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.name = Utf8String.read(buf, 512);
         this.password = DataTypeUtil.readNullable(buf, b -> Utf8String.read(b, 512));
         this.type = SonusGroupType.values()[buf.readShort()];

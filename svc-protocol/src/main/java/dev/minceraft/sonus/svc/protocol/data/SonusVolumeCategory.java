@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
@@ -40,7 +41,7 @@ public class SonusVolumeCategory {
         this.icon = null;
     }
 
-    public SonusVolumeCategory(ByteBuf buf) {
+    public SonusVolumeCategory(ByteBuf buf, SvcPacketContext ctx) {
         this.id = Utf8String.read(buf, 16);
         this.name = Utf8String.read(buf, 16);
         this.description = DataTypeUtil.readNullable(buf, Utf8String::read);
@@ -102,7 +103,7 @@ public class SonusVolumeCategory {
         return this.icon;
     }
 
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         Utf8String.write(buf, this.id);
         Utf8String.write(buf, this.name);
         DataTypeUtil.writeNullable(buf, this.description, Utf8String::write);
