@@ -8,7 +8,7 @@ import dev.minceraft.sonus.protocol.meta.IAgentManager;
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.SonusAgentPmCodec;
 import dev.minceraft.sonus.service.SonusService;
-import dev.minceraft.sonus.service.platform.IServer;
+import dev.minceraft.sonus.service.server.SonusServer;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 
@@ -25,7 +25,7 @@ public class AgentManager implements IAgentManager {
             .build(new CacheLoader<>() {
                 @Override
                 public AgentListener load(UUID key) {
-                    IServer server = AgentManager.this.service.getPlatform().getServer(key);
+                    SonusServer server = AgentManager.this.service.getServer(key);
                     return new AgentListener(AgentManager.this.service, server);
                 }
             });

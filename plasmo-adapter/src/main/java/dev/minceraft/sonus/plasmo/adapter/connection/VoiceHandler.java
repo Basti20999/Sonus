@@ -26,7 +26,7 @@ public class VoiceHandler implements UdpHandler {
     @Override
     public void handlePlayerAudioPacket(PlayerAudioPlasmoPacket packet) {
         short[] pcm = this.connection.getProcessor().decode(packet.getAudioData());
-        this.connection.getPlayer().handleAudioInput(new SonusAudio(pcm, packet.getSequenceNumber()));
+        this.connection.getPlayer().handleAudioInput(new SonusAudio.Pcm(pcm, packet.getSequenceNumber()));
     }
 
     @Override

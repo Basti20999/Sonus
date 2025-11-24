@@ -158,7 +158,7 @@ public class SvcConnection implements AutoCloseable {
 
     public AudioProcessor getProcessor(UUID channelId) {
         return this.processors.computeIfAbsent(channelId, __ ->
-                this.protocolAdapter.getAdapter().getService().createAudioProcessor());
+                this.protocolAdapter.getAdapter().getService().createAudioProcessor(AudioProcessor.Mode.VOICE));
     }
 
     @Override

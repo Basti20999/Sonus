@@ -35,7 +35,7 @@ public final class SpatialNormProcessor {
         if (gain == 0f) {
             return null; // don't send audio
         } else if (gain != 1f) {
-            short[] pcm = audio.data();
+            short[] pcm = audio.pcm();
             for (int i = 0, len = pcm.length; i < len; i++) {
                 pcm[i] = (short) (pcm[i] * gain);
             }

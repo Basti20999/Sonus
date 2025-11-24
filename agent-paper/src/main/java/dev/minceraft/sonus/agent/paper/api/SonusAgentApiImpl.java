@@ -43,7 +43,7 @@ public class SonusAgentApiImpl implements SonusAgentApi {
     public void registerAudioCategory(AudioCategory category) {
         RegisterAudioCategoryMessage packet = new RegisterAudioCategoryMessage();
         packet.setCategory(category);
-        this.plugin.onDefinition(packet);
+        this.plugin.addDefinition(packet);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class SonusAgentApiImpl implements SonusAgentApi {
 
     @Override
     public AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
-        return new AudioProcessor(() -> 1412, Suppliers.ofInstance(mode)); // TODO config for mtu
+        return new AudioProcessor(() -> 1412, mode); // TODO config for mtu
     }
 
     public Set<UUID> getConnectedPlayers() {

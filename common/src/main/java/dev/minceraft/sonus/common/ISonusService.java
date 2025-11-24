@@ -32,5 +32,5 @@ public interface ISonusService {
 
     IPlayerManager getPlayerManager();
 
-    AudioProcessor createAudioProcessor();
+    AudioProcessor createAudioProcessor(AudioProcessor.Mode mode);
 }

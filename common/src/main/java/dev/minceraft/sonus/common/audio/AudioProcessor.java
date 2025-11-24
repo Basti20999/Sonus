@@ -3,13 +3,11 @@ package dev.minceraft.sonus.common.audio;
 import de.maxhenkel.opus4j.OpusDecoder;
 import de.maxhenkel.opus4j.OpusEncoder;
 import de.maxhenkel.opus4j.UnknownPlatformException;
-import dev.minceraft.sonus.common.SonusConstants;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 import java.io.IOException;
 import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 
 import static dev.minceraft.sonus.common.SonusConstants.CHANNELS;
 import static dev.minceraft.sonus.common.SonusConstants.FRAME_SIZE;
@@ -25,12 +23,12 @@ public final class AudioProcessor implements AutoCloseable {
     private static final byte[] ZERO_BYTE_ARRAY = new byte[0];
 
     private final IntSupplier mtu;
-    private final Supplier<Mode> mode;
+    private final Mode mode;
 
     private @MonotonicNonNull OpusDecoder decoder;
     private @MonotonicNonNull OpusEncoder encoder;
 
-    public AudioProcessor(IntSupplier mtu, Supplier<Mode> mode) {
+    public AudioProcessor(IntSupplier mtu, Mode mode) {
         this.mtu = mtu;
         this.mode = mode;
     }
@@ -68,7 +66,7 @@ public final class AudioProcessor implements AutoCloseable {
         // lazy-load opus encoder
         if (this.encoder == null) {
             try {
-                this.encoder = new OpusEncoder(SAMPLE_RATE, CHANNELS, this.mode.get().asOpus());
+                this.encoder = new OpusEncoder(SAMPLE_RATE, CHANNELS, this.mode.asOpus());
                 this.encoder.setMaxPayloadSize(this.mtu.getAsInt());
                 this.encoder.setMaxPacketLossPercentage(0.05f);
             } catch (IOException | UnknownPlatformException exception) {

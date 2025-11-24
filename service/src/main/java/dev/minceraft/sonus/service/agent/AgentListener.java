@@ -2,7 +2,6 @@ package dev.minceraft.sonus.service.agent;
 
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.IAudioSource;
-import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
@@ -27,13 +26,10 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
 
     private final SonusService service;
     private final SonusServer server;
-    // TODO does using a single decoder for a whole server break stuff?
-    private final AudioProcessor processor;
 
     public AgentListener(SonusService service, SonusServer server) {
         this.service = service;
         this.server = server;
-        this.processor = service.createAudioProcessor();
     }
 
     @Override
@@ -106,8 +102,6 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
 
     @Override
     public void close() {
-        try (this.processor) {
-            // NO-OP
-        }
+        // NO-OP for now
     }
 }

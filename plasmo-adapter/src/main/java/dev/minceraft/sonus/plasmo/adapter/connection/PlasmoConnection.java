@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.plasmo.adapter.connection;
 
+import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
@@ -27,7 +28,7 @@ public class PlasmoConnection {
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
 
-    private final IAudioProcessor processor;
+    private final AudioProcessor processor;
     private final MetaHandler metaHandler;
     private final VoiceHandler voiceHandler;
 
@@ -40,7 +41,7 @@ public class PlasmoConnection {
         this.adapter = adapter;
         this.player = player;
 
-        this.processor = adapter.getService().createAudioProcessor();
+        this.processor = adapter.getService().createAudioProcessor(AudioProcessor.Mode.VOICE);
         this.metaHandler = new MetaHandler(adapter, this);
         this.voiceHandler = new VoiceHandler(adapter, this);
 
@@ -147,7 +148,7 @@ public class PlasmoConnection {
         this.remoteAddress = remoteAddress;
     }
 
-    public IAudioProcessor getProcessor() {
+    public AudioProcessor getProcessor() {
         return this.processor;
     }
 }

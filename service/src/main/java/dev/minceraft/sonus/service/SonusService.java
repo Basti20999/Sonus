@@ -15,11 +15,15 @@ import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.rooms.SonusRoomManager;
+import dev.minceraft.sonus.service.server.SonusServer;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
 public final class SonusService implements ISonusService {
@@ -35,6 +39,9 @@ public final class SonusService implements ISonusService {
     private final SonusRoomManager roomManager = new SonusRoomManager(this);
     private final AdapterManager adapters = new AdapterManager(this);
     private final AgentManager agentManager = new AgentManager(this);
+
+    // TODO periodically do cleanup
+    private final Map<UUID, SonusServer> servers = new ConcurrentHashMap<>();
     private final YamlConfigHolder<SonusConfig> config;
 
     public SonusService(IServicePlatform platform) {
@@ -111,7 +118,12 @@ public final class SonusService implements ISonusService {
     }
 
     @Override
-    public AudioProcessor createAudioProcessor() {
-        return new AudioProcessor(() -> this.getConfig().getMtuSize());
+    public AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
+        return new AudioProcessor(() -> this.getConfig().getMtuSize(), mode);
+    }
+
+    public SonusServer getServer(UUID serverId) {
+        return this.servers.computeIfAbsent(serverId, uuid ->
+                new SonusServer(this, this.getPlatform().getServer(uuid)));
     }
 }
