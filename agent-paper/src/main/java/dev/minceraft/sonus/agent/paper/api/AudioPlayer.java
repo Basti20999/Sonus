@@ -34,6 +34,7 @@ public final class AudioPlayer {
     }
 
     public void stopPlaying() {
+        this.thread.stop = true;
         this.thread.interrupt();
     }
 
@@ -54,6 +55,7 @@ public final class AudioPlayer {
         private final AudioStreamMessage packet = new AudioStreamMessage();
         private final AudioTicker ticker;
         private final Consumer<IMetaMessage> messageConsumer;
+        private boolean stop = false;
 
         public AudioThread(
                 UUID playerId, UUID channelId, @Nullable UUID categoryId,
@@ -73,7 +75,7 @@ public final class AudioPlayer {
         public void run() {
             try {
                 List<Frame> frames;
-                while (!(frames = this.ticker.get()).isEmpty()) {
+                while (!this.stop && !(frames = this.ticker.get()).isEmpty()) {
                     // fire audio packet with frames
                     this.packet.setFrames(frames);
                     this.messageConsumer.accept(this.packet);
