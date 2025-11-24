@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.data;
 
-import com.google.common.primitives.Longs;
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
@@ -67,9 +66,19 @@ public class SonusVolumeCategory {
         }
     }
 
+    private static final char[] CHARSET = "abcdefghijklmnopqrstuvwxyz_".toCharArray();
+    private static final int BASE = CHARSET.length;
+
     public static String generateId(UUID uniqueId) {
-        long combinedId = uniqueId.getMostSignificantBits() ^ uniqueId.getLeastSignificantBits();
-        return ByteBufUtil.hexDump(Longs.toByteArray(combinedId));
+        long l = uniqueId.getMostSignificantBits() ^ uniqueId.getLeastSignificantBits();
+        // just do a constant two chars per byte, much easier
+        StringBuilder builder = new StringBuilder(Long.BYTES * 2);
+        for (int i = 0; i < 8; i++) {
+            int b = (int) (l & 0xFF);
+            l >>>= 8L;
+            builder.append(CHARSET[b / BASE]).append(CHARSET[b % BASE]);
+        }
+        return builder.toString();
     }
 
     private static int[][] readIconBytes(ByteBuf buf) {
