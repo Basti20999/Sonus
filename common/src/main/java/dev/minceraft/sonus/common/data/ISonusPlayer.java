@@ -6,6 +6,7 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -79,4 +80,8 @@ public interface ISonusPlayer extends IAudioSource {
     boolean hasPermission(String permission, boolean defaultValue);
 
     boolean canSee(ISonusPlayer target);
+
+    Component renderComponent(Component component);
+
+    String renderPlainComponent(Component component);
 }

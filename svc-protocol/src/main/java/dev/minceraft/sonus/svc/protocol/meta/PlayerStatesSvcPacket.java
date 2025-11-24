@@ -4,6 +4,7 @@ package dev.minceraft.sonus.svc.protocol.meta;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
@@ -24,7 +25,7 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         buf.writeInt(this.states.size());
         for (SvcPlayerState value : this.states.values()) {
             value.encode(buf);
@@ -32,7 +33,7 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> 
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         int size = buf.readInt();
         this.states = new HashMap<>(size);
         for (int i = 0; i < size; i++) {

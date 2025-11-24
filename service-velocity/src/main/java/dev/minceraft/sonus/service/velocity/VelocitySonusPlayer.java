@@ -9,11 +9,16 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+
+import static net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText;
 
 @NullMarked
 public class VelocitySonusPlayer implements IPlatformPlayer {
@@ -86,5 +91,24 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
         // if the source and target are on the same server, this fallback method
         // should only be called if there is no state present yet during login, so hide the target there
         return this.server != ((VelocitySonusPlayer) target).server;
+    }
+
+    // why doesn't velocity expose their internal method for this?
+    @Override
+    public Component renderComponent(Component component) {
+        Locale locale = this.player.getEffectiveLocale();
+        if (locale == null && this.player.hasSentPlayerSettings()) {
+            locale = this.player.getPlayerSettings().getLocale();
+        }
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
+        return GlobalTranslator.render(component, locale);
+    }
+
+    @Override
+    public String renderPlainComponent(Component component) {
+        Component rendered = this.renderComponent(component);
+        return plainText().serialize(rendered);
     }
 }

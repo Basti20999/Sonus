@@ -6,9 +6,7 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
-import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
-import dev.minceraft.sonus.protocol.meta.servicebound.UpdateRoomDefinitionMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -119,6 +117,8 @@ public class AgentListener implements Listener {
         if (playerCount <= 1) {
             this.dirtyRoomDefinition = true;
         }
+
+        this.plugin.getApi().getConnectedPlayers().remove(playerId);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -230,17 +230,10 @@ public class AgentListener implements Listener {
     }
 
     private void sendRoomDefinition() {
-        RoomDefinition roomDefinition = this.plugin.getRoomDefinition();
-        if (roomDefinition == null) {
-            return;
-        }
         if (this.dirtyRoomDefinition) {
             this.dirtyRoomDefinition = false;
-            this.plugin.getLogger().info("Sending sonus room definition to service");
-
-            UpdateRoomDefinitionMessage packet = new UpdateRoomDefinitionMessage();
-            packet.setDefinition(roomDefinition);
-            this.plugin.sendMetaPacket(packet);
+            this.plugin.getLogger().info("Sending agent definition(s) to service");
+            this.plugin.broadcastDefinitions();
         }
     }
 

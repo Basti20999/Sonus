@@ -10,12 +10,18 @@ import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.protocol.meta.IMetaMessage;
+import dev.minceraft.sonus.protocol.meta.MetaRegistry;
+import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import dev.minceraft.sonus.service.processing.util.SpatialNormProcessor;
+import dev.minceraft.sonus.service.server.SonusServer;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
@@ -31,6 +37,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
+import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
+import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL_KEY;
 
 @NullMarked
 public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
@@ -60,6 +68,9 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     private boolean muted;
     private boolean deafened;
 
+    // track server reference
+    private @Nullable SonusServer server;
+
     public SonusPlayer(SonusService service, IPlatformPlayer platform) {
         this.service = service;
         this.platform = platform;
@@ -80,7 +91,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     }
 
     private void processAudioInput(SonusAudio audio) {
-        if (audio.data().length == 0) {
+        if (audio.isZeroLength()) {
             return; // don't process zero-length audio
         }
         if (this.service.getConfig().agcEnabled()) {
@@ -365,7 +376,30 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
 
     @Override
     public void setConnected(boolean connected) {
+        this.setConnected(connected, true);
+    }
+
+    public void setConnected(boolean connected, boolean sendToAgent) {
+        if (this.connected == connected) {
+            return; // no change
+        }
         this.connected = connected;
+        if (sendToAgent) {
+            PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();
+            packet.setPlayerId(this.getUniqueId());
+            packet.setConnected(connected);
+            this.sendMetaPacket(packet);
+        }
+    }
+
+    public void sendMetaPacket(IMetaMessage packet) {
+        ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
+        try {
+            MetaRegistry.REGISTRY.write(buf, packet);
+            this.sendPluginMessage(PLUGIN_MESSAGE_CHANNEL_KEY, buf.retain());
+        } finally {
+            buf.release();
+        }
     }
 
     @Override
@@ -389,6 +423,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     @Override
     public void updateState() {
         this.service.getEventManager().onPlayerStateUpdate(this);
+        this.updateServer();
     }
 
     @Override
@@ -417,6 +452,16 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
         return this.platform.canSeeFallback(((SonusPlayer) target).platform);
     }
 
+    @Override
+    public Component renderComponent(Component component) {
+        return this.platform.renderComponent(component);
+    }
+
+    @Override
+    public String renderPlainComponent(Component component) {
+        return this.platform.renderPlainComponent(component);
+    }
+
     @ApiStatus.Internal
     public void setStates(Map<UUID, SonusPlayerState> states) {
         if (!states.equals(this.perPlayerStates)) {
@@ -429,6 +474,27 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
         for (IRoom room : Set.copyOf(this.voiceRooms.values())) {
             this.leaveRoom(room);
         }
+        // invalidate server
+        this.updateServer(null);
+    }
+
+    public void updateServer() {
+        UUID serverId = this.platform.getServerId();
+        if (serverId != null) {
+            this.updateServer(this.service.getPlayerManager().getServer(serverId));
+        } else {
+            this.updateServer(null);
+        }
+    }
+
+    public void updateServer(@Nullable SonusServer server) {
+        if (server == this.server) {
+            return; // nothing changed
+        }
+        if (this.server != null) {
+            this.server.onQuit(this);
+        }
+        this.server = server;
     }
 
     @Override

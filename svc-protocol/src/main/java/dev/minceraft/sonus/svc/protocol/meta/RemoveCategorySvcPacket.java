@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -18,12 +19,12 @@ public class RemoveCategorySvcPacket extends SvcMetaPacket<RemoveCategorySvcPack
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         Utf8String.write(buf, this.categoryId);
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.categoryId = Utf8String.read(buf, 16);
     }
 

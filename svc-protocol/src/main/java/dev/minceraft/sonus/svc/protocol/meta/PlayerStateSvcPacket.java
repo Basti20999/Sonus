@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.svc.protocol.meta;
 
 import com.google.gson.JsonObject;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
@@ -17,12 +18,12 @@ public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> {
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         this.state.encode(buf);
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.state = new SvcPlayerState(buf);
     }
 

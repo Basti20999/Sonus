@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.protocol.registries;
 import dev.minceraft.sonus.common.protocol.registry.ContextedRegistry;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.common.version.Versioned;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.AddCategorySvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.CreateGroupSvcPacket;
@@ -29,13 +30,12 @@ public final class SvcMetaPacketRegistry {
 
     private static final Map<Key, Integer> PACKET_IDS = new HashMap<>();
 
-    public static final ContextedRegistry<PmDataHolderBuf, SvcMetaPacket<?>, SvcMetaContext> BUF_REGISTRY =
-            ContextedRegistry.Builder.<PmDataHolderBuf, SvcMetaPacket<?>, SvcMetaContext>createContext()
-                    .codec((data, packet, ctx) -> packet.decode(data.getFirst()),
-                            (data, packet, ctx) -> packet.encode(data.getFirst()))
+    public static final ContextedRegistry<PmDataHolderBuf, SvcMetaPacket<?>, SvcPacketContext> BUF_REGISTRY =
+            ContextedRegistry.Builder.<PmDataHolderBuf, SvcMetaPacket<?>, SvcPacketContext>createContext()
+                    .codec((data, packet, ctx) -> packet.decode(data.getFirst(), ctx),
+                            (data, packet, ctx) -> packet.encode(data.getFirst(), ctx))
                     .idCodec((holder, ctx) -> PACKET_IDS.get(holder.getSecond()),
-                            (id, packet, ctx) -> {
-                            })
+                            (id, packet, ctx) -> { /**/ })
                     .idConsumer((id, sample) -> {
                         for (Versioned.VersionedKeyEntry<Key> entry : sample.getPluginMessageChannel().versionedKeys()) {
                             PACKET_IDS.put(entry.key(), id);
@@ -56,10 +56,6 @@ public final class SvcMetaPacketRegistry {
                     .register(SecretSvcPacket.class, SecretSvcPacket::new)
                     .register(UpdateStateSvcPacket.class, UpdateStateSvcPacket::new)
                     .build();
-
-    public record SvcMetaContext(int version) {
-
-    }
 
 /*    public static final ContextedRegistry<PmDataHolderJsonObject, SvcMetaPacket<?>> JSON_REGISTRY =
             new ContextedRegistry.Builder<PmDataHolderJsonObject, SvcMetaPacket<?>>()

@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.protocol.meta;
 
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -20,12 +21,12 @@ public class RemoveGroupSvcPacket extends SvcMetaPacket<RemoveGroupSvcPacket> {
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         DataTypeUtil.writeUniqueId(buf, this.groupId);
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.groupId = DataTypeUtil.readUniqueId(buf);
     }
 

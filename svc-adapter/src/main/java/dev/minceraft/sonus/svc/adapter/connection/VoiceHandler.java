@@ -65,7 +65,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
     @Override
     public void handleMicPacket(MicSvcPacket packet) {
         short[] pcm = this.connection.getProcessor(MIC_CHANNEL_ID).decode(packet.getData());
-        SonusAudio data = new SonusAudio(pcm, packet.getSequenceNumber());
+        SonusAudio data = new SonusAudio.Pcm(pcm, packet.getSequenceNumber());
         this.connection.getPlayer().handleAudioInput(data);
     }
 

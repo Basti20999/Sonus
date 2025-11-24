@@ -2,6 +2,7 @@ package dev.minceraft.sonus.svc.protocol.voice;
 
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -33,7 +34,7 @@ public abstract class SoundSvcPacket<T extends SoundSvcPacket<?>> extends SvcVoi
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         DataTypeUtil.writeUniqueId(buf, this.channelId);
         DataTypeUtil.writeUniqueId(buf, this.sender);
         DataTypeUtil.VAR_INT.writeByteArray(buf,this.data);
@@ -50,7 +51,7 @@ public abstract class SoundSvcPacket<T extends SoundSvcPacket<?>> extends SvcVoi
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.channelId = DataTypeUtil.readUniqueId(buf);
         this.sender = DataTypeUtil.readUniqueId(buf);
         this.data = DataTypeUtil.VAR_INT.readByteArray(buf);

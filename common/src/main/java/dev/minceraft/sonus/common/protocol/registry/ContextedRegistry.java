@@ -43,15 +43,14 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         }
     }
 
-    @Nullable
-    public T read(D data, C ctx) {
+    public @Nullable T read(D data, @Nullable C ctx) {
         int packetId = this.idCodec.decoder.applyAsInt(data, ctx);
         T packet = this.constructors.get(packetId).get();
         this.codec.decoder.accept(data, packet, ctx);
         return packet;
     }
 
-    public void write(D data, T packet, C ctx) {
+    public void write(D data, T packet, @Nullable C ctx) {
         try {
             int packetId = this.packetIds.get(packet.getClass());
             this.idCodec.encoder.accept(data, packetId, ctx);
@@ -134,9 +133,18 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         }
     }
 
-    protected record Entry<T extends ProtocolMessage<?>>(int id, Class<T> clazz, Supplier<T> ctor) {}
+    protected record Entry<T extends ProtocolMessage<?>>(int id, Class<T> clazz, Supplier<T> ctor) {
+    }
 
-    protected record IdCodec<D, C>(ToIntBiFunction<D, C> decoder, ObjIntObjectConsumer<D, C> encoder) {}
+    protected record IdCodec<D, C>(
+            ToIntBiFunction<D, @Nullable C> decoder,
+            ObjIntObjectConsumer<D, @Nullable C> encoder
+    ) {
+    }
 
-    protected record Codec<D, T, C>(TriConsumer<D, T, C> decoder, TriConsumer<D, T, C> encoder) {}
+    protected record Codec<D, T, C>(
+            TriConsumer<D, T, @Nullable C> decoder,
+            TriConsumer<D, T, @Nullable C> encoder
+    ) {
+    }
 }

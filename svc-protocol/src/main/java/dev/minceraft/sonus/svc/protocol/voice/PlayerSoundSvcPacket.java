@@ -2,6 +2,7 @@ package dev.minceraft.sonus.svc.protocol.voice;
 
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
@@ -15,7 +16,7 @@ public class PlayerSoundSvcPacket extends SoundSvcPacket<PlayerSoundSvcPacket> {
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         // what the fuck happened here with the field order? We can't use proper inheritance.
         DataTypeUtil.writeUniqueId(buf, this.channelId);
         DataTypeUtil.writeUniqueId(buf, this.sender);
@@ -37,7 +38,7 @@ public class PlayerSoundSvcPacket extends SoundSvcPacket<PlayerSoundSvcPacket> {
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.channelId = DataTypeUtil.readUniqueId(buf);
         this.sender = DataTypeUtil.readUniqueId(buf);
         this.data = DataTypeUtil.VAR_INT.readByteArray(buf);

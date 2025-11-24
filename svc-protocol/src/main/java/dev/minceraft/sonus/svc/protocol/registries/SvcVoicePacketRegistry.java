@@ -1,7 +1,9 @@
 package dev.minceraft.sonus.svc.protocol.registries;
 
+import dev.minceraft.sonus.common.protocol.registry.ContextedRegistry;
 import dev.minceraft.sonus.common.protocol.registry.SimpleRegistry;
 import dev.minceraft.sonus.common.protocol.util.VarInt;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateAckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.AuthenticateSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckAckSvcPacket;
@@ -19,10 +21,12 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public final class SvcVoicePacketRegistry {
 
-    public static final SimpleRegistry<ByteBuf, SvcVoicePacket<?>> REGISTRY =
-            SimpleRegistry.Builder.<ByteBuf, SvcVoicePacket<?>>createSimple()
-                    .codec((buf, packet) -> packet.decode(buf), (buf, packet) -> packet.encode(buf))
-                    .idCodec(VarInt::read, VarInt::write)
+    public static final ContextedRegistry<ByteBuf, SvcVoicePacket<?>, SvcPacketContext> REGISTRY =
+            SimpleRegistry.Builder.<ByteBuf, SvcVoicePacket<?>, SvcPacketContext>createContext()
+                    .codec((buf, packet, ctx) -> packet.decode(buf, ctx),
+                            (buf, packet, ctx) -> packet.encode(buf, ctx))
+                    .idCodec((buf, __) -> VarInt.read(buf),
+                            (buf, id, __) -> VarInt.write(buf, id))
                     .idOffset(1)  // Svc index starts at 1
                     .register(MicSvcPacket.class, MicSvcPacket::new)
                     .register(PlayerSoundSvcPacket.class, PlayerSoundSvcPacket::new)

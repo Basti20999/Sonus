@@ -5,9 +5,11 @@ dependencies {
     compileOnlyApi(libs.netty.buffer)
     compileOnlyApi(libs.netty.handler)
     compileOnlyApi(libs.adventure.api)
+    compileOnlyApi(libs.adventure.text.serializer.gson)
     compileOnlyApi(libs.slf4j.api)
     compileOnlyApi(libs.guava)
     compileOnlyApi(libs.gson)
     compileOnlyApi(libs.fastutil)
     compileOnlyApi(libs.bundles.configurate)
+    api(libs.opus4j)
 }

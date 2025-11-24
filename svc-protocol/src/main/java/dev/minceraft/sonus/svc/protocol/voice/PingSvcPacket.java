@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.protocol.voice;
 
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.PacketDirection;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -20,13 +21,13 @@ public class PingSvcPacket extends SvcVoicePacket<PingSvcPacket> {
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         DataTypeUtil.writeUniqueId(buf, this.id);
         buf.writeLong(this.timestamp);
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.id = DataTypeUtil.readUniqueId(buf);
         this.timestamp = buf.readLong();
     }

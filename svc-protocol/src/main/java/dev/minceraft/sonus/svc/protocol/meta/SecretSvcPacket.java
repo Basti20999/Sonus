@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.codec.OpusCodec;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -31,7 +32,7 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
     }
 
     @Override
-    public void encode(ByteBuf buf) {
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
         DataTypeUtil.writeUniqueId(buf, this.secret);
         buf.writeInt(this.serverPort);
         DataTypeUtil.writeUniqueId(buf, this.playerId);
@@ -45,7 +46,7 @@ public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
     }
 
     @Override
-    public void decode(ByteBuf buf) {
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.secret = DataTypeUtil.readUniqueId(buf);
         this.serverPort = buf.readInt();
         this.playerId = DataTypeUtil.readUniqueId(buf);

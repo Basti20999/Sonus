@@ -3,6 +3,7 @@ package dev.minceraft.sonus.plasmo.adapter;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
+import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
@@ -11,6 +12,8 @@ import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.UUID;
 
 @NullMarked
 public class PlasmoAdapter implements SonusAdapter {
@@ -46,6 +49,14 @@ public class PlasmoAdapter implements SonusAdapter {
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
 
+    }
+
+    @Override
+    public void registerCategory(ISonusPlayer player, AudioCategory category) {
+    }
+
+    @Override
+    public void unregisterCategory(ISonusPlayer player, UUID categoryId) {
     }
 
     @Override
