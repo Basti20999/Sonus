@@ -11,4 +11,5 @@ dependencies {
     compileOnlyApi(libs.gson)
     compileOnlyApi(libs.fastutil)
     compileOnlyApi(libs.bundles.configurate)
+    api(libs.opus4j)
 }

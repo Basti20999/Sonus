@@ -1,6 +1,6 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
-import dev.minceraft.sonus.common.audio.IAudioProcessor;
+import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
@@ -32,7 +32,7 @@ public class SvcConnection implements AutoCloseable {
     private final MetaHandler metaHandler;
 
     private @Nullable SvcPlayerCipherCodec cipher;
-    private final Map<UUID, IAudioProcessor> processors = new ConcurrentHashMap<>();
+    private final Map<UUID, AudioProcessor> processors = new ConcurrentHashMap<>();
 
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
@@ -156,7 +156,7 @@ public class SvcConnection implements AutoCloseable {
         this.cipher = new SvcPlayerCipherCodec(this, this.protocolAdapter.getSvcCodec(), this.secret);
     }
 
-    public IAudioProcessor getProcessor(UUID channelId) {
+    public AudioProcessor getProcessor(UUID channelId) {
         return this.processors.computeIfAbsent(channelId, __ ->
                 this.protocolAdapter.getAdapter().getService().createAudioProcessor());
     }

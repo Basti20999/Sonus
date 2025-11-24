@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.plasmo.adapter.connection;
 
-import dev.minceraft.sonus.common.audio.IAudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;

@@ -1,8 +1,6 @@
 package dev.minceraft.sonus.protocol.meta.servicebound;
 // Created by booky10 in Sonus (00:05 17.11.2025)
 
-import dev.minceraft.sonus.common.audio.IAudioProcessor;
-import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.common.protocol.util.VarLong;
@@ -91,14 +89,6 @@ public class AudioStreamMessage implements IMetaMessage {
             buf.readBytes(data);
             long sequence = VarLong.read(buf);
             return new Frame(data, sequence);
-        }
-
-        public static Frame processAudio(SonusAudio audio, IAudioProcessor processor) {
-            return new Frame(processor.encode(audio.data()), audio.sequenceNumber());
-        }
-
-        public SonusAudio processAudio(IAudioProcessor processor) {
-            return new SonusAudio(processor.decode(this.data), this.sequence);
         }
     }
 }

@@ -2,7 +2,7 @@ package dev.minceraft.sonus.service.agent;
 
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.IAudioSource;
-import dev.minceraft.sonus.common.audio.IAudioProcessor;
+import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldVec3d;
@@ -28,7 +28,7 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
     private final SonusService service;
     private final SonusServer server;
     // TODO does using a single decoder for a whole server break stuff?
-    private final IAudioProcessor processor;
+    private final AudioProcessor processor;
 
     public AgentListener(SonusService service, SonusServer server) {
         this.service = service;
@@ -95,8 +95,7 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
         // send all frames at once, the client will properly queue them TODO hopefully, test this
         IAudioSource source = new IAudioSource.Static(message.getChannelId());
         for (AudioStreamMessage.Frame frame : frames) {
-            SonusAudio audio = frame.processAudio(this.processor);
-            player.sendStaticAudio(source, audio);
+            player.sendStaticAudio(source, new SonusAudio.Opus(frame.data(), frame.sequence()));
         }
     }
 

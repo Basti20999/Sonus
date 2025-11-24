@@ -3,6 +3,7 @@ package dev.minceraft.sonus.agent.paper.api;
 
 import dev.minceraft.sonus.agent.paper.audio.AudioSupplier;
 import dev.minceraft.sonus.common.audio.AudioCategory;
+import dev.minceraft.sonus.common.audio.AudioProcessor;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -16,5 +17,10 @@ public interface SonusAgentApi {
 
     void registerAudioCategory(AudioCategory category);
 
-    AudioPlayer createAudioPlayer(Player player, UUID channelId, @Nullable UUID categoryId, AudioSupplier audio);
+    AudioPlayer createAudioPlayer(
+            Player player, UUID channelId, @Nullable UUID categoryId,
+            AudioSupplier audio, AudioProcessor.Mode mode
+    );
+
+    AudioProcessor createAudioProcessor(AudioProcessor.Mode mode);
 }

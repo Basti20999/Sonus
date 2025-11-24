@@ -7,7 +7,6 @@ plugins {
 dependencies {
     api(projects.protocol)
     api(libs.speex4j)
-    api(libs.opus4j)
 
     sequenceOf(
         libs.netty.transport.epoll,

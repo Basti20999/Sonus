@@ -91,7 +91,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     }
 
     private void processAudioInput(SonusAudio audio) {
-        if (audio.data().length == 0) {
+        if (audio.isZeroLength()) {
             return; // don't process zero-length audio
         }
         if (this.service.getConfig().agcEnabled()) {

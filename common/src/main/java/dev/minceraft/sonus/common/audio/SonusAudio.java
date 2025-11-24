@@ -3,14 +3,78 @@ package dev.minceraft.sonus.common.audio;
 
 import org.jspecify.annotations.NullMarked;
 
-@NullMarked
-public record SonusAudio(short[] data, long sequenceNumber) {
+import java.util.function.Supplier;
 
-    public SonusAudio(short[] data) {
-        this(data, -1L);
+@NullMarked
+public sealed interface SonusAudio {
+
+    short[] pcm();
+
+    short[] pcm(Supplier<AudioProcessor> processor);
+
+    byte[] opus();
+
+    byte[] opus(Supplier<AudioProcessor> processor);
+
+    long sequenceNumber();
+
+    SonusAudio withSequenceNumber(long sequenceNumber);
+
+    boolean isZeroLength();
+
+    record Pcm(short[] pcm, long sequenceNumber) implements SonusAudio {
+
+        @Override
+        public short[] pcm(Supplier<AudioProcessor> processor) {
+            return this.pcm;
+        }
+
+        @Override
+        public byte[] opus() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public byte[] opus(Supplier<AudioProcessor> processor) {
+            return processor.get().encode(this.pcm);
+        }
+
+        @Override
+        public SonusAudio withSequenceNumber(long sequenceNumber) {
+            return new SonusAudio.Pcm(this.pcm, sequenceNumber);
+        }
+
+        @Override
+        public boolean isZeroLength() {
+            return this.pcm.length == 0;
+        }
     }
 
-    public SonusAudio withSequenceNumber(long sequenceNumber) {
-        return new SonusAudio(this.data, sequenceNumber);
+    record Opus(byte[] opus, long sequenceNumber) implements SonusAudio {
+
+        @Override
+        public short[] pcm() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public short[] pcm(Supplier<AudioProcessor> processor) {
+            return processor.get().decode(this.opus);
+        }
+
+        @Override
+        public byte[] opus(Supplier<AudioProcessor> processor) {
+            return this.opus;
+        }
+
+        @Override
+        public SonusAudio withSequenceNumber(long sequenceNumber) {
+            return new SonusAudio.Opus(this.opus, sequenceNumber);
+        }
+
+        @Override
+        public boolean isZeroLength() {
+            return this.opus.length == 0;
+        }
     }
 }
