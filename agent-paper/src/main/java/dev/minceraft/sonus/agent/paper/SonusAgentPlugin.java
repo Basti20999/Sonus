@@ -7,6 +7,7 @@ import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
+import dev.minceraft.sonus.protocol.meta.servicebound.UpdateRoomDefinitionMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
@@ -17,6 +18,8 @@ import org.jspecify.annotations.NullMarked;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
 
@@ -25,6 +28,7 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     private @MonotonicNonNull SonusAgentApiImpl api;
     private @Nullable YamlConfigHolder<RoomDefinition> roomDefinition;
+    private final List<IMetaMessage> definitions = new ArrayList<>();
 
     protected SonusAgentApiImpl createApi() {
         return new SonusAgentApiImpl(this);
@@ -54,15 +58,16 @@ public class SonusAgentPlugin extends JavaPlugin {
         this.loadRoomDefinition();
     }
 
-    public void sendMetaPacket(IMetaMessage packet) {
+    public boolean sendMetaPacket(IMetaMessage packet) {
         byte[] data = MetaRegistry.write(packet);
         for (Player player : Bukkit.getOnlinePlayers()) {
             // send to first player who has our agent messaging channel registered
             if (player.getListeningPluginChannels().contains(PLUGIN_MESSAGE_CHANNEL)) {
                 player.sendPluginMessage(this, PLUGIN_MESSAGE_CHANNEL, data);
-                break;
+                return true;
             }
         }
+        return false; // no valid connection found
     }
 
     public void loadRoomDefinition() {
@@ -79,5 +84,21 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     public @Nullable RoomDefinition getRoomDefinition() {
         return this.roomDefinition == null ? null : this.roomDefinition.getDelegate();
+    }
+
+    public void addDefinition(IMetaMessage message) {
+        this.definitions.add(message);
+        this.sendMetaPacket(message);
+    }
+
+    public void broadcastDefinitions() {
+        if (this.roomDefinition != null) {
+            UpdateRoomDefinitionMessage packet = new UpdateRoomDefinitionMessage();
+            packet.setDefinition(this.roomDefinition.getDelegate());
+            this.sendMetaPacket(packet);
+        }
+        for (IMetaMessage definition : this.definitions) {
+            this.sendMetaPacket(definition);
+        }
     }
 }
