@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.agent.paper.api;
 // Created by booky10 in Sonus (23:54 16.11.2025)
 
-import com.google.common.base.Suppliers;
 import dev.minceraft.sonus.agent.paper.SonusAgentPlugin;
 import dev.minceraft.sonus.agent.paper.audio.AudioSupplier;
 import dev.minceraft.sonus.agent.paper.audio.AudioTicker;
@@ -17,14 +16,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static dev.minceraft.sonus.common.SonusConstants.FRAME_SIZE;
-import static dev.minceraft.sonus.common.SonusConstants.SAMPLE_RATE;
-
 @ApiStatus.Internal
 @NullMarked
 public class SonusAgentApiImpl implements SonusAgentApi {
 
-    private static final int AUDIO_TICKER_FRAMES = (SAMPLE_RATE / FRAME_SIZE); // only tick once per second
+    // the SVC client caps the audio queue at 32 frames, so we can't queue more than that;
+    // additionally, as clients may have terrible internet connection (especially ping spikes are relevant here),
+    // leave 12 frames of wiggle room before the client caps its audio frame queue
+    private static final int AUDIO_TICKER_FRAMES = 32 - 12;
 
     protected final SonusAgentPlugin plugin;
 

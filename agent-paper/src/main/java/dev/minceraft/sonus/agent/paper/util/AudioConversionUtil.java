@@ -108,7 +108,7 @@ public final class AudioConversionUtil {
         }
         short[] data = new short[bytes.length / 2];
         for (int i = 0, len = bytes.length; i < len; i += 2) {
-            byte b1 = bytes[i], b2 = bytes[i + 1];
+            byte b1 = bytes[i], b2 = bytes[i + 1]; // LE order
             data[i / 2] = (short) (((b2 & 0xFF) << 8) | (b1 & 0xFF));
         }
         return data;
@@ -118,6 +118,7 @@ public final class AudioConversionUtil {
         byte[] data = new byte[shorts.length * 2];
         for (int i = 0, len = shorts.length; i < len; ++i) {
             short s = shorts[i];
+            // LE order
             data[i * 2] = (byte) (s & 0xFF);
             data[i * 2 + 1] = (byte) ((s >> 8) & 0xFF);
         }
