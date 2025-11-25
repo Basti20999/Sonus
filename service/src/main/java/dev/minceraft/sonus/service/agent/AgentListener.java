@@ -88,7 +88,7 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
             this.server.ensureCategory(player, categoryId);
         }
 
-        // send all frames at once, the client will properly queue them TODO hopefully, test this
+        // send all frames at once, the client will queue them (at most 32)
         IAudioSource source = new IAudioSource.Static(message.getChannelId(), categoryId);
         for (AudioStreamMessage.Frame frame : frames) {
             player.sendStaticAudio(source, new SonusAudio.Opus(frame.data(), frame.sequence()));
