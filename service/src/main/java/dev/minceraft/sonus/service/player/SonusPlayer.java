@@ -37,7 +37,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
-import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
 import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL_KEY;
 
 @NullMarked
@@ -334,6 +333,11 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     }
 
     @Override
+    public void sendBackendPluginMessage(Key key, ByteBuf data) {
+        this.platform.sendBackendPluginMessage(key, data);
+    }
+
+    @Override
     public @Nullable WorldVec3d getPosition() {
         return this.position;
     }
@@ -388,6 +392,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
             PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();
             packet.setPlayerId(this.getUniqueId());
             packet.setConnected(connected);
+
             this.sendMetaPacket(packet);
         }
     }
@@ -396,7 +401,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
         ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
         try {
             MetaRegistry.REGISTRY.write(buf, packet);
-            this.sendPluginMessage(PLUGIN_MESSAGE_CHANNEL_KEY, buf.retain());
+            this.sendBackendPluginMessage(PLUGIN_MESSAGE_CHANNEL_KEY, buf.retain());
         } finally {
             buf.release();
         }

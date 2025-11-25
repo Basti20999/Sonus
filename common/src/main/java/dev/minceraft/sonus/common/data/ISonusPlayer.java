@@ -71,6 +71,8 @@ public interface ISonusPlayer extends IAudioSource {
 
     void sendPluginMessage(Key key, ByteBuf data);
 
+    void sendBackendPluginMessage(Key key, ByteBuf data);
+
     void handleConnect();
 
     void ensureTabListed(ISonusPlayer target);

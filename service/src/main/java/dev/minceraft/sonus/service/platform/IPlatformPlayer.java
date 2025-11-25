@@ -20,6 +20,8 @@ public interface IPlatformPlayer {
 
     void sendPluginMessage(Key key, ByteBuf data);
 
+    void sendBackendPluginMessage(Key key, ByteBuf data);
+
     void ensureTabListed(IPlatformPlayer target);
 
     boolean hasPermission(String permission, boolean defaultValue);
