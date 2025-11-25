@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.agent.paper;
 // Created by booky10 in Sonus (18:48 17.11.2025)
 
+import dev.minceraft.sonus.agent.paper.events.VoiceConnectionStateChangeEvent;
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
@@ -9,6 +10,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.papermc.paper.connection.PlayerConnection;
 import io.papermc.paper.connection.PlayerGameConnection;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jspecify.annotations.NullMarked;
@@ -49,11 +51,18 @@ public class AgentMessageListener implements PluginMessageListener, IMetaHandler
 
     @Override
     public void handlePlayerConnectionState(PlayerConnectionStateMessage message) {
+        Player player = Bukkit.getPlayer(message.getPlayerId());
         Set<UUID> players = this.plugin.getApi().getConnectedPlayers();
         if (message.isConnected()) {
-            players.add(message.getPlayerId());
+            // add to set
+            if (players.add(message.getPlayerId()) && player != null) {
+                new VoiceConnectionStateChangeEvent(player, true).callEvent();
+            }
         } else {
-            players.remove(message.getPlayerId());
+            // remove from set
+            if (players.remove(message.getPlayerId()) && player != null) {
+                new VoiceConnectionStateChangeEvent(player, false).callEvent();
+            }
         }
     }
 }
