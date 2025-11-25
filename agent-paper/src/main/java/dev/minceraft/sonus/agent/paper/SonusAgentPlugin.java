@@ -3,6 +3,7 @@ package dev.minceraft.sonus.agent.paper;
 
 import dev.minceraft.sonus.agent.paper.api.SonusAgentApi;
 import dev.minceraft.sonus.agent.paper.api.SonusAgentApiImpl;
+import dev.minceraft.sonus.agent.paper.config.SonusAgentConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
@@ -13,8 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.jspecify.annotations.Nullable;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,11 +28,16 @@ import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
 public class SonusAgentPlugin extends JavaPlugin {
 
     private @MonotonicNonNull SonusAgentApiImpl api;
+    private @MonotonicNonNull YamlConfigHolder<? extends SonusAgentConfig> config;
     private @Nullable YamlConfigHolder<RoomDefinition> roomDefinition;
     private final List<IMetaMessage> definitions = new ArrayList<>();
 
     protected SonusAgentApiImpl createApi() {
         return new SonusAgentApiImpl(this);
+    }
+
+    protected YamlConfigHolder<? extends SonusAgentConfig> createConfig() {
+        return new YamlConfigHolder<>(SonusAgentConfig.class, this.getDataPath().resolve("config.yml"));
     }
 
     protected AgentListener createAgentListener() {
@@ -44,6 +50,7 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     @Override
     public void onLoad() {
+        this.config = this.createConfig();
         this.api = this.createApi();
         Bukkit.getServicesManager().register(SonusAgentApi.class, this.api, this, ServicePriority.Normal);
     }
@@ -83,6 +90,10 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     public @MonotonicNonNull SonusAgentApiImpl getApi() {
         return this.api;
+    }
+
+    public SonusAgentConfig getSonusConfig() {
+        return this.config.getDelegate();
     }
 
     public @Nullable RoomDefinition getRoomDefinition() {
