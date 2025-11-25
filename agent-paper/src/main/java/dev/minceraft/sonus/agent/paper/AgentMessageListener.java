@@ -8,6 +8,7 @@ import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.papermc.paper.connection.PlayerConnection;
+import io.papermc.paper.connection.PlayerGameConnection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.jspecify.annotations.NullMarked;
@@ -26,11 +27,19 @@ public class AgentMessageListener implements PluginMessageListener, IMetaHandler
 
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
-        // NO-OP
+        // legacy behavior to support versions before the new configuration api
+        this.handle(message);
     }
 
     @Override
     public void onPluginMessageReceived(String channel, PlayerConnection connection, byte[] message) {
+        // don't duplicate handling
+        if (!(connection instanceof PlayerGameConnection)) {
+            this.handle(message);
+        }
+    }
+
+    private void handle(byte[] message) {
         ByteBuf buf = Unpooled.wrappedBuffer(message);
         IMetaMessage decoded = MetaRegistry.REGISTRY.read(buf);
         if (decoded != null) {
