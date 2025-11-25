@@ -88,4 +88,9 @@ public class ServicePlatformVelocity implements IServicePlatform {
         }
         return server;
     }
+
+    @Override
+    public boolean serverExists(UUID uniqueId) {
+        return this.serverCache.getIfPresent(uniqueId) != null;
+    }
 }

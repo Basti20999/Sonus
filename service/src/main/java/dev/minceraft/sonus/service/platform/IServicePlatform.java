@@ -21,4 +21,6 @@ public interface IServicePlatform {
     Set<IServer> getServers();
 
     IServer getServer(UUID uniqueId);
+
+    boolean serverExists(UUID uniqueId);
 }

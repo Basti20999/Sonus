@@ -21,6 +21,7 @@ public class SonusConfig implements ISonusConfig {
     private boolean allowRecordings = false;
     private int keepAliveMs = 1000;
     private boolean autoGainControl = true;
+    private int cleanupTaskIntervalMs = 60000;
 
     private SonusConfig() {
     }
@@ -63,5 +64,10 @@ public class SonusConfig implements ISonusConfig {
     @Override
     public boolean agcEnabled() {
         return this.autoGainControl;
+    }
+
+    @Override
+    public int getCleanupTaskIntervalMs() {
+        return this.cleanupTaskIntervalMs;
     }
 }

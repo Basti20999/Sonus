@@ -6,6 +6,7 @@ import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
+import dev.minceraft.sonus.common.service.IScheduledTask;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.common.service.ISonusScheduler;
@@ -16,6 +17,7 @@ import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.rooms.SonusRoomManager;
 import dev.minceraft.sonus.service.server.SonusServer;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,8 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @NullMarked
 public final class SonusService implements ISonusService {
@@ -40,7 +44,6 @@ public final class SonusService implements ISonusService {
     private final AdapterManager adapters = new AdapterManager(this);
     private final AgentManager agentManager = new AgentManager(this);
 
-    // TODO periodically do cleanup
     private final Map<UUID, SonusServer> servers = new ConcurrentHashMap<>();
     private final YamlConfigHolder<SonusConfig> config;
 
@@ -56,6 +59,30 @@ public final class SonusService implements ISonusService {
         this.roomManager.init();
         this.agentManager.init();
         this.udpServer.bind();
+
+        this.initCleanupTask();
+    }
+
+    private void initCleanupTask() {
+        this.config.addReloadHookAndRun(new Consumer<>() {
+
+            private @MonotonicNonNull IScheduledTask task;
+
+            @Override
+            public void accept(SonusConfig config) {
+                if (this.task != null) {
+                    this.task.cancel();
+                }
+
+                this.task = SonusService.this.scheduler.schedule(SonusService.this::cleanup,
+                        0, config.getCleanupTaskIntervalMs(), TimeUnit.MICROSECONDS);
+            }
+        });
+    }
+
+    private void cleanup() {
+        this.servers.entrySet().removeIf(entry ->
+                !SonusService.this.platform.serverExists(entry.getKey()));
     }
 
     public void shutdown() {
