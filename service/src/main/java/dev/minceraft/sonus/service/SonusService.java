@@ -37,13 +37,13 @@ public final class SonusService implements ISonusService {
     private final IServicePlatform platform;
     private final PlayerManager players = new PlayerManager(this);
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
-    private final UdpServer udpServer = new UdpServer(this);
     private final SonusEventManager eventManager = new SonusEventManager(this);
     private final SonusScheduler scheduler = new SonusScheduler();
     private final SonusRoomManager roomManager = new SonusRoomManager(this);
     private final AdapterManager adapters = new AdapterManager(this);
     private final AgentManager agentManager = new AgentManager(this);
 
+    private @MonotonicNonNull UdpServer udpServer;
     private final Map<UUID, SonusServer> servers = new ConcurrentHashMap<>();
     private final YamlConfigHolder<SonusConfig> config;
 
@@ -53,6 +53,9 @@ public final class SonusService implements ISonusService {
     }
 
     public void init() {
+        // constructed here to prevent class leaks in netty thread local map
+        this.udpServer = new UdpServer(this);
+
         LOGGER.info("Initializing sonus service...");
         this.config.reloadConfig();
         this.adapters.init();
@@ -87,7 +90,9 @@ public final class SonusService implements ISonusService {
 
     public void shutdown() {
         LOGGER.info("Shutting down sonus service...");
-        this.udpServer.shutdown();
+        if (this.udpServer != null) {
+            this.udpServer.shutdown();
+        }
         this.scheduler.shutdown();
     }
 

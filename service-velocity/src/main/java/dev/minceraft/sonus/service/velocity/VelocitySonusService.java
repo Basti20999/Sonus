@@ -27,8 +27,10 @@ public class VelocitySonusService {
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
-        this.service.init();
-        this.server.getEventManager().register(this, new VelocityListener(this.service));
+        this.service.getScheduler().execute(() -> {
+            this.service.init();
+            this.server.getEventManager().register(this, new VelocityListener(this.service));
+        });
     }
 
     public SonusService getService() {
