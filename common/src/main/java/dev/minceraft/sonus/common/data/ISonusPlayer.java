@@ -23,6 +23,10 @@ public interface ISonusPlayer extends IAudioSource {
         return this.getName(null);
     }
 
+    void setKeepAlive(long timestamp);
+
+    long getLastKeepAlive();
+
     @Nullable
     String getTeam();
 

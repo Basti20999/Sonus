@@ -44,18 +44,15 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
 
     private final SonusService service;
     private final IPlatformPlayer platform;
-    private @Nullable SonusAdapter sonusAdapter;
-
     // keep track of which rooms this player is in
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
+    private final AtomicLong sequenceNumber = new AtomicLong(-1L); // audio input sequence number
+    private @Nullable SonusAdapter sonusAdapter;
     private @Nullable IRoom serverRoom;
     private @Nullable IRoom prevPrimaryRoom; // hack to fix state updates
     private @Nullable IRoom primaryRoom;
-
     // visibility states of other players
     private Map<UUID, SonusPlayerState> perPlayerStates = Map.of();
-
-    private final AtomicLong sequenceNumber = new AtomicLong(-1L); // audio input sequence number
     private @MonotonicNonNull AgcNode agcNode; // automatic gain control
 
     // metadata sent by the backend server agent
@@ -66,6 +63,8 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     private boolean connected;
     private boolean muted;
     private boolean deafened;
+
+    private long lastKeepAlive;
 
     // track server reference
     private @Nullable SonusServer server;
@@ -166,6 +165,16 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
             return false; // player is hidden for spatial audio
         }
         return true;
+    }
+
+    @Override
+    public void setKeepAlive(long timestamp) {
+        this.lastKeepAlive = timestamp;
+    }
+
+    @Override
+    public long getLastKeepAlive() {
+        return this.lastKeepAlive;
     }
 
     @Override
@@ -481,6 +490,10 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
         }
         // invalidate server
         this.updateServer(null);
+
+        // mark as disconnected
+        this.setConnected(false);
+        this.updateState();
     }
 
     public void updateServer() {
@@ -506,6 +519,16 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     public void close() {
         try (AgcNode ignoredAgcNode = this.agcNode) {
             // NO-OP
+        }
+    }
+
+    public void tickKeepAlive(long currentTime) {
+        if (this.sonusAdapter != null) {
+            this.sonusAdapter.getProtocolAdapter().sendKeepAlive(this, currentTime);
+        }
+        long keepAliveTimeoutMs = this.service.getConfig().getKeepAliveTimeoutMs();
+        if (this.lastKeepAlive + keepAliveTimeoutMs < currentTime) {
+            this.service.getPlayerManager().unregisterPlayer(this.getUniqueId());
         }
     }
 }

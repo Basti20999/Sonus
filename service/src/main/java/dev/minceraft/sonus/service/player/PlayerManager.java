@@ -6,10 +6,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import dev.minceraft.sonus.common.IPlayerManager;
+import dev.minceraft.sonus.common.service.IScheduledTask;
+import dev.minceraft.sonus.service.SonusConfig;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.server.SonusServer;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -17,6 +20,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @NullMarked
 public final class PlayerManager implements IPlayerManager {
@@ -37,6 +42,28 @@ public final class PlayerManager implements IPlayerManager {
                         return new SonusServer(service, server);
                     }
                 });
+
+        this.service.getConfigHolder().addReloadHookAndRun(new Consumer<>() {
+
+            private @MonotonicNonNull IScheduledTask task;
+
+            @Override
+            public void accept(SonusConfig config) {
+                if (this.task != null) {
+                    this.task.cancel();
+                }
+                int keepAliveInterval = config.getKeepAliveMs();
+                this.task = PlayerManager.this.service.getScheduler().schedule(PlayerManager.this::tickKeepAlive,
+                        keepAliveInterval, TimeUnit.MILLISECONDS);
+            }
+        });
+    }
+
+    private void tickKeepAlive() {
+        long currentTime = System.currentTimeMillis();
+        for (SonusPlayer player : this.players.values()) {
+            player.tickKeepAlive(currentTime);
+        }
     }
 
     public boolean unregisterPlayer(UUID playerId) {

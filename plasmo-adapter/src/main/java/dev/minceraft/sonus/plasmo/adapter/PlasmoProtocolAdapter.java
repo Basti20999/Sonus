@@ -2,6 +2,7 @@ package dev.minceraft.sonus.plasmo.adapter;
 
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.protocol.udp.UdpBasedContext;
 import dev.minceraft.sonus.plasmo.adapter.pipeline.PlasmoCipherCodec;
@@ -40,6 +41,11 @@ public class PlasmoProtocolAdapter implements VoiceProtocolAdapter {
                             "bitrate", "-1000"
                     ));
         });
+    }
+
+    @Override
+    public void sendKeepAlive(ISonusPlayer sonusPlayer, long currentTime) {
+        // TODO: Implement Plasmo keep-alive packet sending
     }
 
     @Override

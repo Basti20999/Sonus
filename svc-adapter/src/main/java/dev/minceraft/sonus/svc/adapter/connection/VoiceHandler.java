@@ -46,7 +46,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
         LOGGER.info("Successfully connected {}({}) to Sonus SVC backend - version {}",
                 this.connection.getPlayer().getName(), this.connection.getPlayer().getUniqueId(), this.connection.getVersion());
 
-        this.connection.setLastKeepAlive(System.currentTimeMillis());
+        this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
         this.connection.setConnected(true);
         this.connection.getPlayer().setMuted(false);
         this.connection.getPlayer().setDeafened(false);
@@ -59,7 +59,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     @Override
     public void handleKeepAlivePacket(KeepAliveSvcPacket packet) {
-        this.connection.setLastKeepAlive(System.currentTimeMillis());
+        this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
     }
 
     @Override

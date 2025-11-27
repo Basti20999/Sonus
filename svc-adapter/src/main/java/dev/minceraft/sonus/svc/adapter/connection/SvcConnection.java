@@ -37,7 +37,6 @@ public class SvcConnection implements AutoCloseable {
 
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
-    private long lastKeepAlive = System.currentTimeMillis();
     private SvcPacketContext ctx = SvcPacketContext.INITIAL;
 
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
@@ -136,14 +135,6 @@ public class SvcConnection implements AutoCloseable {
         }
         this.player.setDeafened(disabled);
         return true;
-    }
-
-    public long getLastKeepAlive() {
-        return this.lastKeepAlive;
-    }
-
-    public void setLastKeepAlive(long lastKeepAlive) {
-        this.lastKeepAlive = lastKeepAlive;
     }
 
     public int getVersion() {

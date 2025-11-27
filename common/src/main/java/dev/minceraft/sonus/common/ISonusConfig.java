@@ -20,6 +20,8 @@ public interface ISonusConfig {
 
     int getKeepAliveMs();
 
+    int getKeepAliveTimeoutMs();
+
     boolean agcEnabled();
 
     int getCleanupTaskIntervalMs();

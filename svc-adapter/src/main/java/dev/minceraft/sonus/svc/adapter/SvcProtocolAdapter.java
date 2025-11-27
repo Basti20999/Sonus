@@ -3,8 +3,10 @@ package dev.minceraft.sonus.svc.adapter;
 
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.protocol.udp.UdpBasedContext;
+import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcFrameCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcHandler;
@@ -12,6 +14,7 @@ import dev.minceraft.sonus.svc.adapter.pipeline.SvcPacketCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcPlayerMarkerCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
+import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
@@ -43,6 +46,15 @@ public class SvcProtocolAdapter implements VoiceProtocolAdapter {
     @Override
     public UdpBasedContext<?> newPipelineContext() {
         return SvcUdpContext.newInstance();
+    }
+
+    @Override
+    public void sendKeepAlive(ISonusPlayer sonusPlayer, long currentTime) {
+        SvcConnection connection = this.adapter.getSessions().getConnection(sonusPlayer.getUniqueId());
+        if (connection == null) {
+            return;
+        }
+        connection.sendPacket(KeepAliveSvcPacket.INSTANCE);
     }
 
     public SvcAdapter getAdapter() {

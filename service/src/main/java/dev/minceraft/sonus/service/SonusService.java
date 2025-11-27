@@ -35,21 +35,21 @@ public final class SonusService implements ISonusService {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private final IServicePlatform platform;
-    private final PlayerManager players = new PlayerManager(this);
+    private final PlayerManager players;
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
     private final SonusEventManager eventManager = new SonusEventManager(this);
     private final SonusScheduler scheduler = new SonusScheduler();
     private final SonusRoomManager roomManager = new SonusRoomManager(this);
     private final AdapterManager adapters = new AdapterManager(this);
     private final AgentManager agentManager = new AgentManager(this);
-
-    private @MonotonicNonNull UdpServer udpServer;
     private final Map<UUID, SonusServer> servers = new ConcurrentHashMap<>();
     private final YamlConfigHolder<SonusConfig> config;
+    private @MonotonicNonNull UdpServer udpServer;
 
     public SonusService(IServicePlatform platform) {
         this.platform = platform;
         this.config = new YamlConfigHolder<>(SonusConfig.class, this.platform.getDataPath().resolve("config.yml"));
+        this.players = new PlayerManager(this);
     }
 
     public void init() {

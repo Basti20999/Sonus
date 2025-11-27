@@ -20,6 +20,7 @@ public class SonusConfig implements ISonusConfig {
     private double voiceChatRange = 32.0;
     private boolean allowRecordings = false;
     private int keepAliveMs = 1000;
+    private int keepAliveTimeoutMs = 30000;
     private boolean autoGainControl = true;
     private int cleanupTaskIntervalMs = 60000;
 
@@ -59,6 +60,11 @@ public class SonusConfig implements ISonusConfig {
     @Override
     public int getKeepAliveMs() {
         return this.keepAliveMs;
+    }
+
+    @Override
+    public int getKeepAliveTimeoutMs() {
+        return this.keepAliveTimeoutMs;
     }
 
     @Override
