@@ -1,4 +1,4 @@
-package dev.minceraft.sonus.common;
+package dev.minceraft.sonus.common.config;
 
 import dev.minceraft.sonus.common.protocol.codec.OpusCodec;
 
@@ -25,4 +25,6 @@ public interface ISonusConfig {
     boolean agcEnabled();
 
     int getCleanupTaskIntervalMs();
+
+    ISonusWebConfig getWebConfig();
 }

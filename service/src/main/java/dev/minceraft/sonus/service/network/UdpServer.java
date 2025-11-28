@@ -1,10 +1,11 @@
 package dev.minceraft.sonus.service.network;
 // Created by booky10 in Sonus (01:08 10.08.2025)
 
-import dev.minceraft.sonus.common.ISonusConfig;
+import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.protocol.udp.AbstractMagicUdpCodec;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
+import dev.minceraft.sonus.network.TransportType;
 import dev.minceraft.sonus.service.SonusService;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -43,7 +44,7 @@ public class UdpServer implements IUdpServer {
         ISonusConfig config = this.service.getConfig();
         ChannelFuture future = new Bootstrap()
                 .group(this.bossGroup)
-                .channelFactory(TRANSPORT.getChannelFactory())
+                .channelFactory(TRANSPORT.getDatagramChannelFactory())
                 .handler(new ChannelInitializer<>() {
                     @Override
                     protected void initChannel(Channel channel) {

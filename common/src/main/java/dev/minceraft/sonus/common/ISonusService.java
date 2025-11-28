@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.common;
 
 import dev.minceraft.sonus.common.audio.AudioProcessor;
+import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.protocol.tcp.IPluginMessenger;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
