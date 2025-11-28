@@ -14,7 +14,7 @@ import dev.minceraft.sonus.svc.adapter.pipeline.SvcPacketCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcPlayerMarkerCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
-import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked

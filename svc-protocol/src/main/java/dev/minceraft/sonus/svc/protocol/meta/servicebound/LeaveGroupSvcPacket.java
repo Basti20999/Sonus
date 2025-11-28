@@ -1,8 +1,10 @@
-package dev.minceraft.sonus.svc.protocol.meta;
+package dev.minceraft.sonus.svc.protocol.meta.servicebound;
 
 
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
+import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
+import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;

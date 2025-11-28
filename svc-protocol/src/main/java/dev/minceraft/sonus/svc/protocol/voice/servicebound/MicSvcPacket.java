@@ -1,7 +1,9 @@
-package dev.minceraft.sonus.svc.protocol.voice;
+package dev.minceraft.sonus.svc.protocol.voice.servicebound;
 
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
+import dev.minceraft.sonus.svc.protocol.voice.IVoiceSvcHandler;
+import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;

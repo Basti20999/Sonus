@@ -7,11 +7,11 @@ import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
 import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
-import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.JoinedGroupSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.PlayerStatesSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddGroupSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.JoinedGroupSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.PlayerStateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.PlayerStatesSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 

@@ -4,11 +4,10 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
-import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.RemoveGroupSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.RemovePlayerStatePacket;
-import net.kyori.adventure.util.TriState;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddGroupSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.PlayerStateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.RemoveGroupSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.RemovePlayerStatePacket;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.UUID;

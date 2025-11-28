@@ -7,7 +7,7 @@ import dev.minceraft.sonus.common.protocol.tcp.IPluginMessageSource;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
-import dev.minceraft.sonus.svc.protocol.meta.RequestSecretSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.servicebound.RequestSecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;

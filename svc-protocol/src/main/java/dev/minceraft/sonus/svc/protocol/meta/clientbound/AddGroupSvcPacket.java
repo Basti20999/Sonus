@@ -1,8 +1,10 @@
-package dev.minceraft.sonus.svc.protocol.meta;
+package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
 import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
+import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
+import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;

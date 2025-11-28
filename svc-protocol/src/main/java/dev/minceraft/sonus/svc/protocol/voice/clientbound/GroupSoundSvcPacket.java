@@ -1,5 +1,6 @@
-package dev.minceraft.sonus.svc.protocol.voice;
+package dev.minceraft.sonus.svc.protocol.voice.clientbound;
 
+import dev.minceraft.sonus.svc.protocol.voice.IVoiceSvcHandler;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked

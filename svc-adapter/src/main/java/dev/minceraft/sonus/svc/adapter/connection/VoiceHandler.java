@@ -2,14 +2,14 @@ package dev.minceraft.sonus.svc.adapter.connection;
 
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
-import dev.minceraft.sonus.svc.protocol.voice.AuthenticateAckSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.AuthenticateSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckAckSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.IVoiceSvcHandler;
-import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.MicSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.PingSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.AuthenticateAckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.ConnectionCheckAckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.PingSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.AuthenticateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.ConnectionCheckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.MicSvcPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

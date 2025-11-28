@@ -11,12 +11,12 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.data.SonusVolumeCategory;
-import dev.minceraft.sonus.svc.protocol.meta.AddCategorySvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.RemoveCategorySvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddCategorySvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.RemoveCategorySvcPacket;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
-import dev.minceraft.sonus.svc.protocol.voice.GroupSoundSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.LocationSoundSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.PlayerSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.GroupSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.LocationSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.PlayerSoundSvcPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
