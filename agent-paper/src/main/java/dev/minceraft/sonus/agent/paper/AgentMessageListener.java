@@ -43,7 +43,7 @@ public class AgentMessageListener implements PluginMessageListener, IMetaHandler
 
     private void handle(byte[] message) {
         ByteBuf buf = Unpooled.wrappedBuffer(message);
-        IMetaMessage decoded = MetaRegistry.REGISTRY.read(buf);
+        IMetaMessage decoded = MetaRegistry.REGISTRY.decode(buf);
         if (decoded != null) {
             decoded.handle(this);
         }

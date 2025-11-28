@@ -32,7 +32,7 @@ public final class MetaRegistry {
     public static byte[] write(IMetaMessage message) {
         ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
         try {
-            REGISTRY.write(buf, message);
+            REGISTRY.encode(buf, message);
             byte[] data = new byte[buf.readableBytes()];
             buf.readBytes(data);
             return data;

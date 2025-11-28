@@ -93,7 +93,7 @@ public class PlasmoConnection {
     private void sendTcpPacket(TcpPlasmoPacket<?> packet) {
         ByteBuf buffer = Unpooled.buffer();
         try {
-            TcpPacketRegistry.REGISTRY.write(buffer, packet);
+            TcpPacketRegistry.REGISTRY.encode(buffer, packet);
             this.player.sendPluginMessage(PlasmoPmChannels.CHANNEL, buffer);
         } finally {
             buffer.release();

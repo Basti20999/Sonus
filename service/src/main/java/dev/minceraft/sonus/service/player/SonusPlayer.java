@@ -409,7 +409,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     public void sendMetaPacket(IMetaMessage packet) {
         ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
         try {
-            MetaRegistry.REGISTRY.write(buf, packet);
+            MetaRegistry.REGISTRY.encode(buf, packet);
             this.sendBackendPluginMessage(PLUGIN_MESSAGE_CHANNEL_KEY, buf.retain());
         } finally {
             buf.release();

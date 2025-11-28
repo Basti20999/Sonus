@@ -3,15 +3,12 @@ package dev.minceraft.sonus.common.protocol.registry;
 
 import dev.minceraft.sonus.common.protocol.util.ObjIntObjectConsumer;
 import dev.minceraft.sonus.common.protocol.util.TriConsumer;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,42 +19,46 @@ import java.util.function.ToIntBiFunction;
 @NullMarked
 public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
-
     private final Codec<D, T, C> codec;
     private final IdCodec<D, C> idCodec;
 
-    private final Int2ObjectMap<Supplier<? extends T>> constructors;
+    private final Map<Integer, Supplier<? extends T>> constructors;
     private final Map<Class<? extends T>, Integer> packetIds;
 
     protected ContextedRegistry(Codec<D, T, C> codec, IdCodec<D, C> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idConsumer) {
         this.codec = codec;
         this.idCodec = idCodec;
-        this.constructors = new Int2ObjectArrayMap<>(packets.size());
+        this.constructors = new HashMap<>(packets.size());
         this.packetIds = new IdentityHashMap<>(packets.size());
-
         for (Entry<? extends T> packet : packets) {
-            this.constructors.put(packet.id(), packet.ctor());
-            this.packetIds.put(packet.clazz(), packet.id());
+            if (packet.decode()) {
+                this.constructors.put(packet.id(), packet.ctor());
+            }
+            if (packet.encode()) {
+                this.packetIds.put(packet.clazz(), packet.id());
+            }
             idConsumer.accept(packet.id(), packet.ctor().get());
         }
     }
 
-    public @Nullable T read(D data, @Nullable C ctx) {
+    public @Nullable T decode(D data, @Nullable C ctx) {
         int packetId = this.idCodec.decoder.applyAsInt(data, ctx);
-        T packet = this.constructors.get(packetId).get();
+        Supplier<? extends T> ctor = this.constructors.get(packetId);
+        if (ctor == null) {
+            throw new IllegalStateException("Can't find constructor for decoding packet with id " + packetId);
+        }
+        T packet = ctor.get();
         this.codec.decoder.accept(data, packet, ctx);
         return packet;
     }
 
-    public void write(D data, T packet, @Nullable C ctx) {
-        try {
-            int packetId = this.packetIds.get(packet.getClass());
-            this.idCodec.encoder.accept(data, packetId, ctx);
-            this.codec.encoder.accept(data, packet, ctx);
-        } catch (NullPointerException exception) {
-            throw new IllegalArgumentException("The given packet is not registered: " + packet.getClass(), exception);
+    public void encode(D data, T packet, @Nullable C ctx) {
+        Integer packetId = this.packetIds.get(packet.getClass());
+        if (packetId == null) {
+            throw new IllegalStateException("Can't find id for encoding packet " + packet);
         }
+        this.idCodec.encoder.accept(data, packetId, ctx);
+        this.codec.encoder.accept(data, packet, ctx);
     }
 
     public <A extends T> int getPacketId(Class<A> clazz) {
@@ -72,6 +73,7 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         protected BiConsumer<Integer, T> idConsumer = (id, packet) -> {
         };
         protected int nextId = 0;
+        protected boolean implicitIdUsed = false;
 
         protected Builder() {
         }
@@ -95,12 +97,11 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
             return (S) this;
         }
 
-        public <Z extends T> S idOffset(int firstId) {
+        public S idOffset(int firstId) {
             if (!this.packets.isEmpty()) {
-                LOGGER.warn("Changed idOffset while already having packets registered");
+                throw new IllegalStateException("Can't change id offset after packets have already been registered");
             }
             this.nextId = firstId;
-
             return this.getThis();
         }
 
@@ -109,6 +110,7 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         }
 
         public <Z extends T> S register(Class<Z> clazz, Supplier<Z> ctor, MessageDirection dir) {
+            this.implicitIdUsed = true;
             this.packets.add(new Entry<>(this.nextId++, clazz, ctor, dir));
             return this.getThis();
         }
@@ -118,7 +120,7 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         }
 
         public <Z extends T> S register(int id, Class<Z> clazz, Supplier<Z> ctor, MessageDirection dir) {
-            if (this.nextId != 0) {
+            if (this.implicitIdUsed) {
                 throw new IllegalStateException("Can't register packets with explicit id after implicit ids have been used");
             }
             this.packets.add(new Entry<>(id, clazz, ctor, dir));

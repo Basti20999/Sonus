@@ -29,7 +29,7 @@ public class SonusAgentPmCodec extends AbstractPluginMessageCodec {
             return; // no server id set somehow
         }
 
-        IMetaMessage msg = MetaRegistry.REGISTRY.read(packet);
+        IMetaMessage msg = MetaRegistry.REGISTRY.decode(packet);
         if (msg != null) {
             msg.handle(this.agentManager.getAgentListener(serverId));
         }

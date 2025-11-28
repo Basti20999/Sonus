@@ -84,7 +84,7 @@ public class SvcConnection implements AutoCloseable {
         }
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(channel);
         try {
-            SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet, this.ctx);
+            SvcMetaPacketRegistry.BUF_REGISTRY.encode(data, packet, this.ctx);
             this.player.sendPluginMessage(data.getSecond(), data.getFirst().retain());
         } finally {
             data.recycle();

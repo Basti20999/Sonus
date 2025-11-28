@@ -11,16 +11,19 @@ import java.util.function.ToIntFunction;
 @NullMarked
 public class SimpleRegistry<D, T extends ProtocolMessage<?>> extends ContextedRegistry<D, T, Void> {
 
-    protected SimpleRegistry(Codec<D, T, Void> codec, IdCodec<D, Void> idCodec, List<Entry<? extends T>> packets, BiConsumer<Integer, T> idMapper) {
+    protected SimpleRegistry(
+            Codec<D, T, Void> codec, IdCodec<D, Void> idCodec,
+            List<Entry<? extends T>> packets, BiConsumer<Integer, T> idMapper
+    ) {
         super(codec, idCodec, packets, idMapper);
     }
 
-    public @Nullable T read(D data) {
-        return this.read(data, null); // Pass null as context
+    public @Nullable T decode(D data) {
+        return this.decode(data, null); // context is null
     }
 
-    public void write(D data, T packet) {
-        this.write(data, packet, null); // Pass null as context
+    public void encode(D data, T packet) {
+        this.encode(data, packet, null); // context is null
     }
 
     public static final class Builder<D, T extends ProtocolMessage<?>, S extends Builder<D, T, S>> extends ContextedRegistry.Builder<D, T, Void, S> {
@@ -34,20 +37,26 @@ public class SimpleRegistry<D, T extends ProtocolMessage<?>> extends ContextedRe
 
         @Override
         public SimpleRegistry<D, T> build() {
-            if (this.codec == null)
+            if (this.codec == null) {
                 throw new IllegalStateException("Codec is not set");
-            if (this.idCodec == null)
+            }
+            if (this.idCodec == null) {
                 throw new IllegalStateException("IdCodec is not set");
+            }
             return new SimpleRegistry<>(this.codec, this.idCodec, List.copyOf(this.packets), this.idConsumer);
         }
 
         public S codec(BiConsumer<D, T> decoder, BiConsumer<D, T> encoder) {
-            this.codec = new Codec<>((d, t, c) -> decoder.accept(d, t), (d, t, c) -> encoder.accept(d, t));
+            this.codec = new Codec<>(
+                    (d, t, c) -> decoder.accept(d, t),
+                    (d, t, c) -> encoder.accept(d, t));
             return this.getThis();
         }
 
         public S idCodec(ToIntFunction<D> reader, ObjIntConsumer<D> writer) {
-            this.idCodec = new IdCodec<>((d, c) -> reader.applyAsInt(d), (d, id, c) -> writer.accept(d, id));
+            this.idCodec = new IdCodec<>(
+                    (d, c) -> reader.applyAsInt(d),
+                    (d, id, c) -> writer.accept(d, id));
             return this.getThis();
         }
     }

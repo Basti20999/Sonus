@@ -31,7 +31,7 @@ public class PlasmoPluginMessageCodec extends AbstractPluginMessageCodec {
             LOGGER.warn("{} tried to connect without initial invite", source.getPlayerId());
             return;
         }
-        TcpPlasmoPacket<?> packetObj = TcpPacketRegistry.REGISTRY.read(packet);
+        TcpPlasmoPacket<?> packetObj = TcpPacketRegistry.REGISTRY.decode(packet);
         if (packetObj != null) {
             packetObj.handle(connection.getMetaHandler());
         } else {

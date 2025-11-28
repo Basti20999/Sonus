@@ -46,7 +46,7 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
         SvcMetaPacket metaPacket;
         try {
             SvcPacketContext ctx = connection != null ? connection.getContext() : SvcPacketContext.INITIAL;
-            metaPacket = SvcMetaPacketRegistry.BUF_REGISTRY.read(data, ctx);
+            metaPacket = SvcMetaPacketRegistry.BUF_REGISTRY.decode(data, ctx);
         } finally {
             data.recycle();
         }
