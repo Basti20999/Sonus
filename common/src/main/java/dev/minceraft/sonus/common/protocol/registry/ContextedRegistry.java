@@ -105,15 +105,23 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         }
 
         public <Z extends T> S register(Class<Z> clazz, Supplier<Z> ctor) {
-            this.packets.add(new Entry<>(this.nextId++, clazz, ctor));
+            return this.register(clazz, ctor, MessageDirection.ANY);
+        }
+
+        public <Z extends T> S register(Class<Z> clazz, Supplier<Z> ctor, MessageDirection dir) {
+            this.packets.add(new Entry<>(this.nextId++, clazz, ctor, dir));
             return this.getThis();
         }
 
         public <Z extends T> S register(int id, Class<Z> clazz, Supplier<Z> ctor) {
+            return this.register(id, clazz, ctor, MessageDirection.ANY);
+        }
+
+        public <Z extends T> S register(int id, Class<Z> clazz, Supplier<Z> ctor, MessageDirection dir) {
             if (this.nextId != 0) {
-                LOGGER.warn("Registering packet with explicit id after packets have been registered with implicit ids is not recommended.");
+                throw new IllegalStateException("Can't register packets with explicit id after implicit ids have been used");
             }
-            this.packets.add(new Entry<>(id, clazz, ctor));
+            this.packets.add(new Entry<>(id, clazz, ctor, dir));
             return this.getThis();
         }
 
@@ -133,7 +141,14 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         }
     }
 
-    protected record Entry<T extends ProtocolMessage<?>>(int id, Class<T> clazz, Supplier<T> ctor) {
+    protected record Entry<T extends ProtocolMessage<?>>(
+            int id, Class<T> clazz, Supplier<T> ctor,
+            boolean decode, boolean encode
+    ) {
+
+        protected Entry(int id, Class<T> clazz, Supplier<T> ctor, MessageDirection dir) {
+            this(id, clazz, ctor, dir.decode, dir.encode);
+        }
     }
 
     protected record IdCodec<D, C>(
@@ -146,5 +161,21 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
             TriConsumer<D, T, @Nullable C> decoder,
             TriConsumer<D, T, @Nullable C> encoder
     ) {
+    }
+
+    public enum MessageDirection {
+
+        ANY(true, true),
+        DECODE(true, false),
+        ENCODE(false, true),
+        ;
+
+        private final boolean decode;
+        private final boolean encode;
+
+        MessageDirection(boolean decode, boolean encode) {
+            this.decode = decode;
+            this.encode = encode;
+        }
     }
 }

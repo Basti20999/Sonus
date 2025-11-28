@@ -14,10 +14,12 @@ public class ConnectionCheckSvcPacket extends SvcVoicePacket {
 
     @Override
     public void encode(ByteBuf buf, SvcPacketContext ctx) {
+        // NO-OP
     }
 
     @Override
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
+        // NO-OP
     }
 
     @Override

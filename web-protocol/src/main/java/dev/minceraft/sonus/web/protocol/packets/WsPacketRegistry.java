@@ -22,6 +22,10 @@ import dev.minceraft.sonus.web.protocol.packets.servicebound.StateInfoPacket;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.ANY;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.DECODE;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.ENCODE;
+
 @NullMarked
 public final class WsPacketRegistry {
 
@@ -35,23 +39,23 @@ public final class WsPacketRegistry {
                     .idCodec((buf, __) -> VarInt.read(buf),
                             (buf, id, __) -> VarInt.write(buf, id))
                     // clientbound
-                    .register(AudioPacket.class, AudioPacket::new)
-                    .register(CategoryAddPacket.class, CategoryAddPacket::new)
-                    .register(CategoryRemovePacket.class, CategoryRemovePacket::new)
-                    .register(ConnectedPacket.class, ConnectedPacket::new)
-                    .register(PositionUpdatePacket.class, PositionUpdatePacket::new)
-                    .register(RoomAddPacket.class, RoomAddPacket::new)
-                    .register(RoomJoinResponsePacket.class, RoomJoinResponsePacket::new)
-                    .register(RoomRemovePacket.class, RoomRemovePacket::new)
-                    .register(StateUpdatePacket.class, StateUpdatePacket::new)
+                    .register(AudioPacket.class, AudioPacket::new, ENCODE)
+                    .register(CategoryAddPacket.class, CategoryAddPacket::new, ENCODE)
+                    .register(CategoryRemovePacket.class, CategoryRemovePacket::new, ENCODE)
+                    .register(ConnectedPacket.class, ConnectedPacket::new, ENCODE)
+                    .register(PositionUpdatePacket.class, PositionUpdatePacket::new, ENCODE)
+                    .register(RoomAddPacket.class, RoomAddPacket::new, ENCODE)
+                    .register(RoomJoinResponsePacket.class, RoomJoinResponsePacket::new, ENCODE)
+                    .register(RoomRemovePacket.class, RoomRemovePacket::new, ENCODE)
+                    .register(StateUpdatePacket.class, StateUpdatePacket::new, ENCODE)
                     // commonbound
-                    .register(KeepAlivePacket.class, KeepAlivePacket::new)
-                    .register(PingPacket.class, PingPacket::new)
+                    .register(KeepAlivePacket.class, KeepAlivePacket::new, ANY)
+                    .register(PingPacket.class, PingPacket::new, ANY)
                     // servicebound
-                    .register(InputSoundPacket.class, InputSoundPacket::new)
-                    .register(RoomCreatePacket.class, RoomCreatePacket::new)
-                    .register(RoomJoinRequestPacket.class, RoomJoinRequestPacket::new)
-                    .register(RoomLeavePacket.class, RoomLeavePacket::new)
-                    .register(StateInfoPacket.class, StateInfoPacket::new)
+                    .register(InputSoundPacket.class, InputSoundPacket::new, DECODE)
+                    .register(RoomCreatePacket.class, RoomCreatePacket::new, DECODE)
+                    .register(RoomJoinRequestPacket.class, RoomJoinRequestPacket::new, DECODE)
+                    .register(RoomLeavePacket.class, RoomLeavePacket::new, DECODE)
+                    .register(StateInfoPacket.class, StateInfoPacket::new, DECODE)
                     .build();
 }

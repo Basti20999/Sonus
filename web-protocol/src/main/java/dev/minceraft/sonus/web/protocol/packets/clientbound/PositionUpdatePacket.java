@@ -28,7 +28,6 @@ public class PositionUpdatePacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         this.position = Vec3d.decode(buf);
     }
 

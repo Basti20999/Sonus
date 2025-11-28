@@ -28,7 +28,6 @@ public class StateUpdatePacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         this.state = SonusWebPlayerState.decode(buf);
     }
 

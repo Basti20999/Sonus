@@ -65,7 +65,6 @@ public class AudioPacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         short flags = buf.readUnsignedByte();
         this.channelId = DataTypeUtil.readUniqueId(buf);
         if ((flags & FLAG_SENDER_IS_CHANNEL) != 0) {

@@ -28,7 +28,6 @@ public class CategoryAddPacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         this.category = AudioCategory.decode(buf);
     }
 

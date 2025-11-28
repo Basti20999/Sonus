@@ -30,7 +30,6 @@ public class RoomRemovePacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         this.roomId = DataTypeUtil.readUniqueId(buf);
     }
 

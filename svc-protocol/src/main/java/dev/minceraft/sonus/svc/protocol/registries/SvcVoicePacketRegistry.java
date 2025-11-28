@@ -18,6 +18,10 @@ import dev.minceraft.sonus.svc.protocol.voice.servicebound.MicSvcPacket;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.ANY;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.DECODE;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.ENCODE;
+
 @NullMarked
 public final class SvcVoicePacketRegistry {
 
@@ -27,16 +31,16 @@ public final class SvcVoicePacketRegistry {
                             (buf, packet, ctx) -> packet.encode(buf, ctx))
                     .idCodec((buf, __) -> VarInt.read(buf),
                             (buf, id, __) -> VarInt.write(buf, id))
-                    .idOffset(1)  // Svc index starts at 1
+                    .idOffset(1)  // svc index starts at 1
                     .register(MicSvcPacket.class, MicSvcPacket::new)
-                    .register(PlayerSoundSvcPacket.class, PlayerSoundSvcPacket::new)
-                    .register(GroupSoundSvcPacket.class, GroupSoundSvcPacket::new)
-                    .register(LocationSoundSvcPacket.class, LocationSoundSvcPacket::new)
-                    .register(AuthenticateSvcPacket.class, AuthenticateSvcPacket::new)
-                    .register(AuthenticateAckSvcPacket.class, AuthenticateAckSvcPacket::new)
-                    .register(PingSvcPacket.class, PingSvcPacket::new)
-                    .register(KeepAliveSvcPacket.class, () -> KeepAliveSvcPacket.INSTANCE)
-                    .register(ConnectionCheckSvcPacket.class, ConnectionCheckSvcPacket::new)
-                    .register(ConnectionCheckAckSvcPacket.class, ConnectionCheckAckSvcPacket::new)
+                    .register(PlayerSoundSvcPacket.class, PlayerSoundSvcPacket::new, ENCODE)
+                    .register(GroupSoundSvcPacket.class, GroupSoundSvcPacket::new, ENCODE)
+                    .register(LocationSoundSvcPacket.class, LocationSoundSvcPacket::new, ENCODE)
+                    .register(AuthenticateSvcPacket.class, AuthenticateSvcPacket::new, DECODE)
+                    .register(AuthenticateAckSvcPacket.class, AuthenticateAckSvcPacket::new, ENCODE)
+                    .register(PingSvcPacket.class, PingSvcPacket::new, ANY)
+                    .register(KeepAliveSvcPacket.class, () -> KeepAliveSvcPacket.INSTANCE, ANY)
+                    .register(ConnectionCheckSvcPacket.class, ConnectionCheckSvcPacket::new, DECODE)
+                    .register(ConnectionCheckAckSvcPacket.class, ConnectionCheckAckSvcPacket::new, ENCODE)
                     .build();
 }

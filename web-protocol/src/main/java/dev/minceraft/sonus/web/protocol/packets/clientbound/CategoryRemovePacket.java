@@ -30,7 +30,6 @@ public class CategoryRemovePacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         this.categoryId = DataTypeUtil.readUniqueId(buf);
     }
 

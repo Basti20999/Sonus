@@ -34,7 +34,6 @@ public class ConnectedPacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         this.playerId = DataTypeUtil.readUniqueId(buf);
         this.username = DataTypeUtil.readComponentJson(buf);
     }

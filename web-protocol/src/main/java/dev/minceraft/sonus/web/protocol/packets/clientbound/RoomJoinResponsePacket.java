@@ -26,7 +26,6 @@ public class RoomJoinResponsePacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         this.success = buf.readBoolean();
     }
 

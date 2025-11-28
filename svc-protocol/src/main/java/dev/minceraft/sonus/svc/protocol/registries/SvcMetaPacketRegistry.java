@@ -25,6 +25,9 @@ import org.jspecify.annotations.NullMarked;
 import java.util.HashMap;
 import java.util.Map;
 
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.DECODE;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.ENCODE;
+
 @NullMarked
 public final class SvcMetaPacketRegistry {
 
@@ -41,19 +44,19 @@ public final class SvcMetaPacketRegistry {
                             PACKET_IDS.put(entry.key(), id);
                         }
                     })
-                    .register(AddCategorySvcPacket.class, AddCategorySvcPacket::new)
-                    .register(AddGroupSvcPacket.class, AddGroupSvcPacket::new)
-                    .register(CreateGroupSvcPacket.class, CreateGroupSvcPacket::new)
-                    .register(JoinGroupSvcPacket.class, JoinGroupSvcPacket::new)
-                    .register(JoinedGroupSvcPacket.class, JoinedGroupSvcPacket::new)
-                    .register(LeaveGroupSvcPacket.class, LeaveGroupSvcPacket::new)
-                    .register(PlayerStateSvcPacket.class, PlayerStateSvcPacket::new)
-                    .register(PlayerStatesSvcPacket.class, PlayerStatesSvcPacket::new)
-                    .register(RemovePlayerStatePacket.class, RemovePlayerStatePacket::new)
-                    .register(RemoveCategorySvcPacket.class, RemoveCategorySvcPacket::new)
-                    .register(RemoveGroupSvcPacket.class, RemoveGroupSvcPacket::new)
-                    .register(RequestSecretSvcPacket.class, RequestSecretSvcPacket::new)
-                    .register(SecretSvcPacket.class, SecretSvcPacket::new)
-                    .register(UpdateStateSvcPacket.class, UpdateStateSvcPacket::new)
+                    .register(AddCategorySvcPacket.class, AddCategorySvcPacket::new, ENCODE)
+                    .register(AddGroupSvcPacket.class, AddGroupSvcPacket::new, ENCODE)
+                    .register(CreateGroupSvcPacket.class, CreateGroupSvcPacket::new, DECODE)
+                    .register(JoinGroupSvcPacket.class, JoinGroupSvcPacket::new, DECODE)
+                    .register(JoinedGroupSvcPacket.class, JoinedGroupSvcPacket::new, ENCODE)
+                    .register(LeaveGroupSvcPacket.class, LeaveGroupSvcPacket::new, DECODE)
+                    .register(PlayerStateSvcPacket.class, PlayerStateSvcPacket::new, ENCODE)
+                    .register(PlayerStatesSvcPacket.class, PlayerStatesSvcPacket::new, ENCODE)
+                    .register(RemovePlayerStatePacket.class, RemovePlayerStatePacket::new, ENCODE)
+                    .register(RemoveCategorySvcPacket.class, RemoveCategorySvcPacket::new, ENCODE)
+                    .register(RemoveGroupSvcPacket.class, RemoveGroupSvcPacket::new, ENCODE)
+                    .register(RequestSecretSvcPacket.class, RequestSecretSvcPacket::new, DECODE)
+                    .register(SecretSvcPacket.class, SecretSvcPacket::new, ENCODE)
+                    .register(UpdateStateSvcPacket.class, UpdateStateSvcPacket::new, DECODE)
                     .build();
 }

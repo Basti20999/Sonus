@@ -28,7 +28,6 @@ public class RoomAddPacket extends WebsocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.failClientboundDecode();
         this.room = SonusWebRoom.decode(buf);
     }
 
