@@ -7,7 +7,7 @@ import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class UpdateStateSvcPacket extends SvcMetaPacket<UpdateStateSvcPacket> {
+public class UpdateStateSvcPacket extends SvcMetaPacket {
 
     private boolean disabled;
 

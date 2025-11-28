@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class KeepAliveSvcPacket extends SvcVoicePacket<KeepAliveSvcPacket> {
+public class KeepAliveSvcPacket extends SvcVoicePacket {
 
     public static final KeepAliveSvcPacket INSTANCE = new KeepAliveSvcPacket();
 

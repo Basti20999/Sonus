@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class PlayerStateSvcPacket extends SvcMetaPacket<PlayerStateSvcPacket> {
+public class PlayerStateSvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull SvcPlayerState state;
 

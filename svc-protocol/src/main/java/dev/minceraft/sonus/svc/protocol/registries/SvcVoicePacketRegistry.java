@@ -21,8 +21,8 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public final class SvcVoicePacketRegistry {
 
-    public static final ContextedRegistry<ByteBuf, SvcVoicePacket<?>, SvcPacketContext> REGISTRY =
-            SimpleRegistry.Builder.<ByteBuf, SvcVoicePacket<?>, SvcPacketContext>createContext()
+    public static final ContextedRegistry<ByteBuf, SvcVoicePacket, SvcPacketContext> REGISTRY =
+            SimpleRegistry.Builder.<ByteBuf, SvcVoicePacket, SvcPacketContext>createContext()
                     .codec((buf, packet, ctx) -> packet.decode(buf, ctx),
                             (buf, packet, ctx) -> packet.encode(buf, ctx))
                     .idCodec((buf, __) -> VarInt.read(buf),

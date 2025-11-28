@@ -12,7 +12,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class RemoveGroupSvcPacket extends SvcMetaPacket<RemoveGroupSvcPacket> {
+public class RemoveGroupSvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull UUID groupId;
 

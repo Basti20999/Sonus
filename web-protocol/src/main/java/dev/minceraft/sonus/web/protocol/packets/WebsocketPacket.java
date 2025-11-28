@@ -4,5 +4,9 @@ import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public abstract class WebsocketPacket<T extends WebsocketPacket<?>> extends AbstractWebPacket<IWebSocketHandler> {
+public abstract class WebsocketPacket extends AbstractWebPacket<IWebSocketHandler> {
+
+    protected void failClientboundDecode() {
+        throw new IllegalStateException("Tried decoding clientbound packet");
+    }
 }

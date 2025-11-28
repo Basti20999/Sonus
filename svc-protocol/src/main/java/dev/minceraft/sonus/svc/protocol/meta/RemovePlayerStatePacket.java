@@ -11,7 +11,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class RemovePlayerStatePacket extends SvcMetaPacket<RemovePlayerStatePacket> {
+public class RemovePlayerStatePacket extends SvcMetaPacket {
 
     private @MonotonicNonNull UUID playerId;
 

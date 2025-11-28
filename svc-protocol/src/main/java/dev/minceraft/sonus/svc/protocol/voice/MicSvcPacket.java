@@ -7,7 +7,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class MicSvcPacket extends SvcVoicePacket<MicSvcPacket> {
+public class MicSvcPacket extends SvcVoicePacket {
 
     private byte @MonotonicNonNull [] data;
     private boolean whispering;

@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class AddGroupSvcPacket extends SvcMetaPacket<AddGroupSvcPacket> {
+public class AddGroupSvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull SonusClientGroup group;
 

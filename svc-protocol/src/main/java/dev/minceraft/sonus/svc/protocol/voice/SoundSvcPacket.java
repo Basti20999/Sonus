@@ -11,7 +11,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public abstract class SoundSvcPacket<T extends SoundSvcPacket<?>> extends SvcVoicePacket<T>  {
+public abstract class SoundSvcPacket extends SvcVoicePacket {
 
     public static final byte WHISPER_MASK = 0b1;
     public static final byte HAS_CATEGORY_MASK = 0b10;

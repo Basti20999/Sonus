@@ -12,6 +12,7 @@ public final class SonusConstants {
 
     public static final int SAMPLE_RATE = 48000; // 48 kHz
     public static final int FRAME_SIZE = (SAMPLE_RATE / 1000) * 20;
+    public static final int FRAMES_PER_SECOND = SAMPLE_RATE / FRAME_SIZE;
     public static final int CHANNELS = 1; // Mono
     public static final int CURRENT_VERSION = 0;
 

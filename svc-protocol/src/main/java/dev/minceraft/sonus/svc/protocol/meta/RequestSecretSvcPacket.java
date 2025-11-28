@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class RequestSecretSvcPacket extends SvcMetaPacket<RequestSecretSvcPacket> {
+public class RequestSecretSvcPacket extends SvcMetaPacket {
 
     private int compatibilityVersion;
 

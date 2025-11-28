@@ -11,14 +11,14 @@ import io.netty.channel.ChannelHandlerContext;
 import java.util.List;
 
 @ChannelHandler.Sharable
-public class SvcPacketCodec extends SvcUdpPipelineNode<ByteBuf, SvcVoicePacket<?>> {
+public class SvcPacketCodec extends SvcUdpPipelineNode<ByteBuf, SvcVoicePacket> {
 
     public SvcPacketCodec(SvcUdpMagicCodec svcCodec) {
         super(svcCodec);
     }
 
     @Override
-    public void encode(ChannelHandlerContext ctx, SvcVoicePacket<?> msg, List<Object> out, SvcUdpContext svcCtx) {
+    public void encode(ChannelHandlerContext ctx, SvcVoicePacket msg, List<Object> out, SvcUdpContext svcCtx) {
         ByteBuf buf = ctx.alloc().buffer();
         try {
             SvcVoicePacketRegistry.REGISTRY.write(buf, msg, svcCtx.connection.getContext());
@@ -30,7 +30,7 @@ public class SvcPacketCodec extends SvcUdpPipelineNode<ByteBuf, SvcVoicePacket<?
 
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
-        SvcVoicePacket<?> packet = SvcVoicePacketRegistry.REGISTRY.read(msg, svcCtx.connection.getContext());
+        SvcVoicePacket packet = SvcVoicePacketRegistry.REGISTRY.read(msg, svcCtx.connection.getContext());
         if (packet != null) {
             out.add(packet);
         }

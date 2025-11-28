@@ -13,7 +13,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class JoinGroupSvcPacket extends SvcMetaPacket<JoinGroupSvcPacket> {
+public class JoinGroupSvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull UUID groupId;
     private @Nullable String password;

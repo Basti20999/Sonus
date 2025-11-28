@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class AddCategorySvcPacket extends SvcMetaPacket<AddCategorySvcPacket> {
+public class AddCategorySvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull SonusVolumeCategory category;
 

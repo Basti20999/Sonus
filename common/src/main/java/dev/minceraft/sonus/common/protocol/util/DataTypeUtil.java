@@ -189,9 +189,19 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
     }
 
     public byte[] readByteArray(ByteBuf buf) {
+        return this.readByteArray(buf, Integer.MAX_VALUE);
+    }
+
+    public byte[] readByteArray(ByteBuf buf, int maxLength) {
         int length = this.sizeReader.apply(buf);
         if (length == 0) {
             return new byte[0];
+        } else if (length < 0) {
+            throw new IllegalStateException("Illegal negative array length " + length);
+        } else if (length > maxLength) {
+            throw new IllegalStateException("Byte array with length " + length + " exceeds maximum of " + maxLength);
+        } else if (!buf.isReadable(length)) {
+            throw new IllegalStateException("Can't read " + length + " bytes for byte array");
         }
         byte[] data = new byte[length];
         buf.readBytes(data);

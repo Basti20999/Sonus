@@ -10,7 +10,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class RemoveCategorySvcPacket extends SvcMetaPacket<RemoveCategorySvcPacket>{
+public class RemoveCategorySvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull String categoryId;
 

@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class ConnectionCheckAckSvcPacket extends SvcVoicePacket<ConnectionCheckAckSvcPacket> {
+public class ConnectionCheckAckSvcPacket extends SvcVoicePacket {
 
     public ConnectionCheckAckSvcPacket() {
     }

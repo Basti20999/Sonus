@@ -9,7 +9,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class AuthenticateSvcPacket extends SvcVoicePacket<AuthenticateSvcPacket> {
+public class AuthenticateSvcPacket extends SvcVoicePacket {
 
     private @MonotonicNonNull UUID playerId;
     private @MonotonicNonNull UUID secret;

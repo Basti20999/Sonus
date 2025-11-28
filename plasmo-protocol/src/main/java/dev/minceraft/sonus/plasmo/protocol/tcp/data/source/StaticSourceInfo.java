@@ -15,8 +15,8 @@ public class StaticSourceInfo extends SourceInfo {
 
     public StaticSourceInfo(ByteBuf buf) {
         super(buf, SourceType.STATIC);
-        this.position = Vec3d.read(buf);
-        this.lookAngle = Vec3d.read(buf);
+        this.position = Vec3d.decode(buf);
+        this.lookAngle = Vec3d.decode(buf);
     }
 
     public StaticSourceInfo(String addonId, UUID id, UUID voiceLineId, @Nullable String name,
@@ -30,8 +30,8 @@ public class StaticSourceInfo extends SourceInfo {
     @Override
     public void write(ByteBuf buf) {
         super.write(buf);
-        Vec3d.write(buf, this.position);
-        Vec3d.write(buf, this.lookAngle);
+        Vec3d.encode(buf, this.position);
+        Vec3d.encode(buf, this.lookAngle);
     }
 
     public Vec3d getPosition() {

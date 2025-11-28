@@ -12,7 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class CreateGroupSvcPacket extends SvcMetaPacket<CreateGroupSvcPacket> {
+public class CreateGroupSvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull String name;
     private @Nullable String password;

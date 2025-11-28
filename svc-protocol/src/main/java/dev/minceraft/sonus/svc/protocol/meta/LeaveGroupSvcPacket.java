@@ -8,7 +8,7 @@ import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class LeaveGroupSvcPacket extends SvcMetaPacket<LeaveGroupSvcPacket> {
+public class LeaveGroupSvcPacket extends SvcMetaPacket {
 
     public LeaveGroupSvcPacket() {
         super(SvcPluginChannels.LEAVE_GROUP);

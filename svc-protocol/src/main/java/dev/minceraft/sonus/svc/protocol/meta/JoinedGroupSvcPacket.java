@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.UUID;
 
 @NullMarked
-public class JoinedGroupSvcPacket extends SvcMetaPacket<JoinedGroupSvcPacket> {
+public class JoinedGroupSvcPacket extends SvcMetaPacket {
 
     private @Nullable UUID groupId;
     private boolean wrongPassword;

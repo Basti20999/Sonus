@@ -3,7 +3,7 @@ package dev.minceraft.sonus.svc.protocol.voice;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class GroupSoundSvcPacket extends SoundSvcPacket<GroupSoundSvcPacket> {
+public class GroupSoundSvcPacket extends SoundSvcPacket {
 
     @Override
     public void handle(IVoiceSvcHandler handler) {

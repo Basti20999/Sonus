@@ -14,7 +14,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class SecretSvcPacket extends SvcMetaPacket<SecretSvcPacket> {
+public class SecretSvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull UUID secret;
     private int serverPort;

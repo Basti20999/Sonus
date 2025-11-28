@@ -11,7 +11,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class PingSvcPacket extends SvcVoicePacket<PingSvcPacket> {
+public class PingSvcPacket extends SvcVoicePacket {
 
     private @MonotonicNonNull PacketDirection direction;
     private @MonotonicNonNull UUID id;

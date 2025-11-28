@@ -7,7 +7,7 @@ import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class PlayerSoundSvcPacket extends SoundSvcPacket<PlayerSoundSvcPacket> {
+public class PlayerSoundSvcPacket extends SoundSvcPacket {
 
     private boolean whispering;
     private float distance;

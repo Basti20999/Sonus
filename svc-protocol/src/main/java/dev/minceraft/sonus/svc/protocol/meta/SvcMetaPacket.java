@@ -10,7 +10,7 @@ import org.jspecify.annotations.NullMarked;
 
 
 @NullMarked
-public abstract class SvcMetaPacket<T extends SvcMetaPacket<?>> extends AbstractSvcPacket<IMetaSvcHandler> implements IJsonCodec<IMetaSvcHandler> {
+public abstract class SvcMetaPacket extends AbstractSvcPacket<IMetaSvcHandler> implements IJsonCodec<IMetaSvcHandler> {
 
     protected final Versioned<Key> pluginMessageChannel;
 

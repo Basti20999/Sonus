@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @NullMarked
-public class PlayerStatesSvcPacket extends SvcMetaPacket<PlayerStatesSvcPacket> {
+public class PlayerStatesSvcPacket extends SvcMetaPacket {
 
     private @MonotonicNonNull Map<UUID, SvcPlayerState> states;
 

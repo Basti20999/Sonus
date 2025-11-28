@@ -21,8 +21,8 @@ public class DirectSourceInfo extends SourceInfo {
     public DirectSourceInfo(ByteBuf buf) {
         super(buf, SourceType.DIRECT);
         this.profile = DataTypeUtil.readNullable(buf, b -> DataTypeUtil.INT.readGameProfile(b, Utf8String::readUnsignedShort));
-        this.relativePosition = DataTypeUtil.readNullable(buf, Vec3d::read);
-        this.lookAngle = DataTypeUtil.readNullable(buf, Vec3d::read);
+        this.relativePosition = DataTypeUtil.readNullable(buf, Vec3d::decode);
+        this.lookAngle = DataTypeUtil.readNullable(buf, Vec3d::decode);
         this.cameraRelative = buf.readBoolean();
     }
 
@@ -41,8 +41,8 @@ public class DirectSourceInfo extends SourceInfo {
         super.write(buf);
         DataTypeUtil.writeNullable(buf, this.profile, (b, profile) ->
                 DataTypeUtil.INT.writeGameProfile(b, profile, Utf8String::writeUnsignedShort));
-        DataTypeUtil.writeNullable(buf, this.relativePosition, Vec3d::write);
-        DataTypeUtil.writeNullable(buf, this.lookAngle, Vec3d::write);
+        DataTypeUtil.writeNullable(buf, this.relativePosition, Vec3d::encode);
+        DataTypeUtil.writeNullable(buf, this.lookAngle, Vec3d::encode);
         buf.writeBoolean(this.cameraRelative);
     }
 

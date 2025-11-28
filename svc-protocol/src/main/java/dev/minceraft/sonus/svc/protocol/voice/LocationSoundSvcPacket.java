@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacket> {
+public class LocationSoundSvcPacket extends SoundSvcPacket {
 
     protected @MonotonicNonNull Vec3d location;
     protected float distance;
@@ -22,7 +22,7 @@ public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacke
         // what the fuck happened here with the field order? We can't use proper inheritance.
         DataTypeUtil.writeUniqueId(buf, this.channelId);
         DataTypeUtil.writeUniqueId(buf, this.sender);
-        Vec3d.write(buf, this.location);
+        Vec3d.encode(buf, this.location);
         DataTypeUtil.VAR_INT.writeByteArray(buf, this.data);
         buf.writeLong(this.sequenceNumber);
         buf.writeFloat(this.distance);
@@ -41,7 +41,7 @@ public class LocationSoundSvcPacket extends SoundSvcPacket<LocationSoundSvcPacke
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.channelId = DataTypeUtil.readUniqueId(buf);
         this.sender = DataTypeUtil.readUniqueId(buf);
-        this.location = Vec3d.read(buf); // local field
+        this.location = Vec3d.decode(buf); // local field
         this.data = DataTypeUtil.VAR_INT.readByteArray(buf);
         this.sequenceNumber = buf.readLong();
         this.distance = buf.readFloat(); // local field

@@ -56,16 +56,16 @@ public class SvcConnection implements AutoCloseable {
     }
 
     public void sendPacket(AbstractSvcPacket<?> packet) {
-        if (packet instanceof SvcVoicePacket<?> voicePacket) {
+        if (packet instanceof SvcVoicePacket voicePacket) {
             sendUdpPacket(voicePacket);
-        } else if (packet instanceof SvcMetaPacket<?> metaPacket) {
+        } else if (packet instanceof SvcMetaPacket metaPacket) {
             sendTcpPacket(metaPacket);
         } else {
             throw new IllegalArgumentException("Unsupported packet type: " + packet.getClass().getName());
         }
     }
 
-    private void sendUdpPacket(SvcVoicePacket<?> packet) {
+    private void sendUdpPacket(SvcVoicePacket packet) {
         if (this.remoteAddress == null) {
             throw new IllegalStateException("Cannot send UDP packet before remote address is set.");
         }
@@ -77,7 +77,7 @@ public class SvcConnection implements AutoCloseable {
         this.protocolAdapter.getAdapter().getService().getUdpServer().sendPacket(payload);
     }
 
-    private void sendTcpPacket(SvcMetaPacket<?> packet) {
+    private void sendTcpPacket(SvcMetaPacket packet) {
         Key channel = packet.getPluginMessageChannel().getForVersion(this.ctx.version());
         if (channel == null) {
             return;

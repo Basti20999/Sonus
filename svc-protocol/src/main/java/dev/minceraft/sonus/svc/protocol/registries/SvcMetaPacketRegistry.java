@@ -30,8 +30,8 @@ public final class SvcMetaPacketRegistry {
 
     private static final Map<Key, Integer> PACKET_IDS = new HashMap<>();
 
-    public static final ContextedRegistry<PmDataHolderBuf, SvcMetaPacket<?>, SvcPacketContext> BUF_REGISTRY =
-            ContextedRegistry.Builder.<PmDataHolderBuf, SvcMetaPacket<?>, SvcPacketContext>createContext()
+    public static final ContextedRegistry<PmDataHolderBuf, SvcMetaPacket, SvcPacketContext> BUF_REGISTRY =
+            ContextedRegistry.Builder.<PmDataHolderBuf, SvcMetaPacket, SvcPacketContext>createContext()
                     .codec((data, packet, ctx) -> packet.decode(data.getFirst(), ctx),
                             (data, packet, ctx) -> packet.encode(data.getFirst(), ctx))
                     .idCodec((holder, ctx) -> PACKET_IDS.get(holder.getSecond()),

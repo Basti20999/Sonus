@@ -43,7 +43,7 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
         SvcConnection connection = sessionManager.getConnection(source.getPlayerId());
 
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(packet, channel);
-        SvcMetaPacket<? extends SvcMetaPacket<?>> metaPacket;
+        SvcMetaPacket metaPacket;
         try {
             SvcPacketContext ctx = connection != null ? connection.getContext() : SvcPacketContext.INITIAL;
             metaPacket = SvcMetaPacketRegistry.BUF_REGISTRY.read(data, ctx);

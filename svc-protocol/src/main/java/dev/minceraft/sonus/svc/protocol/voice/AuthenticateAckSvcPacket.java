@@ -5,7 +5,7 @@ import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class AuthenticateAckSvcPacket extends SvcVoicePacket<AuthenticateAckSvcPacket> {
+public class AuthenticateAckSvcPacket extends SvcVoicePacket {
 
     @Override
     public void handle(IVoiceSvcHandler handler) {
