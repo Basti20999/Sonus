@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.meta.servicebound;
 
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
@@ -29,18 +28,8 @@ public class RequestSecretSvcPacket extends SvcMetaPacket {
     }
 
     @Override
-    public void encode(JsonObject json) {
-        json.addProperty("compatibilityVersion", this.compatibilityVersion);
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.compatibilityVersion = json.get("compatibilityVersion").getAsInt();
-    }
-
-    @Override
     public void handle(IMetaSvcHandler handler) {
-        handler.handleRequestSecretPacket( this);
+        handler.handleRequestSecretPacket(this);
     }
 
     public int getCompatibilityVersion() {

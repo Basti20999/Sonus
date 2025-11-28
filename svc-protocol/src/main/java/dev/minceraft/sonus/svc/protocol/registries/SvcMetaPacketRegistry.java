@@ -56,26 +56,4 @@ public final class SvcMetaPacketRegistry {
                     .register(SecretSvcPacket.class, SecretSvcPacket::new)
                     .register(UpdateStateSvcPacket.class, UpdateStateSvcPacket::new)
                     .build();
-
-/*    public static final ContextedRegistry<PmDataHolderJsonObject, SvcMetaPacket<?>> JSON_REGISTRY =
-            new ContextedRegistry.Builder<PmDataHolderJsonObject, SvcMetaPacket<?>>()
-                    .codec((data, packet) -> packet.decode(data.getFirst()),
-                            (data, packet) -> packet.encode(data.getFirst()))
-                    .idCodec(holder -> PACKET_IDS.get((holder).getSecond()), (id, packet) -> {
-                    })
-                    .idMapper((id, sample) -> PACKET_IDS.put(sample.getPluginMessageChannel(), id))
-                    .register(AddCategorySvcPacket.class, AddCategorySvcPacket::new)
-                    .register(AddGroupSvcPacket.class, AddGroupSvcPacket::new)
-                    .register(CreateGroupSvcPacket.class, CreateGroupSvcPacket::new)
-                    .register(JoinGroupSvcPacket.class, JoinGroupSvcPacket::new)
-                    .register(JoinedGroupSvcPacket.class, JoinedGroupSvcPacket::new)
-                    .register(LeaveGroupSvcPacket.class, LeaveGroupSvcPacket::new)
-                    .register(PlayerStateSvcPacket.class, PlayerStateSvcPacket::new)
-                    .register(PlayerStateSvcPacket.class, PlayerStateSvcPacket::new)
-                    .register(RemoveCategorySvcPacket.class, RemoveCategorySvcPacket::new)
-                    .register(RemoveGroupSvcPacket.class, RemoveGroupSvcPacket::new)
-                    .register(RequestSecretSvcPacket.class, RequestSecretSvcPacket::new)
-                    .register(SecretSvcPacket.class, SecretSvcPacket::new)
-                    .register(UpdateStateSvcPacket.class, UpdateStateSvcPacket::new)
-                    .build();*/
 }

@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.data;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import io.netty.buffer.ByteBuf;
@@ -43,15 +42,6 @@ public class SonusClientGroup {
         this.type = SonusGroupType.values()[buf.readShort()];
     }
 
-    public SonusClientGroup(JsonObject json) {
-        this.groupId = UUID.fromString(json.get("groupId").getAsString());
-        this.name = json.get("name").getAsString();
-        this.password = json.get("password").getAsBoolean();
-        this.persistent = json.get("persistent").getAsBoolean();
-        this.hidden = json.get("hidden").getAsBoolean();
-        this.type = SonusGroupType.ID_INDEX.valueOrThrow(json.get("type").getAsString());
-    }
-
     public String getName() {
         return this.name;
     }
@@ -84,15 +74,6 @@ public class SonusClientGroup {
         buf.writeBoolean(this.persistent);
         buf.writeBoolean(this.hidden);
         buf.writeShort(this.type.ordinal());
-    }
-
-    public void encode(JsonObject json) {
-        json.addProperty("name", this.name);
-        json.addProperty("groupId", this.groupId.toString());
-        json.addProperty("password", this.password);
-        json.addProperty("persistent", this.persistent);
-        json.addProperty("hidden", this.hidden);
-        json.addProperty("type", this.type.getId());
     }
 
     @Override

@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
@@ -30,16 +29,6 @@ public class RemoveGroupSvcPacket extends SvcMetaPacket {
     @Override
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.groupId = DataTypeUtil.readUniqueId(buf);
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        json.addProperty("groupId", this.groupId.toString());
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.groupId = UUID.fromString(json.get("groupId").getAsString());
     }
 
     @Override

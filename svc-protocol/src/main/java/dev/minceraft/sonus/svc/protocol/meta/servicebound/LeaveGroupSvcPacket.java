@@ -1,7 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.meta.servicebound;
 
-
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
@@ -16,28 +14,14 @@ public class LeaveGroupSvcPacket extends SvcMetaPacket {
         super(SvcPluginChannels.LEAVE_GROUP);
     }
 
-    public LeaveGroupSvcPacket(ByteBuf buf) {
-        super(SvcPluginChannels.LEAVE_GROUP);
-    }
-
-    public LeaveGroupSvcPacket(JsonObject json) {
-        super(SvcPluginChannels.LEAVE_GROUP);
-    }
-
     @Override
     public void encode(ByteBuf buf, SvcPacketContext ctx) {
+        // NO-OP
     }
 
     @Override
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-    }
-
-    @Override
-    public void decode(JsonObject json) {
+        // NO-OP
     }
 
     @Override

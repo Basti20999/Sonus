@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.data.SonusVolumeCategory;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
@@ -32,16 +31,6 @@ public class AddCategorySvcPacket extends SvcMetaPacket {
     @Override
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.category = new SonusVolumeCategory(buf, ctx);
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        this.category.encode(json);
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.category = new SonusVolumeCategory(json);
     }
 
     @Override

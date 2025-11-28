@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.data;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import io.netty.buffer.ByteBuf;
@@ -33,18 +32,6 @@ public class SvcPlayerState {
         this.groupId = DataTypeUtil.readNullable(buf, DataTypeUtil::readUniqueId);
     }
 
-    public SvcPlayerState(JsonObject json) {
-        this.playerId = UUID.fromString(json.get("playerId").getAsString());
-        this.name = json.get("name").getAsString();
-        this.disabled = json.get("disabled").getAsBoolean();
-        this.disconnected = json.get("disconnected").getAsBoolean();
-        if (json.has("groupId")) {
-            this.groupId = UUID.fromString(json.get("groupId").getAsString());
-        } else {
-            this.groupId = null;
-        }
-    }
-
     public void encode(ByteBuf buf) {
         buf.writeBoolean(this.disabled);
         buf.writeBoolean(this.disconnected);
@@ -52,16 +39,6 @@ public class SvcPlayerState {
         buf.writeLong(this.playerId.getLeastSignificantBits());
         Utf8String.write(buf, this.name);
         DataTypeUtil.writeNullable(buf, this.groupId, DataTypeUtil::writeUniqueId);
-    }
-
-    public void encode(JsonObject json) {
-        json.addProperty("playerId", this.playerId.toString());
-        json.addProperty("name", this.name);
-        json.addProperty("disabled", this.disabled);
-        json.addProperty("disconnected", this.disconnected);
-        if (this.groupId != null) {
-            json.addProperty("groupId", this.groupId.toString());
-        }
     }
 
     public UUID getPlayerId() {

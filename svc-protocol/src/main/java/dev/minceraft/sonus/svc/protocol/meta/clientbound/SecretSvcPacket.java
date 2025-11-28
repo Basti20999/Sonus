@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.codec.OpusCodec;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
@@ -59,34 +58,6 @@ public class SecretSvcPacket extends SvcMetaPacket {
         this.groupsEnabled = buf.readBoolean();
         this.voiceHost = Utf8String.read(buf);
         this.allowRecording = buf.readBoolean();
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        json.addProperty("secret", this.secret.toString());
-        json.addProperty("serverPort", this.serverPort);
-        json.addProperty("playerId", this.playerId.toString());
-        json.addProperty("codec", this.codec.name());
-        json.addProperty("mtuSize", this.mtuSize);
-        json.addProperty("voiceChatDistance", this.voiceChatDistance);
-        json.addProperty("keepAlive", this.keepAlive);
-        json.addProperty("groupsEnabled", this.groupsEnabled);
-        json.addProperty("voiceHost", this.voiceHost);
-        json.addProperty("allowRecording", this.allowRecording);
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.secret = UUID.fromString(json.get("secret").getAsString());
-        this.serverPort = json.get("serverPort").getAsInt();
-        this.playerId = UUID.fromString(json.get("playerId").getAsString());
-        this.codec = OpusCodec.valueOf(json.get("codec").getAsString());
-        this.mtuSize = json.get("mtuSize").getAsInt();
-        this.voiceChatDistance = json.get("voiceChatDistance").getAsDouble();
-        this.keepAlive = json.get("keepAlive").getAsInt();
-        this.groupsEnabled = json.get("groupsEnabled").getAsBoolean();
-        this.voiceHost = json.get("voiceHost").getAsString();
-        this.allowRecording = json.get("allowRecording").getAsBoolean();
     }
 
     @Override

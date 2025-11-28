@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
@@ -27,16 +26,6 @@ public class AddGroupSvcPacket extends SvcMetaPacket {
     @Override
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.group = new SonusClientGroup(buf);
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        this.group.encode(json);
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.group = new SonusClientGroup(json);
     }
 
     @Override

@@ -1,13 +1,10 @@
 package dev.minceraft.sonus.svc.protocol.data;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
-import io.netty.buffer.Unpooled;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.Nullable;
@@ -52,19 +49,6 @@ public class SonusVolumeCategory {
             DataTypeUtil.readNullable(buf, Utf8String::read); // discard description translation key
         }
         this.icon = DataTypeUtil.readNullable(buf, SonusVolumeCategory::readIconBytes);
-    }
-
-    public SonusVolumeCategory(JsonObject json) {
-        this.id = json.get("id").getAsString();
-        this.name = json.get("name").getAsString();
-        this.description = json.has("description") ?
-                json.get("description").getAsString() : null;
-        if (json.has("icon")) {
-            byte[] iconBytes = ByteBufUtil.decodeHexDump(json.get("icon").getAsString());
-            this.icon = readIconBytes(Unpooled.wrappedBuffer(iconBytes));
-        } else {
-            this.icon = null;
-        }
     }
 
     private static final char[] CHARSET = "abcdefghijklmnopqrstuvwxyz_".toCharArray();
@@ -134,22 +118,5 @@ public class SonusVolumeCategory {
             buf.writeBoolean(false); // description translation key
         }
         DataTypeUtil.writeNullableIf(buf, this.icon, i -> i[0] != null, SonusVolumeCategory::writeIconBytes);
-    }
-
-    public void encode(JsonObject json) {
-        json.addProperty("id", this.id);
-        json.addProperty("name", this.name);
-        if (this.description != null) {
-            json.addProperty("description", this.description);
-        }
-        if (this.icon != null && this.icon[0] != null) {
-            ByteBuf buf = Unpooled.buffer(16 * 16 * Integer.BYTES);
-            try {
-                writeIconBytes(buf, this.icon);
-                json.addProperty("icon", ByteBufUtil.hexDump(buf));
-            } finally {
-                buf.release();
-            }
-        }
     }
 }

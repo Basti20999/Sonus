@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
@@ -28,16 +27,6 @@ public class RemoveCategorySvcPacket extends SvcMetaPacket {
     @Override
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.categoryId = Utf8String.read(buf, 16);
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        json.addProperty("categoryId", this.categoryId);
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.categoryId = json.get("categoryId").getAsString();
     }
 
     @Override

@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
@@ -29,16 +28,6 @@ public class RemovePlayerStatePacket extends SvcMetaPacket {
     @Override
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.playerId = DataTypeUtil.readUniqueId(buf);
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        json.addProperty("playerId", this.playerId.toString());
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.playerId = UUID.fromString(json.get("playerId").getAsString());
     }
 
     @Override

@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
@@ -33,20 +32,6 @@ public class JoinedGroupSvcPacket extends SvcMetaPacket {
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.groupId = DataTypeUtil.readNullable(buf, DataTypeUtil::readUniqueId);
         this.wrongPassword = buf.readBoolean();
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        if (this.groupId != null) {
-            json.addProperty("groupId", this.groupId.toString());
-        }
-        json.addProperty("wrongPassword", this.wrongPassword);
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.groupId = json.has("groupId") ? UUID.fromString(json.get("groupId").getAsString()) : null;
-        this.wrongPassword = json.get("wrongPassword").getAsBoolean();
     }
 
     @Override

@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.meta.servicebound;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
@@ -25,16 +24,6 @@ public class UpdateStateSvcPacket extends SvcMetaPacket {
     @Override
     public void decode(ByteBuf buf, SvcPacketContext ctx) {
         this.disabled = buf.readBoolean();
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        json.addProperty("disabled", this.disabled);
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.disabled = json.get("disabled").getAsBoolean();
     }
 
     @Override

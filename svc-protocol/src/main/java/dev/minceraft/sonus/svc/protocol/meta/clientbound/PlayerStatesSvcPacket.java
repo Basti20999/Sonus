@@ -1,9 +1,6 @@
 package dev.minceraft.sonus.svc.protocol.meta.clientbound;
 
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
@@ -40,27 +37,6 @@ public class PlayerStatesSvcPacket extends SvcMetaPacket {
         this.states = new HashMap<>(size);
         for (int i = 0; i < size; i++) {
             SvcPlayerState state = new SvcPlayerState(buf);
-            this.states.put(state.getPlayerId(), state);
-        }
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        JsonArray array = new JsonArray(this.states.size());
-        for (SvcPlayerState value : this.states.values()) {
-            JsonObject object = new JsonObject();
-            value.encode(object);
-            array.add(object);
-        }
-        json.add("states", array);
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        JsonArray array = json.getAsJsonArray("states");
-        this.states = new HashMap<>(array.size());
-        for (JsonElement jsonElement : array) {
-            SvcPlayerState state = new SvcPlayerState(jsonElement.getAsJsonObject());
             this.states.put(state.getPlayerId(), state);
         }
     }

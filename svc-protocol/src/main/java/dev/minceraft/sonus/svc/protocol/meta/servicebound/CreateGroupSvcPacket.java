@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.protocol.meta.servicebound;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
@@ -36,24 +35,6 @@ public class CreateGroupSvcPacket extends SvcMetaPacket {
         this.name = Utf8String.read(buf, 512);
         this.password = DataTypeUtil.readNullable(buf, b -> Utf8String.read(b, 512));
         this.type = SonusGroupType.values()[buf.readShort()];
-    }
-
-    @Override
-    public void encode(JsonObject json) {
-        json.addProperty("name", this.name);
-        if (this.password != null) {
-            json.addProperty("password", this.password);
-        }
-        json.addProperty("type", this.type.getId());
-    }
-
-    @Override
-    public void decode(JsonObject json) {
-        this.name = json.get("name").getAsString();
-        this.password = json.has("password") ?
-                json.get("password").getAsString() : null;
-        this.type = SonusGroupType.ID_INDEX.valueOrThrow(
-                json.get("type").getAsString());
     }
 
     @Override
