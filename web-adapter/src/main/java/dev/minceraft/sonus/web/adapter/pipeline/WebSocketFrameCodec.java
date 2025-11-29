@@ -22,7 +22,7 @@ public class WebSocketFrameCodec extends MessageToMessageCodec<WebSocketFrame, A
         if (msg instanceof TextWebSocketMessage txt) {
             out.add(new TextWebSocketFrame(txt.getText()));
         } else if (msg instanceof ByteWebSocketMessage binary) {
-            out.add(new BinaryWebSocketFrame(binary.getDirectBuf()));
+            out.add(new BinaryWebSocketFrame(binary.getDirectBuf().retain()));
         }
     }
 
