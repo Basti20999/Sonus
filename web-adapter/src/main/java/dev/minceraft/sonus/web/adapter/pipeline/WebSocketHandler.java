@@ -5,8 +5,12 @@ import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WebSocketHandler extends ChannelInboundHandlerAdapter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private final WebSocketConnection connection;
 
@@ -23,5 +27,12 @@ public class WebSocketHandler extends ChannelInboundHandlerAdapter {
         } finally {
             ReferenceCountUtil.release(msg);
         }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        LOGGER.error("Caught exception in web connection to {} for {}",
+                this.connection.getPlayer().getUniqueId(), ctx.channel(), cause);
+        ctx.close();
     }
 }
