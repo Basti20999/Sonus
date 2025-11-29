@@ -17,6 +17,7 @@ import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import dev.minceraft.sonus.service.processing.util.SpatialNormProcessor;
+import dev.minceraft.sonus.service.rooms.ServerRoom;
 import dev.minceraft.sonus.service.server.SonusServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -216,6 +217,9 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
             if (!Objects.equals(room.getPassword(), password)) {
                 return false; // wrong password (and no bypass permission)
             }
+        }
+        if (room instanceof ServerRoom) {
+            return false; // don't allow accessing server rooms manually
         }
         return true; // allow join
     }
