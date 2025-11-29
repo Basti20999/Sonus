@@ -5,6 +5,7 @@ import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import net.kyori.adventure.key.Key;
+import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+@NullMarked
 public class SonusEventManager implements ISonusEventManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");

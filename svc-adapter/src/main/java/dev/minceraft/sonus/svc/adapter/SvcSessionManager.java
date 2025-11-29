@@ -1,108 +1,130 @@
 package dev.minceraft.sonus.svc.adapter;
 
+import com.google.common.collect.ImmutableMap;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
 import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
-import dev.minceraft.sonus.svc.protocol.meta.AddGroupSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.PlayerStateSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.PlayerStatesSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.RemoveGroupSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddGroupSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.JoinedGroupSvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.PlayerStatesSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
+
+@NullMarked
 public class SvcSessionManager {
 
     private final SvcAdapter adapter;
-    private final Map<UUID, SvcConnection> connections = new HashMap<>();
+
+    private final Map<UUID, SvcConnection> connections = new ConcurrentHashMap<>();
 
     public SvcSessionManager(SvcAdapter adapter) {
         this.adapter = adapter;
 
-        this.adapter.getService().getScheduler().schedule(this::tickKeepAlive,
-                0,
-                this.adapter.getService().getConfig().getKeepAliveMs(),
-                TimeUnit.MILLISECONDS);
-    }
-
-    public SvcConnection getConnection(UUID playerId) {
-        return this.connections.get(playerId);
+        int keepAliveInterval = this.adapter.getService().getConfig().getKeepAliveMs();
+        this.adapter.getService().getScheduler().schedule(
+                this::tickKeepAlive, 0, keepAliveInterval, TimeUnit.MILLISECONDS);
     }
 
     public void addConnection(SvcConnection connection) {
         this.connections.put(connection.getPlayer().getUniqueId(), connection);
     }
 
+    public @Nullable SvcConnection getConnection(UUID playerId) {
+        return this.connections.get(playerId);
+    }
+
+    public boolean removeSession(UUID playerId) {
+        try (SvcConnection conn = this.connections.remove(playerId)) {
+            return conn != null;
+        }
+    }
+
     public void onConnectionEstablished(SvcConnection connection) {
-        this.adapter.getService().getEventManager().onPlayerStateUpdate(connection.getPlayer());
-
-        PlayerStatesSvcPacket statesPacket = new PlayerStatesSvcPacket();
-        statesPacket.setStates(this.getPlayerStates(connection));
-        connection.sendPacket(statesPacket);
-
+        // send group initialization packets for everything
+        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
         for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
             AddGroupSvcPacket packet = new AddGroupSvcPacket();
-            packet.setGroup(new SonusClientGroup(room));
+            packet.setGroup(new SonusClientGroup(room, bypassPassword));
+            connection.sendPacket(packet);
+        }
+
+        // broadcast new player state to everyone else
+        connection.getPlayer().updateState();
+
+        // bulk-initialize all player states
+        PlayerStatesSvcPacket statesPacket = new PlayerStatesSvcPacket();
+        statesPacket.setStates(this.buildBulkPlayerStates(connection.getPlayer()));
+        connection.sendPacket(statesPacket);
+
+        // primary room is still set, tell the player it's in a group
+        IRoom primaryRoom = connection.getPlayer().getPrimaryRoom();
+        if (primaryRoom != null) {
+            JoinedGroupSvcPacket packet = new JoinedGroupSvcPacket();
+            packet.setGroupId(primaryRoom.getId());
+            packet.setWrongPassword(false);
             connection.sendPacket(packet);
         }
     }
 
     public void tickKeepAlive() {
-        broadcastPacket(new KeepAliveSvcPacket());
+        this.broadcast(KeepAliveSvcPacket.INSTANCE);
     }
 
-    public void broadcastPacket(AbstractSvcPacket<?> packet) {
+    public void broadcast(AbstractSvcPacket<?> packet) {
+        this.broadcast(__ -> packet);
+    }
+
+    public void broadcast(Function<SvcConnection, AbstractSvcPacket<?>> packet) {
         for (SvcConnection conn : this.connections.values()) {
-            if (!conn.isConnected()) {
-                continue;
+            if (conn.isConnected()) {
+                conn.sendPacket(packet.apply(conn));
             }
-            conn.sendPacket(packet);
         }
     }
 
-    public void broadcastPacketSourced(ISonusPlayer source, PlayerStateSvcPacket packet) {
+    public void broadcastFrom(ISonusPlayer source, AbstractSvcPacket<?> packet) {
+        this.broadcastFrom(source, __ -> packet);
+    }
+
+    public void broadcastFrom(ISonusPlayer source, Function<SvcConnection, AbstractSvcPacket<?>> packet) {
         for (SvcConnection conn : this.connections.values()) {
-            if (!conn.isConnected() || !conn.getPlayer().shouldSee(source)) {
-                continue;
+            if (!conn.isConnected() || !conn.getPlayer().canSee(source)) {
+                continue; // target not connected or target can't see source
             }
             conn.getPlayer().ensureTabListed(source);
-            conn.sendPacket(packet);
+            conn.sendPacket(packet.apply(conn));
         }
     }
 
-    public Map<UUID, SvcPlayerState> getPlayerStates(SvcConnection listener) {
-        Collection<? extends ISonusPlayer> players = this.adapter.getService().getPlayerManager().getPlayers();
-        Map<UUID, SvcPlayerState> states = new HashMap<>(this.connections.size());
-        for (ISonusPlayer player : players) {
-            if (!player.isConnected() || !player.shouldSee(listener.getPlayer())) {
-                continue;
+    public SvcPlayerState buildPlayerState(ISonusPlayer viewer, ISonusPlayer player) {
+        IRoom primaryRoom = player.getPrimaryRoom();
+        return new SvcPlayerState(
+                player.getUniqueId(viewer), player.getName(viewer),
+                player.isDeafened(), !player.isConnected(),
+                primaryRoom == null ? null : primaryRoom.getId()
+        );
+    }
+
+    public Map<UUID, SvcPlayerState> buildBulkPlayerStates(ISonusPlayer player) {
+        ImmutableMap.Builder<UUID, SvcPlayerState> states = ImmutableMap.builderWithExpectedSize(this.connections.size());
+        for (ISonusPlayer target : this.adapter.getService().getPlayerManager().getPlayers()) {
+            // build state update of target if player can see target
+            if (target.isConnected() && player.canSee(target)) {
+                states.put(target.getUniqueId(player), this.buildPlayerState(player, target));
             }
-            states.put(player.getUniqueId(), this.adapter.buildPlayerState(player));
         }
-        return states;
-    }
-
-    public void removeSession(UUID playerId) {
-        this.connections.remove(playerId);
-    }
-
-    public void broadcastNewGroup(IRoom room) {
-        AddGroupSvcPacket packet = new AddGroupSvcPacket();
-        SonusClientGroup group = new SonusClientGroup(room);
-        packet.setGroup(group);
-        this.broadcastPacket(packet);
-    }
-
-    public void broadcastRemoveGroup(IRoom room) {
-        RemoveGroupSvcPacket packet = new RemoveGroupSvcPacket();
-        packet.setGroupId(room.getId());
-        this.broadcastPacket(packet);
+        return states.build();
     }
 }

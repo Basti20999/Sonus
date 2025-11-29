@@ -1,5 +1,16 @@
 package dev.minceraft.sonus.svc.protocol.voice;
 
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.AuthenticateAckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.ConnectionCheckAckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.GroupSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.LocationSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.PlayerSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.PingSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.AuthenticateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.ConnectionCheckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.MicSvcPacket;
+
 public interface IVoiceSvcHandler {
 
     default void handleAuthenticateAck(AuthenticateAckSvcPacket packet) {

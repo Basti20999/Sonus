@@ -1,15 +1,12 @@
 package dev.minceraft.sonus.svc.protocol.meta;
 
-
-import dev.minceraft.sonus.common.protocol.codec.IJsonCodec;
 import dev.minceraft.sonus.common.version.Versioned;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 
-
 @NullMarked
-public abstract class SvcMetaPacket<T extends SvcMetaPacket<?>> extends AbstractSvcPacket<IMetaSvcHandler> implements IJsonCodec<IMetaSvcHandler> {
+public abstract class SvcMetaPacket extends AbstractSvcPacket<IMetaSvcHandler> {
 
     protected final Versioned<Key> pluginMessageChannel;
 

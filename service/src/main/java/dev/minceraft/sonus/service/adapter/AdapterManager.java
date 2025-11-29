@@ -2,7 +2,7 @@ package dev.minceraft.sonus.service.adapter;
 // Created by booky10 in Sonus (01:45 10.08.2025)
 
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
-import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.adapter.UdpSonusAdapter;
 import dev.minceraft.sonus.service.SonusService;
 import net.kyori.adventure.util.Services;
 import org.jspecify.annotations.NullMarked;
@@ -19,27 +19,28 @@ public final class AdapterManager {
 
     private final SonusService service;
     private final Set<SonusAdapter> adapters = Services.services(SonusAdapter.class);
-    private final @Nullable VoiceProtocolAdapter[] adaptersByMagic = new VoiceProtocolAdapter[0xFF + 1];
+    private final @Nullable UdpSonusAdapter[] adaptersByMagic = new UdpSonusAdapter[0xFF + 1];
 
     public AdapterManager(SonusService service) {
         this.service = service;
     }
 
     public void init() {
-        LOGGER.info("Try to init {} adapters", this.adapters.size());
         for (SonusAdapter adapter : this.adapters) {
             try {
-                LOGGER.info("Init {}", adapter.getClass().getSimpleName());
+                LOGGER.info("Initializing {} adapter...", adapter.getClass().getSimpleName());
                 adapter.init(this.service);
-                VoiceProtocolAdapter proto = adapter.getProtocolAdapter();
-                this.adaptersByMagic[proto.getMagicByte() & 0xFF] = proto;
+                UdpSonusAdapter proto = adapter.getUdpAdapter();
+                if (proto != null) {
+                    this.adaptersByMagic[proto.getMagicByte() & 0xFF] = proto;
+                }
             } catch (Throwable throwable) {
                 LOGGER.warn("Failed to initialize {}", adapter.getClass().getSimpleName(), throwable);
             }
         }
     }
 
-    public @Nullable VoiceProtocolAdapter getAdapter(byte magicByte) {
+    public @Nullable UdpSonusAdapter getAdapter(byte magicByte) {
         return this.adaptersByMagic[magicByte & 0xFF];
     }
 

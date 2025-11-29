@@ -3,24 +3,25 @@ package dev.minceraft.sonus.common.service;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.rooms.RoomAudioType;
+import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.UUID;
 
+@NullMarked
 public interface ISonusRoomManager {
 
-    IRoom getRoom(UUID uniqueId);
+    @Nullable IRoom getRoom(UUID uniqueId);
 
     Collection<IRoom> getRooms();
 
-    boolean joinRoom(ISonusPlayer player, UUID roomId, @Nullable String password);
+    IRoom createStaticRoom(String name, @Nullable String password, RoomAudioType audioType, boolean persist);
 
-    boolean joinPrimaryRoom(ISonusPlayer player, UUID roomId, @Nullable String password);
+    boolean createRoom(IRoom room);
 
-    IRoom createStaticPrimaryRoom(String name, @Nullable String password, RoomAudioType audioType);
+    boolean removeRoom(IRoom room);
 
-    void removeRoom(IRoom room);
-
-    void leavePrimaryRoom(ISonusPlayer player);
+    void updateRoomDefinition(UUID serverId, RoomDefinition definition);
 }

@@ -19,11 +19,11 @@ public class Vec3d {
         this.z = z;
     }
 
-    public static Vec3d read(ByteBuf buf) {
+    public static Vec3d decode(ByteBuf buf) {
         return new Vec3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
     }
 
-    public static void write(ByteBuf buf, Vec3d vec) {
+    public static void encode(ByteBuf buf, Vec3d vec) {
         buf.writeDouble(vec.x);
         buf.writeDouble(vec.y);
         buf.writeDouble(vec.z);
@@ -46,5 +46,10 @@ public class Vec3d {
         double dy = this.y - listenerPos.getY();
         double dz = this.z - listenerPos.getZ();
         return dx * dx + dy * dy + dz * dz;
+    }
+
+    @Override
+    public String toString() {
+        return "Vec3d[" + this.x + ", " + this.y + ", " + this.z + ']';
     }
 }

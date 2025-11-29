@@ -1,19 +1,24 @@
 package dev.minceraft.sonus.service.velocity;
 
+import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.translation.GlobalTranslator;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+
+import static net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText;
 
 @NullMarked
 public class VelocitySonusPlayer implements IPlatformPlayer {
@@ -27,7 +32,7 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     }
 
     @Override
-    public UUID getUniqueId() {
+    public UUID getUniqueId(@Nullable IPlatformPlayer viewer) {
         return this.player.getUniqueId();
     }
 
@@ -39,24 +44,43 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     }
 
     @Override
-    public String getName() {
+    public String getName(@Nullable IPlatformPlayer viewer) {
         return this.player.getUsername();
     }
 
     @Override
     public void sendPluginMessage(Key key, ByteBuf data) {
-        byte[] array = new byte[data.readableBytes()];
-        data.readBytes(array);
-        this.player.sendPluginMessage(MinecraftChannelIdentifier.from(key), array);
+        try {
+            byte[] array = new byte[data.readableBytes()];
+            data.readBytes(array);
+            this.player.sendPluginMessage(MinecraftChannelIdentifier.from(key), array);
+        } finally {
+            data.release();
+        }
     }
 
     @Override
-    public void ensureTabListed(ISonusPlayer target) {
+    public void sendBackendPluginMessage(Key key, ByteBuf data) {
+        try {
+            if (this.player.isActive()) {
+                this.player.getCurrentServer().ifPresent(server -> {
+                    byte[] array = new byte[data.readableBytes()];
+                    data.readBytes(array);
+                    server.sendPluginMessage(MinecraftChannelIdentifier.from(key), array);
+                });
+            }
+        } finally {
+            data.release();
+        }
+    }
+
+    @Override
+    public void ensureTabListed(IPlatformPlayer target) {
         TabList tabList = this.player.getTabList();
-        if (tabList.getEntry(target.getUniqueId()).isPresent()) {
+        if (tabList.getEntry(target.getUniqueId(this)).isPresent()) {
             return; // Already present
         }
-        Optional<Player> targetPlayer = this.server.getPlayer(target.getUniqueId());
+        Optional<Player> targetPlayer = this.server.getPlayer(target.getUniqueId(this));
         if (targetPlayer.isEmpty()) {
             return; // Target player not online
         }
@@ -66,5 +90,40 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
                 .showHat(true) // Force showing hats
                 .tabList(tabList)
                 .build());
+    }
+
+    @Override
+    public boolean hasPermission(String permission, boolean defaultValue) {
+        Tristate permissionValue = this.player.getPermissionValue(permission);
+        if (permissionValue != Tristate.UNDEFINED) {
+            return permissionValue.asBoolean();
+        }
+        return defaultValue;
+    }
+
+    @Override
+    public boolean canSeeFallback(IPlatformPlayer target) {
+        // if the source and target are on the same server, this fallback method
+        // should only be called if there is no state present yet during login, so hide the target there
+        return this.server != ((VelocitySonusPlayer) target).server;
+    }
+
+    // why doesn't velocity expose their internal method for this?
+    @Override
+    public Component renderComponent(Component component) {
+        Locale locale = this.player.getEffectiveLocale();
+        if (locale == null && this.player.hasSentPlayerSettings()) {
+            locale = this.player.getPlayerSettings().getLocale();
+        }
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
+        return GlobalTranslator.render(component, locale);
+    }
+
+    @Override
+    public String renderPlainComponent(Component component) {
+        Component rendered = this.renderComponent(component);
+        return plainText().serialize(rendered);
     }
 }

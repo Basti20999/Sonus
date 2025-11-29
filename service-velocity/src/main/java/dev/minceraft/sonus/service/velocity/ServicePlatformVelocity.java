@@ -1,40 +1,52 @@
 package dev.minceraft.sonus.service.velocity;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
-import dev.minceraft.sonus.common.rooms.RoomType;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
-import dev.minceraft.sonus.service.rooms.AbstractRoom;
-import dev.minceraft.sonus.service.rooms.SpatialRoom;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.key.Key;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-@Singleton
 @NullMarked
+@Singleton
 public class ServicePlatformVelocity implements IServicePlatform {
 
     private final ProxyServer server;
     private final Path dataPath;
-    private @MonotonicNonNull VelocitySonusService velocityPlugin;
+
+    private final LoadingCache<UUID, @Nullable IServer> serverCache;
 
     @Inject
     public ServicePlatformVelocity(ProxyServer server, @DataDirectory Path dataPath) {
         this.server = server;
         this.dataPath = dataPath;
+
+        this.serverCache = Caffeine.newBuilder()
+                .expireAfterAccess(10, TimeUnit.MINUTES)
+                .build(serverId -> {
+                    for (RegisteredServer velServer : server.getAllServers()) {
+                        if (serverId.equals(VelocityServer.generateUniqueId(velServer.getServerInfo()))) {
+                            return new VelocityServer(velServer.getServerInfo());
+                        }
+                    }
+                    return null;
+                });
     }
 
     @Override
@@ -42,11 +54,15 @@ public class ServicePlatformVelocity implements IServicePlatform {
         return this.dataPath;
     }
 
+    public IPlatformPlayer getPlayer(Player player) {
+        return new VelocitySonusPlayer(this.server, player);
+    }
+
     @Override
-    @Nullable
-    public IPlatformPlayer getPlayer(UUID uniqueId) {
+    public @Nullable IPlatformPlayer getPlayer(UUID uniqueId) {
         return this.server.getPlayer(uniqueId)
-                .map(player -> new VelocitySonusPlayer(this.server, player)).orElse(null);
+                .map(this::getPlayer)
+                .orElse(null);
     }
 
     @Override
@@ -57,21 +73,24 @@ public class ServicePlatformVelocity implements IServicePlatform {
     @Override
     public Set<IServer> getServers() {
         Collection<RegisteredServer> registered = this.server.getAllServers();
-        Set<IServer> result = new HashSet<>(registered.size());
-
+        ImmutableSet.Builder<IServer> result = ImmutableSet.builderWithExpectedSize(registered.size());
         for (RegisteredServer server : registered) {
             result.add(new VelocityServer(server.getServerInfo()));
         }
-        return result;
+        return result.build();
     }
 
     @Override
-    public AbstractRoom provideRoom(IServer server) {
-        return new SpatialRoom(this.velocityPlugin.getService(), server.getUniqueId(), RoomType.SPECIAL_SERVER_OWNED);
+    public IServer getServer(UUID uniqueId) {
+        IServer server = this.serverCache.get(uniqueId);
+        if (server == null) {
+            throw new IllegalStateException("Can't find server with id " + uniqueId);
+        }
+        return server;
     }
 
-    public ServicePlatformVelocity connectPlugin(VelocitySonusService velocityPlugin) {
-        this.velocityPlugin = velocityPlugin;
-        return this;
+    @Override
+    public boolean serverExists(UUID uniqueId) {
+        return this.serverCache.getIfPresent(uniqueId) != null;
     }
 }

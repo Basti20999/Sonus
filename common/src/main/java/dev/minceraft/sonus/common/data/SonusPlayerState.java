@@ -5,11 +5,12 @@ import io.netty.buffer.ByteBuf;
 
 import java.util.UUID;
 
-public record SonusPlayerState(UUID playerId, boolean hidden) {
+public record SonusPlayerState(UUID playerId, boolean staticHidden, boolean spatialHidden) {
 
     public void write(ByteBuf buf) {
         DataTypeUtil.writeUniqueId(buf, this.playerId);
-        buf.writeBoolean(this.hidden);
+        buf.writeBoolean(this.staticHidden);
+        buf.writeBoolean(this.spatialHidden);
     }
 
     public static void write(ByteBuf buf, SonusPlayerState state) {
@@ -18,7 +19,8 @@ public record SonusPlayerState(UUID playerId, boolean hidden) {
 
     public static SonusPlayerState read(ByteBuf buf) {
         UUID playerId = DataTypeUtil.readUniqueId(buf);
-        boolean hidden = buf.readBoolean();
-        return new SonusPlayerState(playerId, hidden);
+        boolean staticHidden = buf.readBoolean();
+        boolean spatialHidden = buf.readBoolean();
+        return new SonusPlayerState(playerId, staticHidden, spatialHidden);
     }
 }

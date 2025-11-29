@@ -1,10 +1,14 @@
 package dev.minceraft.sonus.common.protocol.util;
 // Created by booky10 in Sonus (01:19 17.07.2025)
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jspecify.annotations.NullMarked;
 
@@ -13,6 +17,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -56,10 +61,10 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
         }
     }
 
-    public static <T> void writeNullable(ByteBuf buf, @Nullable T groupId, BiConsumer<ByteBuf, T> writer) {
-        if (groupId != null) {
+    public static <T> void writeNullable(ByteBuf buf, @Nullable T value, BiConsumer<ByteBuf, T> writer) {
+        if (value != null) {
             buf.writeBoolean(true);
-            writer.accept(buf, groupId);
+            writer.accept(buf, value);
         } else {
             buf.writeBoolean(false);
         }
@@ -74,11 +79,45 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
         }
     }
 
-    public static <T> @Nullable T readIf(ByteBuf buf, Function<ByteBuf, T> reader) {
+    public static <T> @Nullable T readNullable(ByteBuf buf, Function<ByteBuf, T> reader) {
         if (buf.readBoolean()) {
             return reader.apply(buf);
         }
         return null;
+    }
+
+    public static void writeComponentJson(ByteBuf buf, Component component) {
+        String componentJson = GsonComponentSerializer.gson().serialize(component);
+        Utf8String.write(buf, componentJson);
+    }
+
+    public static Component readComponentJson(ByteBuf buf) {
+        String componentJson = Utf8String.read(buf);
+        return GsonComponentSerializer.gson().deserialize(componentJson);
+    }
+
+    public <R, C, V> Table<R, C, V> readTable(ByteBuf buf, BufReader<R> rowReader, BufReader<C> columnReader, BufReader<V> valueReader) {
+        HashBasedTable<R, C, V> table = HashBasedTable.create();
+        int columnSize = this.sizeReader.apply(buf);
+        for (int i = 0; i < columnSize; i++) {
+            C column = columnReader.read(buf);
+            int rowSize = this.sizeReader.apply(buf);
+            for (int j = 0; j < rowSize; j++) {
+                R row = rowReader.read(buf);
+                V val = valueReader.read(buf);
+                table.put(row, column, val);
+            }
+        }
+        return table;
+    }
+
+    public <R, C, V> void writeTable(ByteBuf buf, Table<R, C, V> table, BufWriter<R> rowWriter, BufWriter<C> columnWriter, BufWriter<V> valueWriter) {
+        Set<Map.Entry<C, Map<R, V>>> columns = table.columnMap().entrySet();
+        this.sizeWriter.accept(buf, columns.size());
+        for (Map.Entry<C, Map<R, V>> column : columns) {
+            columnWriter.write(buf, column.getKey());
+            this.writeMap(buf, column.getValue(), rowWriter, valueWriter);
+        }
     }
 
     public <K, V> Map<K, V> readMap(ByteBuf buf, BufReader<K> keyReader, BufReader<V> valueReader) {
@@ -150,9 +189,19 @@ public record DataTypeUtil(Function<ByteBuf, Integer> sizeReader, BiConsumer<Byt
     }
 
     public byte[] readByteArray(ByteBuf buf) {
+        return this.readByteArray(buf, Integer.MAX_VALUE);
+    }
+
+    public byte[] readByteArray(ByteBuf buf, int maxLength) {
         int length = this.sizeReader.apply(buf);
         if (length == 0) {
             return new byte[0];
+        } else if (length < 0) {
+            throw new IllegalStateException("Illegal negative array length " + length);
+        } else if (length > maxLength) {
+            throw new IllegalStateException("Byte array with length " + length + " exceeds maximum of " + maxLength);
+        } else if (!buf.isReadable(length)) {
+            throw new IllegalStateException("Can't read " + length + " bytes for byte array");
         }
         byte[] data = new byte[length];
         buf.readBytes(data);

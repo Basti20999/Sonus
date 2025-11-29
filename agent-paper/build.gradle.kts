@@ -1,3 +1,4 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import net.minecrell.pluginyml.bukkit.BukkitPluginDescription
 
 plugins {
@@ -9,9 +10,12 @@ plugins {
 dependencies {
     api(projects.protocol)
     compileOnly(libs.paper.api)
+
+    api(libs.lame4j) // mp3 decoder
 }
 
 configure<BukkitPluginDescription> {
+    name = "SonusAgent"
     authors = listOf("pianoman911", "booky10")
     website = "https://minceraft.dev/sonus"
     apiVersion = "1.13"
@@ -21,20 +25,10 @@ configure<BukkitPluginDescription> {
 tasks {
     runServer {
         runDirectory = project.layout.projectDirectory.dir("run")
-
         minecraftVersion("1.21.8")
     }
 
-    shadowJar {
-
-        archiveBaseName = rootProject.name
-        archiveClassifier = "paper"
-        destinationDirectory = rootProject.layout.buildDirectory.dir("libs")
-
-        relocate("org.bstats", "de.pianoman911.playerculling.bstats")
-    }
-
-    assemble {
-        dependsOn(shadowJar)
+    withType<ShadowJar> {
+        relocate("org.bstats", "dev.minceraft.sonus.agent.paper.bstats")
     }
 }

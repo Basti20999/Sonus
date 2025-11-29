@@ -1,6 +1,6 @@
 package dev.minceraft.sonus.common.protocol.udp;
 
-import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.adapter.UdpSonusAdapter;
 import dev.minceraft.sonus.common.protocol.util.TypeUtil;
 import io.leangen.geantyref.TypeToken;
 import io.netty.buffer.ByteBuf;
@@ -14,19 +14,19 @@ public abstract class AbstractMagicUdpCodec<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
-    private final VoiceProtocolAdapter adapter;
+    private final UdpSonusAdapter adapter;
     private final byte magicByte;
     private final ByteBuf magicByteBuf;
     private final Class<T> packetClass;
 
-    public AbstractMagicUdpCodec(VoiceProtocolAdapter adapter, byte magicByte, Class<T> packetClass) {
+    public AbstractMagicUdpCodec(UdpSonusAdapter adapter, byte magicByte, Class<T> packetClass) {
         this.adapter = adapter;
         this.magicByte = magicByte;
         this.magicByteBuf = this.allocateMagicBuffer();
         this.packetClass = packetClass;
     }
 
-    public AbstractMagicUdpCodec(VoiceProtocolAdapter adapter, byte magicByte, TypeToken<T> packetTypeToken) {
+    public AbstractMagicUdpCodec(UdpSonusAdapter adapter, byte magicByte, TypeToken<T> packetTypeToken) {
         this.adapter = adapter;
         this.magicByte = magicByte;
         this.magicByteBuf = this.allocateMagicBuffer();
@@ -54,7 +54,7 @@ public abstract class AbstractMagicUdpCodec<T> {
         // Default does nothing
     }
 
-    public VoiceProtocolAdapter getAdapter() {
+    public UdpSonusAdapter getAdapter() {
         return this.adapter;
     }
 

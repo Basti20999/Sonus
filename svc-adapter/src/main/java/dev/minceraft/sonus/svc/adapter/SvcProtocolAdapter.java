@@ -2,7 +2,7 @@ package dev.minceraft.sonus.svc.adapter;
 // Created by booky10 in Sonus (02:19 10.08.2025)
 
 import dev.minceraft.sonus.common.ISonusService;
-import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.adapter.UdpSonusAdapter;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.protocol.udp.UdpBasedContext;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcCipherCodec;
@@ -15,7 +15,7 @@ import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class SvcProtocolAdapter implements VoiceProtocolAdapter {
+public class SvcProtocolAdapter implements UdpSonusAdapter {
 
     private final SvcAdapter adapter;
     private final SvcUdpMagicCodec svcCodec = new SvcUdpMagicCodec(this);

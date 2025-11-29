@@ -1,5 +1,8 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     alias(libs.plugins.pluginyml.bukkit) apply false
+    alias(libs.plugins.gradleup.shadow) apply false
 }
 
 allprojects {
@@ -43,5 +46,19 @@ subprojects {
             isPreserveFileTimestamps = false
             isReproducibleFileOrder = true
         }
+
+        withType<ShadowJar> {
+            destinationDirectory = rootProject.layout.buildDirectory.dir("libs")
+        }
+
+        named("assemble") {
+            findByName("shadowJar")?.apply {
+                this@named.dependsOn(this@apply)
+            }
+        }
     }
+}
+
+tasks.register<Delete>("clean") {
+    delete(rootProject.layout.buildDirectory)
 }

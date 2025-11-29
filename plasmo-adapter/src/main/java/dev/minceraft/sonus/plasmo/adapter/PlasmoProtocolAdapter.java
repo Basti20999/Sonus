@@ -1,7 +1,7 @@
 package dev.minceraft.sonus.plasmo.adapter;
 
 import dev.minceraft.sonus.common.ISonusService;
-import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.adapter.UdpSonusAdapter;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.protocol.udp.UdpBasedContext;
 import dev.minceraft.sonus.plasmo.adapter.pipeline.PlasmoCipherCodec;
@@ -17,7 +17,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.Map;
 
 @NullMarked
-public class PlasmoProtocolAdapter implements VoiceProtocolAdapter {
+public class PlasmoProtocolAdapter implements UdpSonusAdapter {
 
     private final PlasmoUdpMagicCodec plasmoCodec = new PlasmoUdpMagicCodec(this);
     private @MonotonicNonNull CodecInfo codecInfo;

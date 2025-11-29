@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_CONNECT_PLASMO;
+
 @NullMarked
 public class PlasmoSessionManager {
 
@@ -49,7 +51,7 @@ public class PlasmoSessionManager {
         Collection<? extends ISonusPlayer> players = this.adapter.getService().getPlayerManager().getPlayers();
         Map<UUID, VoicePlayerInfo> states = new HashMap<>(players.size());
         for (ISonusPlayer player : players) {
-            if (!player.isConnected() || !player.shouldSee(listener.getPlayer())) {
+            if (!player.isConnected() || !player.canSee(listener.getPlayer())) {
                 continue;
             }
             states.put(player.getUniqueId(), this.adapter.buildPlayerInfo(player));
@@ -74,6 +76,9 @@ public class PlasmoSessionManager {
     public PlasmoConnection createConnection(UUID playerId) {
         ISonusPlayer player = this.adapter.getService().getPlayerManager().getPlayer(playerId);
         if (player == null) {
+            return null;
+        }
+        if (!player.hasPermission(PERMISSION_CONNECT_PLASMO, true)) {
             return null;
         }
         PlasmoConnection plasmoConnection = new PlasmoConnection(this.adapter, player);

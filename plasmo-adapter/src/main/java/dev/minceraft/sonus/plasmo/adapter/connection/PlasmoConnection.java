@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.plasmo.adapter.connection;
 
+import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
@@ -26,8 +27,11 @@ public class PlasmoConnection {
     private final PlasmoAdapter adapter;
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
+
+    private final AudioProcessor processor;
     private final MetaHandler metaHandler;
     private final VoiceHandler voiceHandler;
+
     private final Set<VoiceActivation> voiceActivations = new HashSet<>();
     private long lastKeepAlive;
     private ICipher cipher;
@@ -36,6 +40,8 @@ public class PlasmoConnection {
     public PlasmoConnection(PlasmoAdapter adapter, ISonusPlayer player) {
         this.adapter = adapter;
         this.player = player;
+
+        this.processor = adapter.getService().createAudioProcessor(AudioProcessor.Mode.VOICE);
         this.metaHandler = new MetaHandler(adapter, this);
         this.voiceHandler = new VoiceHandler(adapter, this);
 
@@ -49,7 +55,7 @@ public class PlasmoConnection {
                 true, // Allow proximity
                 false, // Force mono audio
                 true, // Allow other activations
-                this.adapter.getProtocolAdapter().getCodecInfo(),
+                this.adapter.getUdpAdapter().getCodecInfo(),
                 1 // weight
         );
 
@@ -78,7 +84,7 @@ public class PlasmoConnection {
         packet.setTimestamp(System.currentTimeMillis());
         WrappedUdpPipelineData payload = new WrappedUdpPipelineData(
                 PlasmoUdpContext.newInstance(this.remoteAddress, this),
-                this.adapter.getProtocolAdapter().getPlasmoCodec(),
+                this.adapter.getUdpAdapter().getPlasmoCodec(),
                 packet
         );
         this.adapter.getService().getUdpServer().sendPacket(payload);
@@ -87,7 +93,7 @@ public class PlasmoConnection {
     private void sendTcpPacket(TcpPlasmoPacket<?> packet) {
         ByteBuf buffer = Unpooled.buffer();
         try {
-            TcpPacketRegistry.REGISTRY.write(buffer, packet);
+            TcpPacketRegistry.REGISTRY.encode(buffer, packet);
             this.player.sendPluginMessage(PlasmoPmChannels.CHANNEL, buffer);
         } finally {
             buffer.release();
@@ -140,5 +146,9 @@ public class PlasmoConnection {
 
     public void setRemoteAddress(InetSocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
+    }
+
+    public AudioProcessor getProcessor() {
+        return this.processor;
     }
 }

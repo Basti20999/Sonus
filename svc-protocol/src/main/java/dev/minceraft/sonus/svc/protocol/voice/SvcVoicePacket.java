@@ -5,7 +5,7 @@ import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public abstract class SvcVoicePacket<T extends SvcVoicePacket<?>> extends AbstractSvcPacket<IVoiceSvcHandler> {
+public abstract class SvcVoicePacket extends AbstractSvcPacket<IVoiceSvcHandler> {
 
     protected SvcVoicePacket() {
     }

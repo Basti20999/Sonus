@@ -1,0 +1,46 @@
+package dev.minceraft.sonus.svc.protocol.meta.clientbound;
+
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
+import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
+import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
+import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
+import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.jspecify.annotations.NullMarked;
+
+import java.util.UUID;
+
+@NullMarked
+public class RemovePlayerStatePacket extends SvcMetaPacket {
+
+    private @MonotonicNonNull UUID playerId;
+
+    public RemovePlayerStatePacket() {
+        super(SvcPluginChannels.REMOVE_PLAYER_STATE);
+    }
+
+    @Override
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
+        DataTypeUtil.writeUniqueId(buf, this.playerId);
+    }
+
+    @Override
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
+        this.playerId = DataTypeUtil.readUniqueId(buf);
+    }
+
+    @Override
+    public void handle(IMetaSvcHandler handler) {
+        handler.handleRemovePlayerStatePacket(this);
+    }
+
+    public UUID getPlayerId() {
+        return this.playerId;
+    }
+
+    public void setPlayerId(UUID playerId) {
+        this.playerId = playerId;
+    }
+}
+

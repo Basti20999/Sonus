@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     alias(libs.plugins.gradleup.shadow)
     alias(libs.plugins.run.velocity)
@@ -6,24 +8,21 @@ plugins {
 dependencies {
     compileOnly(libs.velocity)
     annotationProcessor(libs.velocity)
-    implementation(projects.service)
+
+    compileOnly(projects.service)
+    runtimeOnly(projects.service) {
+        targetConfiguration = "shadow"
+    }
 }
 
 tasks {
     runVelocity {
         runDirectory = project.layout.projectDirectory.dir("run")
-
         velocityVersion("3.4.0-SNAPSHOT")
     }
 
-    shadowJar {
-        mergeServiceFiles()
-        duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        archiveBaseName = rootProject.name
-        archiveClassifier = "velocity"
-    }
-
-    assemble {
-        dependsOn(shadowJar)
+    withType<ShadowJar> {
+        // velocity already includes netty dependencies, so exclude them
+        exclude("io/netty/**")
     }
 }

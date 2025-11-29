@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
+import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
@@ -7,6 +8,7 @@ import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcPlayerCipherCodec;
 import dev.minceraft.sonus.svc.adapter.pipeline.SvcUdpContext;
 import dev.minceraft.sonus.svc.protocol.AbstractSvcPacket;
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.voice.SvcVoicePacket;
@@ -16,21 +18,26 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
-public class SvcConnection {
+public class SvcConnection implements AutoCloseable {
 
     private final SvcProtocolAdapter protocolAdapter;
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
+
     private final VoiceHandler voiceHandler;
     private final MetaHandler metaHandler;
+
     private @Nullable SvcPlayerCipherCodec cipher;
+    private final Map<UUID, AudioProcessor> processors = new ConcurrentHashMap<>();
+
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
-    private long lastKeepAlive = System.currentTimeMillis();
-    private int version = -1;
+    private SvcPacketContext ctx = SvcPacketContext.INITIAL;
 
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
         this.protocolAdapter = protocolAdapter;
@@ -49,16 +56,16 @@ public class SvcConnection {
     }
 
     public void sendPacket(AbstractSvcPacket<?> packet) {
-        if (packet instanceof SvcVoicePacket<?> voicePacket) {
+        if (packet instanceof SvcVoicePacket voicePacket) {
             sendUdpPacket(voicePacket);
-        } else if (packet instanceof SvcMetaPacket<?> metaPacket) {
+        } else if (packet instanceof SvcMetaPacket metaPacket) {
             sendTcpPacket(metaPacket);
         } else {
             throw new IllegalArgumentException("Unsupported packet type: " + packet.getClass().getName());
         }
     }
 
-    private void sendUdpPacket(SvcVoicePacket<?> packet) {
+    private void sendUdpPacket(SvcVoicePacket packet) {
         if (this.remoteAddress == null) {
             throw new IllegalStateException("Cannot send UDP packet before remote address is set.");
         }
@@ -70,16 +77,15 @@ public class SvcConnection {
         this.protocolAdapter.getAdapter().getService().getUdpServer().sendPacket(payload);
     }
 
-    private void sendTcpPacket(SvcMetaPacket<?> packet) {
-        Key channel = packet.getPluginMessageChannel().getForVersion(this.version);
+    private void sendTcpPacket(SvcMetaPacket packet) {
+        Key channel = packet.getPluginMessageChannel().getForVersion(this.ctx.version());
         if (channel == null) {
             return;
         }
         PmDataHolderBuf data = PmDataHolderBuf.newInstance(channel);
         try {
-            SvcMetaPacketRegistry.BUF_REGISTRY.write(data, packet, new SvcMetaPacketRegistry.SvcMetaContext(this.version));
-
-            this.player.sendPluginMessage(data.getSecond(), data.getFirst());
+            SvcMetaPacketRegistry.BUF_REGISTRY.encode(data, packet, this.ctx);
+            this.player.sendPluginMessage(data.getSecond(), data.getFirst().retain());
         } finally {
             data.recycle();
         }
@@ -131,21 +137,30 @@ public class SvcConnection {
         return true;
     }
 
-    public long getLastKeepAlive() {
-        return this.lastKeepAlive;
-    }
-
-    public void setLastKeepAlive(long lastKeepAlive) {
-        this.lastKeepAlive = lastKeepAlive;
-    }
-
     public int getVersion() {
-        return this.version;
+        return this.ctx.version();
     }
 
     public void setVersion(int version) {
-        this.version = version;
+        this.ctx = this.ctx.withVersion(version);
         // Cipher depends on the version, so we need to recreate it
         this.cipher = new SvcPlayerCipherCodec(this, this.protocolAdapter.getSvcCodec(), this.secret);
+    }
+
+    public SvcPacketContext getContext() {
+        return this.ctx;
+    }
+
+    public AudioProcessor getProcessor(UUID channelId) {
+        return this.processors.computeIfAbsent(channelId, __ ->
+                this.protocolAdapter.getAdapter().getService().createAudioProcessor(AudioProcessor.Mode.VOICE));
+    }
+
+    @Override
+    public void close() {
+        this.processors.values().removeIf(processor -> {
+            processor.close();
+            return true;
+        });
     }
 }

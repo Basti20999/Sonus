@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.service.platform;
 
-import dev.minceraft.sonus.service.rooms.AbstractRoom;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -21,5 +20,7 @@ public interface IServicePlatform {
 
     Set<IServer> getServers();
 
-    AbstractRoom provideRoom(IServer server);
+    IServer getServer(UUID uniqueId);
+
+    boolean serverExists(UUID uniqueId);
 }

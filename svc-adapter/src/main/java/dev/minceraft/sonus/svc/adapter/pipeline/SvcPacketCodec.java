@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.svc.adapter.pipeline;
 
-
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
 import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import dev.minceraft.sonus.svc.protocol.registries.SvcVoicePacketRegistry;
@@ -12,22 +11,26 @@ import io.netty.channel.ChannelHandlerContext;
 import java.util.List;
 
 @ChannelHandler.Sharable
-public class SvcPacketCodec extends SvcUdpPipelineNode<ByteBuf, SvcVoicePacket<?>> {
+public class SvcPacketCodec extends SvcUdpPipelineNode<ByteBuf, SvcVoicePacket> {
 
     public SvcPacketCodec(SvcUdpMagicCodec svcCodec) {
         super(svcCodec);
     }
 
     @Override
-    public void encode(ChannelHandlerContext ctx, SvcVoicePacket<?> msg, List<Object> out, SvcUdpContext svcCtx) throws Exception {
+    public void encode(ChannelHandlerContext ctx, SvcVoicePacket msg, List<Object> out, SvcUdpContext svcCtx) {
         ByteBuf buf = ctx.alloc().buffer();
-        SvcVoicePacketRegistry.REGISTRY.write(buf, msg);
-        out.add(buf);
+        try {
+            SvcVoicePacketRegistry.REGISTRY.encode(buf, msg, svcCtx.connection.getContext());
+            out.add(buf.retain());
+        } finally {
+            buf.release();
+        }
     }
 
     @Override
-    public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) throws Exception {
-        SvcVoicePacket<?> packet = SvcVoicePacketRegistry.REGISTRY.read(msg);
+    public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
+        SvcVoicePacket packet = SvcVoicePacketRegistry.REGISTRY.decode(msg, svcCtx.connection.getContext());
         if (packet != null) {
             out.add(packet);
         }

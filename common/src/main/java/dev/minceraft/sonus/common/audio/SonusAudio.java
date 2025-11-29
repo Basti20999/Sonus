@@ -3,19 +3,96 @@ package dev.minceraft.sonus.common.audio;
 
 import org.jspecify.annotations.NullMarked;
 
+import java.util.function.Supplier;
+
 @NullMarked
-public record SonusAudio(byte[] data, long sequenceNumber) {
+public sealed interface SonusAudio {
 
-    public SonusAudio(byte[] data) {
-        this(data, -1L);
+    short[] pcm();
+
+    short[] pcm(Supplier<AudioProcessor> processor);
+
+    default Pcm asPcm(Supplier<AudioProcessor> processor) {
+        return new Pcm(this.pcm(processor), this.sequenceNumber());
     }
 
-    public SonusAudio withSequenceNumber(long sequenceNumber) {
-        return new SonusAudio(this.data, sequenceNumber);
+    byte[] opus();
+
+    byte[] opus(Supplier<AudioProcessor> processor);
+
+    default Opus asOpus(Supplier<AudioProcessor> processor) {
+        return new Opus(this.opus(processor), this.sequenceNumber());
     }
 
-    public SonusAudio withData(byte[] data) {
-        return new SonusAudio(data, this.sequenceNumber);
+    long sequenceNumber();
+
+    SonusAudio withSequenceNumber(long sequenceNumber);
+
+    boolean isZeroLength();
+
+    record Pcm(short[] pcm, long sequenceNumber) implements SonusAudio {
+
+        @Override
+        public short[] pcm(Supplier<AudioProcessor> processor) {
+            return this.pcm;
+        }
+
+        @Override
+        public Pcm asPcm(Supplier<AudioProcessor> processor) {
+            return this;
+        }
+
+        @Override
+        public byte[] opus() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public byte[] opus(Supplier<AudioProcessor> processor) {
+            return processor.get().encode(this.pcm);
+        }
+
+        @Override
+        public SonusAudio withSequenceNumber(long sequenceNumber) {
+            return new SonusAudio.Pcm(this.pcm, sequenceNumber);
+        }
+
+        @Override
+        public boolean isZeroLength() {
+            return this.pcm.length == 0;
+        }
     }
 
+    record Opus(byte[] opus, long sequenceNumber) implements SonusAudio {
+
+        @Override
+        public short[] pcm() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public short[] pcm(Supplier<AudioProcessor> processor) {
+            return processor.get().decode(this.opus);
+        }
+
+        @Override
+        public byte[] opus(Supplier<AudioProcessor> processor) {
+            return this.opus;
+        }
+
+        @Override
+        public Opus asOpus(Supplier<AudioProcessor> processor) {
+            return this;
+        }
+
+        @Override
+        public SonusAudio withSequenceNumber(long sequenceNumber) {
+            return new SonusAudio.Opus(this.opus, sequenceNumber);
+        }
+
+        @Override
+        public boolean isZeroLength() {
+            return this.opus.length == 0;
+        }
+    }
 }

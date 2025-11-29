@@ -10,4 +10,6 @@ public interface IPlayerManager {
     ISonusPlayer getPlayer(UUID playerId);
 
     Collection<? extends ISonusPlayer> getPlayers();
+
+    void disableOnBackendSwitch(UUID playerId);
 }

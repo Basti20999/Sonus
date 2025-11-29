@@ -6,7 +6,6 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.rooms.RoomAudioType;
-import dev.minceraft.sonus.common.rooms.RoomType;
 import dev.minceraft.sonus.service.SonusService;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
@@ -23,21 +22,17 @@ public abstract class AbstractRoom implements IRoom {
 
     protected final SonusService service;
     protected final UUID roomId;
-    protected final Map<UUID, ISonusPlayer> members = new ConcurrentHashMap<>();
-    protected final RoomType roomType;
-    protected RoomAudioType roomAudioType = RoomAudioType.OPEN;
     protected String name;
+
+    protected final Map<UUID, ISonusPlayer> members = new ConcurrentHashMap<>();
+
+    protected RoomAudioType roomAudioType = RoomAudioType.OPEN;
     protected @Nullable String password;
 
-    public AbstractRoom(SonusService service, RoomType roomType) {
-        this(service, UUID.randomUUID(), roomType);
-    }
-
-    public AbstractRoom(SonusService service, UUID roomId, RoomType roomType) {
+    public AbstractRoom(SonusService service, UUID roomId) {
         this.service = service;
-        this.roomId = Objects.requireNonNull(roomId);
-        this.roomType = roomType;
-        this.name = "Room-" + this.roomId.toString().substring(0, 5);
+        this.roomId = roomId;
+        this.name = "room_" + this.roomId.toString().substring(0, 8);
     }
 
     @Override
@@ -51,20 +46,12 @@ public abstract class AbstractRoom implements IRoom {
 
     @Override
     public boolean addMember(ISonusPlayer player) {
-        if (this.members.containsKey(player.getUniqueId())) {
-            return false; // Already in the room
-        }
-        this.members.put(player.getUniqueId(), player);
-        return true;
+        return this.members.putIfAbsent(player.getUniqueId(), player) == null;
     }
 
     @Override
     public boolean removeMember(ISonusPlayer player) {
-        if (!this.members.containsKey(player.getUniqueId())) {
-            return false; // Not in the room
-        }
-        this.members.remove(player.getUniqueId());
-        return true;
+        return this.members.remove(player.getUniqueId()) != null;
     }
 
     @Override
@@ -91,11 +78,6 @@ public abstract class AbstractRoom implements IRoom {
     @Override
     public void setPassword(@Nullable String password) {
         this.password = password;
-    }
-
-    @Override
-    public RoomType getRoomType() {
-        return this.roomType;
     }
 
     @Override

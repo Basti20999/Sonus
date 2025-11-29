@@ -1,9 +1,7 @@
 package dev.minceraft.sonus.svc.protocol.data;
 
-import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.common.rooms.IRoom;
-import dev.minceraft.sonus.common.rooms.RoomType;
 import io.netty.buffer.ByteBuf;
 
 import java.util.UUID;
@@ -26,12 +24,12 @@ public class SonusClientGroup {
         this.type = type;
     }
 
-    public SonusClientGroup(IRoom room) {
+    public SonusClientGroup(IRoom room, boolean bypassPassword) {
         this.name = room.getName();
         this.groupId = room.getId();
-        this.password = room.getPassword() != null;
-        this.persistent = room.getRoomType() == RoomType.SPECIAL_SERVER_OWNED;
-        this.hidden = room.getRoomType() == RoomType.SPECIAL_SERVER_OWNED;
+        this.password = room.getPassword() != null && !bypassPassword;
+        this.persistent = false; // dummy value, not used on client
+        this.hidden = !room.isVisible();
         this.type = SonusGroupType.fromSonus(room.getRoomAudioType());
     }
 
@@ -42,15 +40,6 @@ public class SonusClientGroup {
         this.persistent = buf.readBoolean();
         this.hidden = buf.readBoolean();
         this.type = SonusGroupType.values()[buf.readShort()];
-    }
-
-    public SonusClientGroup(JsonObject json) {
-        this.groupId = UUID.fromString(json.get("groupId").getAsString());
-        this.name = json.get("name").getAsString();
-        this.password = json.get("password").getAsBoolean();
-        this.persistent = json.get("persistent").getAsBoolean();
-        this.hidden = json.get("hidden").getAsBoolean();
-        this.type = SonusGroupType.ID_INDEX.valueOrThrow(json.get("type").getAsString());
     }
 
     public String getName() {
@@ -85,15 +74,6 @@ public class SonusClientGroup {
         buf.writeBoolean(this.persistent);
         buf.writeBoolean(this.hidden);
         buf.writeShort(this.type.ordinal());
-    }
-
-    public void encode(JsonObject json) {
-        json.addProperty("name", this.name);
-        json.addProperty("groupId", this.groupId.toString());
-        json.addProperty("password", this.password);
-        json.addProperty("persistent", this.persistent);
-        json.addProperty("hidden", this.hidden);
-        json.addProperty("type", this.type.getId());
     }
 
     @Override

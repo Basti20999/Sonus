@@ -1,0 +1,43 @@
+package dev.minceraft.sonus.svc.protocol.meta.clientbound;
+
+import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
+import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
+import dev.minceraft.sonus.svc.protocol.meta.IMetaSvcHandler;
+import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
+import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
+import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.jspecify.annotations.NullMarked;
+
+@NullMarked
+public class PlayerStateSvcPacket extends SvcMetaPacket {
+
+    private @MonotonicNonNull SvcPlayerState state;
+
+    public PlayerStateSvcPacket() {
+        super(SvcPluginChannels.PLAYER_STATE);
+    }
+
+    @Override
+    public void encode(ByteBuf buf, SvcPacketContext ctx) {
+        this.state.encode(buf);
+    }
+
+    @Override
+    public void decode(ByteBuf buf, SvcPacketContext ctx) {
+        this.state = new SvcPlayerState(buf);
+    }
+
+    @Override
+    public void handle(IMetaSvcHandler handler) {
+        handler.handlePlayerStatePacket(this);
+    }
+
+    public SvcPlayerState getState() {
+        return this.state;
+    }
+
+    public void setState(SvcPlayerState state) {
+        this.state = state;
+    }
+}

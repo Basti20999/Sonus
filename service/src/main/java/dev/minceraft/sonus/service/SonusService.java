@@ -1,25 +1,33 @@
 package dev.minceraft.sonus.service;
 // Created by booky10 in Sonus (01:33 17.07.2025)
 
-import dev.minceraft.sonus.common.ISonusConfig;
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.audio.AudioProcessor;
+import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
+import dev.minceraft.sonus.common.service.IScheduledTask;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.common.service.ISonusScheduler;
 import dev.minceraft.sonus.service.adapter.AdapterManager;
 import dev.minceraft.sonus.service.agent.AgentManager;
-import dev.minceraft.sonus.service.meta.MetaDecoder;
 import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.rooms.SonusRoomManager;
+import dev.minceraft.sonus.service.server.SonusServer;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @NullMarked
 public final class SonusService implements ISonusService {
@@ -27,47 +35,70 @@ public final class SonusService implements ISonusService {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private final IServicePlatform platform;
-    private final PlayerManager players = new PlayerManager(this);
-    private final MetaDecoder metaDecoder = new MetaDecoder(this);
+    private final PlayerManager players;
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
-    private final UdpServer udpServer = new UdpServer(this);
     private final SonusEventManager eventManager = new SonusEventManager(this);
     private final SonusScheduler scheduler = new SonusScheduler();
     private final SonusRoomManager roomManager = new SonusRoomManager(this);
     private final AdapterManager adapters = new AdapterManager(this);
     private final AgentManager agentManager = new AgentManager(this);
+    private final Map<UUID, SonusServer> servers = new ConcurrentHashMap<>();
     private final YamlConfigHolder<SonusConfig> config;
+    private @MonotonicNonNull UdpServer udpServer;
 
     public SonusService(IServicePlatform platform) {
         this.platform = platform;
-        this.config = new YamlConfigHolder<>(SonusConfig.class, this.platform.getDataPath().resolve("config.yml"));
+        Path configPath = this.platform.getDataPath().resolve("config.yml");
+        this.config = new YamlConfigHolder<>(SonusConfig.class, SonusConfig::new, configPath);
+        this.players = new PlayerManager(this);
     }
 
     public void init() {
-        LOGGER.info("Initializing Sonus Service...");
+        // constructed here to prevent class leaks in netty thread local map
+        this.udpServer = new UdpServer(this);
 
-        LOGGER.info("Reloading configuration...");
+        LOGGER.info("Initializing sonus service...");
         this.config.reloadConfig();
-
-        LOGGER.info("Initializing Adapters...");
         this.adapters.init();
-
-        LOGGER.info("Initializing Room Manager...");
         this.roomManager.init();
-
-        LOGGER.info("Initializing agent handlers...");
         this.agentManager.init();
-
-        LOGGER.info("Initializing udp server...");
         this.udpServer.bind();
+
+        this.initCleanupTask();
+    }
+
+    private void initCleanupTask() {
+        this.config.addReloadHookAndRun(new Consumer<>() {
+
+            private @MonotonicNonNull IScheduledTask task;
+
+            @Override
+            public void accept(SonusConfig config) {
+                if (this.task != null) {
+                    this.task.cancel();
+                }
+
+                this.task = SonusService.this.scheduler.schedule(SonusService.this::cleanup,
+                        0, config.getCleanupTaskIntervalMs(), TimeUnit.MICROSECONDS);
+            }
+        });
+    }
+
+    private void cleanup() {
+        this.servers.entrySet().removeIf(entry ->
+                !SonusService.this.platform.serverExists(entry.getKey()));
+    }
+
+    public void shutdown() {
+        LOGGER.info("Shutting down sonus service...");
+        if (this.udpServer != null) {
+            this.udpServer.shutdown();
+        }
+        this.scheduler.shutdown();
     }
 
     public IServicePlatform getPlatform() {
         return this.platform;
-    }
-
-    public MetaDecoder getMetaDecoder() {
-        return this.metaDecoder;
     }
 
     @Override
@@ -117,5 +148,15 @@ public final class SonusService implements ISonusService {
     @Override
     public PlayerManager getPlayerManager() {
         return this.players;
+    }
+
+    @Override
+    public AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
+        return new AudioProcessor(() -> this.getConfig().getMtuSize(), mode);
+    }
+
+    public SonusServer getServer(UUID serverId) {
+        return this.servers.computeIfAbsent(serverId, uuid ->
+                new SonusServer(this, this.getPlatform().getServer(uuid)));
     }
 }

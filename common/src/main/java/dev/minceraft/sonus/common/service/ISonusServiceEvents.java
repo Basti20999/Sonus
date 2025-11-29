@@ -3,10 +3,12 @@ package dev.minceraft.sonus.common.service;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import net.kyori.adventure.key.Key;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Set;
 import java.util.UUID;
 
+@NullMarked
 public interface ISonusServiceEvents {
 
     default void onPlayerSwitchBackend(UUID playerId) {

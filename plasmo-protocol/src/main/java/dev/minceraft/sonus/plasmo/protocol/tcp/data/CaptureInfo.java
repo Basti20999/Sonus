@@ -13,7 +13,7 @@ public class CaptureInfo {
     public CaptureInfo(ByteBuf buf) {
         this.sampleRate = buf.readInt();
         this.mtuSize = buf.readInt();
-        this.codecInfo = DataTypeUtil.readIf(buf, CodecInfo::new);
+        this.codecInfo = DataTypeUtil.readNullable(buf, CodecInfo::new);
     }
 
     public CaptureInfo(int sampleRate, int mtuSize, CodecInfo codecInfo) {

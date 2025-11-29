@@ -4,102 +4,134 @@ package dev.minceraft.sonus.svc.adapter;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
-import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.adapter.UdpSonusAdapter;
+import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
-import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
+import dev.minceraft.sonus.svc.protocol.data.SonusVolumeCategory;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddCategorySvcPacket;
+import dev.minceraft.sonus.svc.protocol.meta.clientbound.RemoveCategorySvcPacket;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
-import dev.minceraft.sonus.svc.protocol.voice.GroupSoundSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.LocationSoundSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.PlayerSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.GroupSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.LocationSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.PlayerSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.UUID;
 
 @NullMarked
 public class SvcAdapter implements SonusAdapter {
 
-    private @MonotonicNonNull SvcSessionManager sessionManager;
-    private @MonotonicNonNull SvcSonusListener serviceListener;
+    private @MonotonicNonNull SvcSessionManager sessions;
     private @MonotonicNonNull SvcProtocolAdapter protocolAdapter;
     private @MonotonicNonNull ISonusService service;
 
     @Override
     public void init(ISonusService service) {
         this.service = service;
-        this.sessionManager = new SvcSessionManager(this);
-        this.serviceListener = new SvcSonusListener(this);
+        this.sessions = new SvcSessionManager(this);
         this.protocolAdapter = new SvcProtocolAdapter(this);
 
-        this.service.getEventManager().registerListener(this.serviceListener);
+        this.service.getEventManager().registerListener(new SvcSonusListener(this));
 
         VersionManager.logSupportedVersions();
     }
 
     @Override
     public void sendStaticAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
-        SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
 
         GroupSoundSvcPacket packet = new GroupSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
-        packet.setData(audio.data());
+        packet.setCategory(SonusVolumeCategory.generateId(source.getCategoryId()));
+        packet.setData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
-
         connection.sendPacket(packet);
     }
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio, Vec3d pos) {
-        SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
 
         LocationSoundSvcPacket packet = new LocationSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
-        packet.setData(audio.data());
+        packet.setCategory(SonusVolumeCategory.generateId(source.getCategoryId()));
+        packet.setData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setLocation(pos);
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
-
         connection.sendPacket(packet);
     }
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
-        SvcConnection connection = this.sessionManager.getConnection(player.getUniqueId());
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
 
         PlayerSoundSvcPacket packet = new PlayerSoundSvcPacket();
         packet.setChannelId(source.getSenderId());
         packet.setSender(source.getSenderId());
-        packet.setData(audio.data());
+        packet.setCategory(SonusVolumeCategory.generateId(source.getCategoryId()));
+        packet.setData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
-
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
-
         connection.sendPacket(packet);
     }
 
     @Override
-    public VoiceProtocolAdapter getProtocolAdapter() {
-        return this.protocolAdapter;
+    public void registerCategory(ISonusPlayer player, AudioCategory category) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
+        AddCategorySvcPacket packet = new AddCategorySvcPacket();
+        packet.setCategory(new SonusVolumeCategory(category, player::renderPlainComponent));
+        connection.sendPacket(packet);
     }
 
-    public SvcPlayerState buildPlayerState(ISonusPlayer player) {
-        return new SvcPlayerState(
-                player.getUniqueId(),
-                player.getName(),
-                player.isDeafened(),
-                !player.isConnected(),
-                player.getPrimaryRoom() == null ? null : player.getPrimaryRoom().getId()
-        );
+    @Override
+    public void unregisterCategory(ISonusPlayer player, UUID categoryId) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
+        RemoveCategorySvcPacket packet = new RemoveCategorySvcPacket();
+        packet.setCategoryId(SonusVolumeCategory.generateId(categoryId));
+        connection.sendPacket(packet);
+    }
+
+    @Override
+    public void sendKeepAlive(ISonusPlayer player, long currentTime) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            connection.sendPacket(KeepAliveSvcPacket.INSTANCE);
+        }
+    }
+
+    @Override
+    public UdpSonusAdapter getUdpAdapter() {
+        return this.protocolAdapter;
     }
 
     public ISonusService getService() {
         return this.service;
     }
 
-    public SvcSessionManager getSessionManager() {
-        return this.sessionManager;
+    public SvcSessionManager getSessions() {
+        return this.sessions;
     }
 }

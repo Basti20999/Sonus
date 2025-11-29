@@ -56,8 +56,7 @@ public class MetaHandler implements TcpHandler {
     public void handlePlayerStatePacket(PlayerStatePacket<?> packet) {
         this.connection.getPlayer().setDeafened(packet.isVoiceDisabled());
         this.connection.getPlayer().setMuted(packet.isMicrophoneMuted());
-
-        this.adapter.getService().getEventManager().onPlayerStateUpdate(this.connection.getPlayer());
+        this.connection.getPlayer().updateState();
     }
 
     @Override

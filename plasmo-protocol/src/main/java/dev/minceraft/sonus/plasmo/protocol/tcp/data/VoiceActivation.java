@@ -35,7 +35,7 @@ public class VoiceActivation {
         this.proximity = buf.readBoolean();
         this.stereoSupported = buf.readBoolean();
         this.transitive = buf.readBoolean();
-        this.encoderInfo = DataTypeUtil.readIf(buf, CodecInfo::new);
+        this.encoderInfo = DataTypeUtil.readNullable(buf, CodecInfo::new);
         this.weight = buf.readInt();
     }
 

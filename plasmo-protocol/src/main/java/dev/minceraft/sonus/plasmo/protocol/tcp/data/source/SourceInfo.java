@@ -40,9 +40,9 @@ public abstract class SourceInfo {
         this.sourceType = sourceType;
         this.addonId = Utf8String.readUnsignedShort(buf);
         this.id = DataTypeUtil.readUniqueId(buf);
-        this.name = DataTypeUtil.readIf(buf, Utf8String::readUnsignedShort);
+        this.name = DataTypeUtil.readNullable(buf, Utf8String::readUnsignedShort);
         this.state = buf.readByte();
-        this.codecInfo = DataTypeUtil.readIf(buf, CodecInfo::new);
+        this.codecInfo = DataTypeUtil.readNullable(buf, CodecInfo::new);
         this.stereo = buf.readBoolean();
         this.voiceLineId = DataTypeUtil.readUniqueId(buf);
         this.iconVisible = buf.readBoolean();

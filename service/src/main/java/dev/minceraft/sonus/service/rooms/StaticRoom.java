@@ -4,15 +4,16 @@ package dev.minceraft.sonus.service.rooms;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
-import dev.minceraft.sonus.common.rooms.RoomType;
 import dev.minceraft.sonus.service.SonusService;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.UUID;
 
 @NullMarked
 public class StaticRoom extends AbstractRoom {
 
-    public StaticRoom(SonusService service, RoomType type) {
-        super(service, type);
+    public StaticRoom(SonusService service, UUID roomId) {
+        super(service, roomId);
     }
 
     @Override
@@ -23,5 +24,10 @@ public class StaticRoom extends AbstractRoom {
             }
             member.sendStaticAudio(source, audio);
         }
+    }
+
+    @Override
+    public boolean isVisible() {
+        return true;
     }
 }

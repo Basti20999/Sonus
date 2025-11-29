@@ -6,21 +6,33 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 @NullMarked
 public interface ISonusPlayer extends IAudioSource {
 
-    UUID getUniqueId();
+    UUID getUniqueId(@Nullable ISonusPlayer viewer);
 
-    String getName();
+    default UUID getUniqueId() {
+        return this.getUniqueId(null);
+    }
 
-    Map<UUID, SonusPlayerState> getPerPlayerStates();
+    String getName(@Nullable ISonusPlayer viewer);
+
+    default String getName() {
+        return this.getName(null);
+    }
+
+    void setKeepAlive(long timestamp);
+
+    long getLastKeepAlive();
+
+    @Nullable
+    String getTeam();
 
     @Nullable
     SonusAdapter getAdapter();
@@ -32,6 +44,10 @@ public interface ISonusPlayer extends IAudioSource {
     void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position);
 
     void sendSpatialAudio(IAudioSource source, SonusAudio audio);
+
+    void sendSpatialNormedAudio(IAudioSource source, SonusAudio audio);
+
+    boolean canAccessRoom(IRoom room, @Nullable String password);
 
     void joinRoom(IRoom room);
 
@@ -63,14 +79,19 @@ public interface ISonusPlayer extends IAudioSource {
 
     void sendPluginMessage(Key key, ByteBuf data);
 
+    void sendBackendPluginMessage(Key key, ByteBuf data);
+
     void handleConnect();
 
     void ensureTabListed(ISonusPlayer target);
 
     void updateState();
 
-    default boolean shouldSee(ISonusPlayer target) {
-        return target.getPrimaryRoom() != null ||
-                Objects.requireNonNull(this.getServerId()).equals(target.getServerId()); // Server ID should never be null here
-    }
+    boolean hasPermission(String permission, boolean defaultValue);
+
+    boolean canSee(ISonusPlayer target);
+
+    Component renderComponent(Component component);
+
+    String renderPlainComponent(Component component);
 }

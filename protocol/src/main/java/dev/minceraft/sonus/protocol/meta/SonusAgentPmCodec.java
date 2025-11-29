@@ -1,35 +1,37 @@
 package dev.minceraft.sonus.protocol.meta;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.tcp.AbstractPluginMessageCodec;
-import dev.minceraft.sonus.common.protocol.tcp.MessageSource;
+import dev.minceraft.sonus.common.protocol.tcp.IPluginMessageSource;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Set;
+import java.util.UUID;
 
+@NullMarked
 public class SonusAgentPmCodec extends AbstractPluginMessageCodec {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
-    private final IMetaHandler handler;
+    private final IAgentManager agentManager;
 
-    public SonusAgentPmCodec(Set<Key> supportedChannels, IMetaHandler handler) {
+    public SonusAgentPmCodec(Set<Key> supportedChannels, IAgentManager agentManager) {
         super(supportedChannels);
-        this.handler = handler;
+        this.agentManager = agentManager;
     }
 
     @Override
-    public void handle(ByteBuf packet, Key channel, MessageSource source, ISonusPlayer player) {
-        if (source == MessageSource.PLAYER) {
-            LOGGER.warn("{} tried to send data on the Sonus Internal channel. ", player.getName());
+    public void handle(ByteBuf packet, Key channel, IPluginMessageSource source) {
+        if (!(source instanceof IPluginMessageSource.Server)) {
             return;
         }
-        IMetaMessage msg = MetaRegistry.REGISTRY.read(packet);
-        if (msg == null) {
-            return;
+        UUID serverId = source.getServerId();
+        if (serverId == null) {
+            return; // no server id set somehow
         }
-        msg.handle(this.handler);
+
+        IMetaMessage msg = MetaRegistry.REGISTRY.decode(packet);
+        if (msg != null) {
+            msg.handle(this.agentManager.getAgentListener(serverId));
+        }
     }
 }

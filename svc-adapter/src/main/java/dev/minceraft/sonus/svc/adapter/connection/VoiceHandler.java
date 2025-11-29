@@ -2,20 +2,23 @@ package dev.minceraft.sonus.svc.adapter.connection;
 
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
-import dev.minceraft.sonus.svc.protocol.voice.AuthenticateAckSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.AuthenticateSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckAckSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.ConnectionCheckSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.IVoiceSvcHandler;
-import dev.minceraft.sonus.svc.protocol.voice.KeepAliveSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.MicSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.PingSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.AuthenticateAckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.clientbound.ConnectionCheckAckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.PingSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.AuthenticateSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.ConnectionCheckSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.servicebound.MicSvcPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 public class VoiceHandler implements IVoiceSvcHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
+    private static final UUID MIC_CHANNEL_ID = new UUID(9018035903106730674L, -6405133132459802568L);
 
     private final SvcProtocolAdapter protocolAdapter;
     private final SvcConnection connection;
@@ -30,7 +33,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
         if (!packet.getSecret().equals(this.connection.getSecret())) {
             return; // Ignore packets with mismatched secret
         }
-        if (!packet.getPlayerId().equals(this.connection.getPlayer().getUniqueId())) {
+        if (!packet.getPlayerId().equals(this.connection.getPlayer().getUniqueId(this.connection.getPlayer()))) {
             LOGGER.warn("Received AuthenticateSvcPacket for player {} with mismatched ID: {}.",
                     this.connection.getPlayer().getUniqueId(), packet.getPlayerId());
             return;
@@ -43,11 +46,11 @@ public class VoiceHandler implements IVoiceSvcHandler {
         LOGGER.info("Successfully connected {}({}) to Sonus SVC backend - version {}",
                 this.connection.getPlayer().getName(), this.connection.getPlayer().getUniqueId(), this.connection.getVersion());
 
-        this.connection.setLastKeepAlive(System.currentTimeMillis());
+        this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
         this.connection.setConnected(true);
         this.connection.getPlayer().setMuted(false);
         this.connection.getPlayer().setDeafened(false);
-        this.protocolAdapter.getAdapter().getSessionManager().onConnectionEstablished(this.connection);
+        this.protocolAdapter.getAdapter().getSessions().onConnectionEstablished(this.connection);
 
         this.connection.sendPacket(new ConnectionCheckAckSvcPacket());
 
@@ -56,17 +59,18 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     @Override
     public void handleKeepAlivePacket(KeepAliveSvcPacket packet) {
-        this.connection.setLastKeepAlive(System.currentTimeMillis());
+        this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
     }
 
     @Override
     public void handleMicPacket(MicSvcPacket packet) {
-        SonusAudio data = new SonusAudio(packet.getData(), packet.getSequenceNumber());
+        short[] pcm = this.connection.getProcessor(MIC_CHANNEL_ID).decode(packet.getData());
+        SonusAudio data = new SonusAudio.Pcm(pcm, packet.getSequenceNumber());
         this.connection.getPlayer().handleAudioInput(data);
     }
 
     @Override
     public void handlePingPacket(PingSvcPacket packet) {
-        // TODO: handle ping packet
+        // NO-OP, we never send ping packets
     }
 }

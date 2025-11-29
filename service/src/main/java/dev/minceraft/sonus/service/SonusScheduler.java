@@ -16,6 +16,11 @@ public class SonusScheduler implements ISonusScheduler {
     private final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(3);
 
     @Override
+    public void execute(Runnable task) {
+        this.scheduler.execute(task);
+    }
+
+    @Override
     public IScheduledTask schedule(Runnable task, long delay, long period, TimeUnit unit) {
         ScheduledFuture<?> scheduledFuture = this.scheduler.scheduleAtFixedRate(new WrappedRunnable(task), delay, period, unit);
         return new ScheduledTask(scheduledFuture);
@@ -25,6 +30,10 @@ public class SonusScheduler implements ISonusScheduler {
     public IScheduledTask schedule(Runnable task, long delay, TimeUnit unit) {
         ScheduledFuture<?> scheduledFuture = this.scheduler.schedule(new WrappedRunnable(task), delay, unit);
         return new ScheduledTask(scheduledFuture);
+    }
+
+    public void shutdown() {
+        this.scheduler.shutdownNow();
     }
 
     private record WrappedRunnable(Runnable runnable) implements Runnable {

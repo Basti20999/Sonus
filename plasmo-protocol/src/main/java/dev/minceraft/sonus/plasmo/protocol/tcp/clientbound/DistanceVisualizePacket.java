@@ -23,14 +23,14 @@ public class DistanceVisualizePacket extends TcpPlasmoPacket<DistanceVisualizePa
     public void encode(ByteBuf buf) {
         buf.writeInt(this.radius);
         buf.writeInt(this.hexColor);
-        DataTypeUtil.writeNullable(buf, this.position, Vec3d::write);
+        DataTypeUtil.writeNullable(buf, this.position, Vec3d::encode);
     }
 
     @Override
     public void decode(ByteBuf buf) {
         this.radius = buf.readInt();
         this.hexColor = buf.readInt();
-        this.position = DataTypeUtil.readIf(buf, Vec3d::read);
+        this.position = DataTypeUtil.readNullable(buf, Vec3d::decode);
     }
 
     @Override

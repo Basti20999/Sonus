@@ -2,10 +2,12 @@ package dev.minceraft.sonus.service.velocity;
 
 import com.velocitypowered.api.proxy.server.ServerInfo;
 import dev.minceraft.sonus.service.platform.IServer;
+import org.jspecify.annotations.NullMarked;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+@NullMarked
 public class VelocityServer implements IServer {
 
     private final ServerInfo server;
@@ -13,7 +15,11 @@ public class VelocityServer implements IServer {
 
     public VelocityServer(ServerInfo server) {
         this.server = server;
-        this.uniqueId = UUID.nameUUIDFromBytes(server.getName().getBytes(StandardCharsets.UTF_8));
+        this.uniqueId = generateUniqueId(server);
+    }
+
+    public static UUID generateUniqueId(ServerInfo server) {
+        return UUID.nameUUIDFromBytes(("VeloServer:" + server.getName()).getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

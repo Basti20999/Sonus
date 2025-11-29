@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.common.protocol.tcp;
 
-import dev.minceraft.sonus.common.data.ISonusPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
@@ -18,5 +17,5 @@ public abstract class AbstractPluginMessageCodec {
         return this.supportedChannels;
     }
 
-    public abstract void handle(ByteBuf packet, Key channel, MessageSource source, ISonusPlayer player);
+    public abstract void handle(ByteBuf packet, Key channel, IPluginMessageSource source);
 }

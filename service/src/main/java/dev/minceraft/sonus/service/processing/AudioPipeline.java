@@ -1,8 +1,10 @@
 package dev.minceraft.sonus.service.processing;
 
+import dev.minceraft.sonus.common.audio.SonusAudio;
+
 import java.util.List;
 
-public class AudioPipeline implements AudioPipelineNode {
+public final class AudioPipeline implements AudioPipelineNode {
 
     private final List<AudioPipelineNode> nodes;
 
@@ -14,13 +16,14 @@ public class AudioPipeline implements AudioPipelineNode {
         this.nodes.add(node);
     }
 
-
     @Override
-    public short[] process(short[] data) {
-        short[] output = data;
+    public void process(SonusAudio audio) {
         for (AudioPipelineNode node : this.nodes) {
-            output = node.process(output);
+            node.process(audio);
         }
-        return output;
+    }
+
+    public boolean isEmpty() {
+        return this.nodes.isEmpty();
     }
 }

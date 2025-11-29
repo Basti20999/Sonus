@@ -27,7 +27,8 @@ public class VoiceHandler implements UdpHandler {
 
     @Override
     public void handlePlayerAudioPacket(PlayerAudioPlasmoPacket packet) {
-        this.connection.getPlayer().handleAudioInput(new SonusAudio(packet.getAudioData(), packet.getSequenceNumber()));
+        short[] pcm = this.connection.getProcessor().decode(packet.getAudioData());
+        this.connection.getPlayer().handleAudioInput(new SonusAudio.Pcm(pcm, packet.getSequenceNumber()));
     }
 
     @Override
@@ -46,7 +47,7 @@ public class VoiceHandler implements UdpHandler {
             CaptureInfo captureInfo = new CaptureInfo(
                     SonusConstants.SAMPLE_RATE,
                     this.adapter.getService().getConfig().getMtuSize(),
-                    this.adapter.getProtocolAdapter().getCodecInfo()
+                    this.adapter.getUdpAdapter().getCodecInfo()
             );
             configPacket.setCaptureInfo(captureInfo);
 

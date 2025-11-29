@@ -43,7 +43,7 @@ public class ConfigPacket extends ConfigPlayerInfoPacket<ConfigPacket> {
     public void decode(ByteBuf buf) {
         this.serverId = DataTypeUtil.readUniqueId(buf);
         this.captureInfo = new CaptureInfo(buf);
-        this.encryptionInfo = DataTypeUtil.readIf(buf, EncryptionInfo::new);
+        this.encryptionInfo = DataTypeUtil.readNullable(buf, EncryptionInfo::new);
         this.sourceLines = DataTypeUtil.INT.readCollection(buf, VoiceSourceLine::new, HashSet::new);
         this.activations = DataTypeUtil.INT.readCollection(buf, VoiceActivation::new, HashSet::new);
 
