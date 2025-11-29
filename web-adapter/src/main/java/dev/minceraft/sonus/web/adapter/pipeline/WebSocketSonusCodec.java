@@ -4,7 +4,6 @@ import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.adapter.messages.AbstractWebSocketMessage;
 import dev.minceraft.sonus.web.adapter.messages.ByteWebSocketMessage;
 import dev.minceraft.sonus.web.adapter.util.HttpRequestUtil;
-import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import dev.minceraft.sonus.web.protocol.packets.WsPacketRegistry;
@@ -15,7 +14,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketCloseStatus;
 
 import java.util.List;
 
-public class WebSocketSonusCodec extends MessageToMessageCodec<AbstractWebSocketMessage, AbstractWebPacket<?>> {
+public class WebSocketSonusCodec extends MessageToMessageCodec<AbstractWebSocketMessage, WebSocketPacket> {
 
     private final WebSocketConnection connection;
 
@@ -24,13 +23,10 @@ public class WebSocketSonusCodec extends MessageToMessageCodec<AbstractWebSocket
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, AbstractWebPacket<?> msg, List<Object> out) {
-        if (!(msg instanceof WebSocketPacket packet)) {
-            return;
-        }
+    protected void encode(ChannelHandlerContext ctx, WebSocketPacket msg, List<Object> out) {
         ByteBuf buf = ctx.alloc().buffer();
         try {
-            WsPacketRegistry.REGISTRY.encode(buf, packet, new WsPacketContext(this.connection.getVersion()));
+            WsPacketRegistry.REGISTRY.encode(buf, msg, new WsPacketContext(this.connection.getVersion()));
             out.add(new ByteWebSocketMessage(buf.retain()));
         } finally {
             buf.release();
@@ -42,6 +38,7 @@ public class WebSocketSonusCodec extends MessageToMessageCodec<AbstractWebSocket
         if (msg instanceof ByteWebSocketMessage binary) {
             out.add(WsPacketRegistry.REGISTRY.decode(binary.getDirectBuf(), new WsPacketContext(this.connection.getVersion())));
         } else {
+            // unexpected message
             HttpRequestUtil.doSocketClose(ctx, WebSocketCloseStatus.INVALID_MESSAGE_TYPE);
         }
     }
