@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class WebTokenUtil {
 
     public static final int TOKEN_LENGTH = 16;
-    public static final char[] TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_.-".toCharArray();
+    public static final char[] TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890".toCharArray();
 
     static {
         Arrays.sort(TOKEN_CHARS);

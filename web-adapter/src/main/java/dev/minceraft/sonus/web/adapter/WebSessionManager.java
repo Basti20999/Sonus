@@ -91,8 +91,8 @@ public class WebSessionManager {
         return token;
     }
 
-    public @Nullable ISonusPlayer getByToken(String token) {
-        WeakReference<ISonusPlayer> player = this.tokens.get(token);
+    public @Nullable ISonusPlayer consumeToken(String token) {
+        WeakReference<ISonusPlayer> player = this.tokens.remove(token);
         return player != null ? player.get() : null;
     }
 
@@ -104,9 +104,9 @@ public class WebSessionManager {
         return this.connections.get(playerId);
     }
 
-    public void removeSession(UUID playerId) {
-        try (WebSocketConnection ignoredConn = this.connections.remove(playerId)) {
-            // NO-OP
+    public boolean removeSession(UUID playerId) {
+        try (WebSocketConnection conn = this.connections.remove(playerId)) {
+            return conn != null;
         }
     }
 }

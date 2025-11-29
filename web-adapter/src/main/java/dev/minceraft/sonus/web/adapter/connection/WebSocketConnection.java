@@ -41,7 +41,7 @@ public class WebSocketConnection implements AutoCloseable {
 
     public void sendPacket(AbstractWebPacket<?> packet) {
         if (packet instanceof WebSocketPacket websocketPacket) {
-            sendWebSocketPacket(websocketPacket);
+            this.sendWebSocketPacket(websocketPacket);
         }
     }
 

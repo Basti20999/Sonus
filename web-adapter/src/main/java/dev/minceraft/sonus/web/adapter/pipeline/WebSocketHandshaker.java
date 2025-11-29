@@ -60,7 +60,7 @@ public class WebSocketHandshaker extends ChannelInboundHandlerAdapter {
         if (!WebTokenUtil.isValidToken(token)) {
             throw new HttpErrorException(HttpResponseStatus.BAD_REQUEST);
         }
-        ISonusPlayer player = this.adapter.getSessions().getByToken(token);
+        ISonusPlayer player = this.adapter.getSessions().consumeToken(token);
         if (player == null) {
             throw new HttpErrorException(HttpResponseStatus.FORBIDDEN);
         }
