@@ -11,7 +11,6 @@ import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceInfoPacket;
-import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.StaticSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.clientbound.SourceAudioPlasmoPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -47,6 +46,9 @@ public class PlasmoAdapter implements SonusAdapter {
     @Override
     public void sendStaticAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
         PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
 
         UUID sourceId = UUID.randomUUID();
         StaticSourceInfo info = new StaticSourceInfo(
@@ -70,7 +72,7 @@ public class PlasmoAdapter implements SonusAdapter {
 
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
         packet.setDistance((short) 0);
-        packet.setAudioData(audio.opus());
+        packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setSourceId(sourceId);
         packet.setSourceState((byte) 0);
@@ -86,10 +88,13 @@ public class PlasmoAdapter implements SonusAdapter {
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
         PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
 
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
         packet.setDistance((short) 0);
-        packet.setAudioData(audio.opus());
+        packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setSourceId(source.getSenderId());
         packet.setSourceState((byte) 0);
@@ -124,16 +129,5 @@ public class PlasmoAdapter implements SonusAdapter {
 
     public PlasmoSessionManager getSessionManager() {
         return this.sessionManager;
-    }
-
-    public VoicePlayerInfo buildPlayerInfo(ISonusPlayer player) {
-        // TODO: respect viewer?
-        return new VoicePlayerInfo(
-                player.getUniqueId(),
-                player.getName(),
-                player.isMuted(),
-                !player.isConnected(),
-                player.isDeafened()
-        );
     }
 }

@@ -7,14 +7,15 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.ConfigPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerListPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.CaptureInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpHandler;
-import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.CustomPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.serverbound.PlayerAudioPlasmoPacket;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@NullMarked
 public class VoiceHandler implements UdpHandler {
 
     private final PlasmoAdapter adapter;
@@ -27,13 +28,8 @@ public class VoiceHandler implements UdpHandler {
 
     @Override
     public void handlePlayerAudioPacket(PlayerAudioPlasmoPacket packet) {
-        short[] pcm = this.connection.getProcessor().decode(packet.getAudioData());
+        short[] pcm = this.connection.getProcessor(packet.getActivationId()).decode(packet.getAudioData());
         this.connection.getPlayer().handleAudioInput(new SonusAudio.Pcm(pcm, packet.getSequenceNumber()));
-    }
-
-    @Override
-    public void handleCustomPacket(CustomPlasmoPacket packet) {
-
     }
 
     @Override

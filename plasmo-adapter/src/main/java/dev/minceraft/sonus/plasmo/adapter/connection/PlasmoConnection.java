@@ -15,33 +15,37 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceActivation;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpPlasmoPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.jspecify.annotations.NullMarked;
 
 import java.net.InetSocketAddress;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class PlasmoConnection {
+@NullMarked
+public class PlasmoConnection implements AutoCloseable {
 
     private final PlasmoAdapter adapter;
     private final ISonusPlayer player;
     private final UUID secret = UUID.randomUUID();
 
-    private final AudioProcessor processor;
     private final MetaHandler metaHandler;
     private final VoiceHandler voiceHandler;
+    private final Map<UUID, AudioProcessor> processors = new ConcurrentHashMap<>();
 
     private final Set<VoiceActivation> voiceActivations = new HashSet<>();
     private long lastKeepAlive;
-    private ICipher cipher;
-    private InetSocketAddress remoteAddress;
+    private @MonotonicNonNull ICipher cipher;
+    private @MonotonicNonNull InetSocketAddress remoteAddress;
 
     public PlasmoConnection(PlasmoAdapter adapter, ISonusPlayer player) {
         this.adapter = adapter;
         this.player = player;
 
-        this.processor = adapter.getService().createAudioProcessor(AudioProcessor.Mode.VOICE);
         this.metaHandler = new MetaHandler(adapter, this);
         this.voiceHandler = new VoiceHandler(adapter, this);
 
@@ -59,7 +63,9 @@ public class PlasmoConnection {
                 1 // weight
         );
 
-        voiceActivations.add(defaultActivation);
+        this.voiceActivations.add(defaultActivation);
+
+        this.player.setAdapter(this.adapter);
     }
 
     public ICipher getCipher() {
@@ -148,7 +154,16 @@ public class PlasmoConnection {
         this.remoteAddress = remoteAddress;
     }
 
-    public AudioProcessor getProcessor() {
-        return this.processor;
+    public AudioProcessor getProcessor(UUID channelId) {
+        return this.processors.computeIfAbsent(channelId, __ ->
+                this.adapter.getService().createAudioProcessor(AudioProcessor.Mode.VOICE));
+    }
+
+    @Override
+    public void close() {
+        this.processors.values().removeIf(processor -> {
+            processor.close();
+            return true;
+        });
     }
 }

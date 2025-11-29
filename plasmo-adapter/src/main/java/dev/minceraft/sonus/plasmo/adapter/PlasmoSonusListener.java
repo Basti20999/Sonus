@@ -4,15 +4,18 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.PlasmoPmChannels;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerDisconnectPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerInfoRequestPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerInfoUpdatePacket;
 import net.kyori.adventure.key.Key;
+import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 import java.util.UUID;
 
+@NullMarked
 public class PlasmoSonusListener implements ISonusServiceEvents {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
@@ -24,16 +27,33 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
     }
 
     @Override
+    public void onPlayerSwitchBackend(UUID playerId) {
+        // remove backend-specific session
+        if (this.adapter.getSessionManager().removeSession(playerId)){
+            // disable sonus during backend switch
+            this.adapter.getService().getPlayerManager().disableOnBackendSwitch(playerId);
+        }
+    }
+
+    @Override
     public void onPlayerQuit(UUID playerId) {
-        ISonusServiceEvents.super.onPlayerQuit(playerId);
+        // remove backend-specific session
+        this.adapter.getSessionManager().removeSession(playerId);
+
+        // completely remove player
+        PlayerDisconnectPacket packet = new PlayerDisconnectPacket();
+        packet.setUniqueId(playerId);
+        this.adapter.getSessionManager().broadcast(packet);
     }
 
     @Override
     public void onPlayerStateUpdate(ISonusPlayer player) {
-        PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket();
-        packet.setPlayerInfo(this.adapter.buildPlayerInfo(player));
+        this.adapter.getSessionManager().broadcast(connection -> {
+            PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket();
+            packet.setPlayerInfo(this.adapter.getSessionManager().buildPlayerInfo(connection.getPlayer(), player));
 
-        this.adapter.getSessionManager().broadcastPacket(packet);
+            return packet;
+        });
     }
 
     @Override
