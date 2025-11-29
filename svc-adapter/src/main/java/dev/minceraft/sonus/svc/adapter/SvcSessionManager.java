@@ -45,9 +45,9 @@ public class SvcSessionManager {
         return this.connections.get(playerId);
     }
 
-    public void removeSession(UUID playerId) {
-        try (SvcConnection ignoredConn = this.connections.remove(playerId)) {
-            // NO-OP
+    public boolean removeSession(UUID playerId) {
+        try (SvcConnection conn = this.connections.remove(playerId)) {
+            return conn != null;
         }
     }
 

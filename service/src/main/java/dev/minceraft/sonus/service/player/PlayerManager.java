@@ -98,15 +98,22 @@ public final class PlayerManager implements IPlayerManager {
         return this.serverCache.getUnchecked(serverId);
     }
 
+    @Override
+    public void disableOnBackendSwitch(UUID playerId) {
+        SonusPlayer player = this.getPlayer(playerId);
+        if (player != null) {
+            player.setConnected(false, false); // prevent packet sending
+            player.setMuted(true);
+            player.setDeafened(true);
+        }
+    }
+
     public void onPlayerSwitchBackend(UUID playerId) {
         SonusPlayer player = this.getPlayer(playerId);
         if (player == null) {
             return;
         }
         player.setStates(Map.of()); // reset player states on server switch
-        player.setConnected(false, false); // prevent packet sending
-        player.setMuted(true);
-        player.setDeafened(true);
         player.updateState(); // broadcast update
 
         for (SonusPlayer target : this.players.values()) {

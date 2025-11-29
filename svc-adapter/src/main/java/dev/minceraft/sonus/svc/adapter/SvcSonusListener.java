@@ -26,7 +26,10 @@ public class SvcSonusListener implements ISonusServiceEvents {
     @Override
     public void onPlayerSwitchBackend(UUID playerId) {
         // remove backend-specific session
-        this.adapter.getSessions().removeSession(playerId);
+        if (this.adapter.getSessions().removeSession(playerId)) {
+            // disable sonus during backend switch
+            this.adapter.getService().getPlayerManager().disableOnBackendSwitch(playerId);
+        }
     }
 
     @Override
