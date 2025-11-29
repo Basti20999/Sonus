@@ -74,7 +74,7 @@ public class MetaHandler implements IMetaSvcHandler {
         SecretSvcPacket secretSvcPacket = new SecretSvcPacket();
         secretSvcPacket.setSecret(this.connection.getSecret());
         secretSvcPacket.setServerPort(remoteAddress.getPort());
-        secretSvcPacket.setPlayerId(this.connection.getPlayer().getUniqueId());
+        secretSvcPacket.setPlayerId(this.connection.getPlayer().getUniqueId(this.connection.getPlayer()));
         secretSvcPacket.setCodec(this.protocolAdapter.getAdapter().getService().getConfig().getOpusCodec());
         secretSvcPacket.setMtuSize(service.getConfig().getMtuSize());
         secretSvcPacket.setKeepAlive(service.getConfig().getKeepAliveMs());

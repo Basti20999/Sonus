@@ -83,6 +83,7 @@ public class PlasmoAdapter implements SonusAdapter {
     }
 
     public VoicePlayerInfo buildPlayerInfo(ISonusPlayer player) {
+        // TODO: respect viewer?
         return new VoicePlayerInfo(
                 player.getUniqueId(),
                 player.getName(),

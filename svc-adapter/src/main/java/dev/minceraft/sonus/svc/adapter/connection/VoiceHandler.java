@@ -33,7 +33,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
         if (!packet.getSecret().equals(this.connection.getSecret())) {
             return; // Ignore packets with mismatched secret
         }
-        if (!packet.getPlayerId().equals(this.connection.getPlayer().getUniqueId())) {
+        if (!packet.getPlayerId().equals(this.connection.getPlayer().getUniqueId(this.connection.getPlayer()))) {
             LOGGER.warn("Received AuthenticateSvcPacket for player {} with mismatched ID: {}.",
                     this.connection.getPlayer().getUniqueId(), packet.getPlayerId());
             return;

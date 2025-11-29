@@ -38,7 +38,7 @@ public class SonusWebPlayerState {
     }
 
     public static SonusWebPlayerState fromState(ISonusPlayer player, ISonusPlayer viewer) {
-        UUID uniqueId = player.getUniqueId();
+        UUID uniqueId = player.getUniqueId(viewer);
         TextComponent name = Component.text(player.getName(viewer));
         boolean muted = player.isMuted();
         boolean deafened = player.isDeafened();

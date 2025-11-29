@@ -32,7 +32,7 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     }
 
     @Override
-    public UUID getUniqueId() {
+    public UUID getUniqueId(@Nullable IPlatformPlayer viewer) {
         return this.player.getUniqueId();
     }
 
@@ -77,10 +77,10 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     @Override
     public void ensureTabListed(IPlatformPlayer target) {
         TabList tabList = this.player.getTabList();
-        if (tabList.getEntry(target.getUniqueId()).isPresent()) {
+        if (tabList.getEntry(target.getUniqueId(this)).isPresent()) {
             return; // Already present
         }
-        Optional<Player> targetPlayer = this.server.getPlayer(target.getUniqueId());
+        Optional<Player> targetPlayer = this.server.getPlayer(target.getUniqueId(this));
         if (targetPlayer.isEmpty()) {
             return; // Target player not online
         }

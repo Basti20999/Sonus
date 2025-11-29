@@ -11,7 +11,7 @@ import java.util.UUID;
 @NullMarked
 public interface IPlatformPlayer {
 
-    UUID getUniqueId();
+    UUID getUniqueId(@Nullable IPlatformPlayer viewer);
 
     @Nullable
     UUID getServerId();

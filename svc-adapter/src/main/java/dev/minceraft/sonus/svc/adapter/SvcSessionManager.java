@@ -9,7 +9,6 @@ import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
 import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.JoinedGroupSvcPacket;
-import dev.minceraft.sonus.svc.protocol.meta.clientbound.PlayerStateSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.PlayerStatesSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
 import org.jspecify.annotations.NullMarked;
@@ -109,11 +108,11 @@ public class SvcSessionManager {
         }
     }
 
-    public SvcPlayerState buildPlayerState(ISonusPlayer player, ISonusPlayer target) {
-        IRoom primaryRoom = target.getPrimaryRoom();
+    public SvcPlayerState buildPlayerState(ISonusPlayer viewer, ISonusPlayer player) {
+        IRoom primaryRoom = player.getPrimaryRoom();
         return new SvcPlayerState(
-                target.getUniqueId(), target.getName(player),
-                target.isDeafened(), !target.isConnected(),
+                player.getUniqueId(viewer), player.getName(viewer),
+                player.isDeafened(), !player.isConnected(),
                 primaryRoom == null ? null : primaryRoom.getId()
         );
     }
@@ -123,7 +122,7 @@ public class SvcSessionManager {
         for (ISonusPlayer target : this.adapter.getService().getPlayerManager().getPlayers()) {
             // build state update of target if player can see target
             if (target.isConnected() && player.canSee(target)) {
-                states.put(target.getUniqueId(), this.buildPlayerState(player, target));
+                states.put(target.getUniqueId(player), this.buildPlayerState(player, target));
             }
         }
         return states.build();

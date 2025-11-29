@@ -15,7 +15,11 @@ import java.util.UUID;
 @NullMarked
 public interface ISonusPlayer extends IAudioSource {
 
-    UUID getUniqueId();
+    UUID getUniqueId(@Nullable ISonusPlayer viewer);
+
+    default UUID getUniqueId() {
+        return this.getUniqueId(null);
+    }
 
     String getName(@Nullable ISonusPlayer viewer);
 

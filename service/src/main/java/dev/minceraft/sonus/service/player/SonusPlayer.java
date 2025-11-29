@@ -300,8 +300,9 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     }
 
     @Override
-    public UUID getUniqueId() {
-        return this.platform.getUniqueId();
+    public UUID getUniqueId(@Nullable ISonusPlayer viewer) {
+        IPlatformPlayer platformViewer = viewer != null ? ((SonusPlayer) viewer).platform : null;
+        return this.platform.getUniqueId(platformViewer);
     }
 
     @Override
