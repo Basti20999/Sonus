@@ -4,12 +4,12 @@ package dev.minceraft.sonus.web.protocol.packets.commonbound;
 import dev.minceraft.sonus.common.protocol.util.VarLong;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
-import dev.minceraft.sonus.web.protocol.packets.WebsocketPacket;
+import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class PingPacket extends WebsocketPacket {
+public class PingPacket extends WebSocketPacket {
 
     private long id;
 

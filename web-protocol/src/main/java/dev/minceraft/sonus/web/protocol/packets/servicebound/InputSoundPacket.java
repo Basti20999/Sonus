@@ -6,13 +6,13 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
-import dev.minceraft.sonus.web.protocol.packets.WebsocketPacket;
+import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class InputSoundPacket extends WebsocketPacket {
+public class InputSoundPacket extends WebSocketPacket {
 
     private static final int MAX_OPUS_BITRATE = 64_000; // according to https://wiki.xiph.org/Opus_Recommended_Settings#Bandwidth_Transition_Thresholds
     private static final int MAX_OPUS_BYTES_PER_FRAME = MAX_OPUS_BITRATE / Byte.SIZE / SonusConstants.FRAMES_PER_SECOND;

@@ -4,7 +4,7 @@ package dev.minceraft.sonus.web.protocol.packets.clientbound;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
-import dev.minceraft.sonus.web.protocol.packets.WebsocketPacket;
+import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -12,7 +12,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class CategoryRemovePacket extends WebsocketPacket {
+public class CategoryRemovePacket extends WebSocketPacket {
 
     private @MonotonicNonNull UUID categoryId;
 

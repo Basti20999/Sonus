@@ -95,7 +95,7 @@ public class SvcSessionManager {
         }
     }
 
-    public void broadcastFrom(ISonusPlayer source, PlayerStateSvcPacket packet) {
+    public void broadcastFrom(ISonusPlayer source, AbstractSvcPacket<?> packet) {
         this.broadcastFrom(source, __ -> packet);
     }
 

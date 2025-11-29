@@ -12,9 +12,17 @@ public sealed interface SonusAudio {
 
     short[] pcm(Supplier<AudioProcessor> processor);
 
+    default Pcm asPcm(Supplier<AudioProcessor> processor) {
+        return new Pcm(this.pcm(processor), this.sequenceNumber());
+    }
+
     byte[] opus();
 
     byte[] opus(Supplier<AudioProcessor> processor);
+
+    default Opus asOpus(Supplier<AudioProcessor> processor) {
+        return new Opus(this.opus(processor), this.sequenceNumber());
+    }
 
     long sequenceNumber();
 
@@ -27,6 +35,11 @@ public sealed interface SonusAudio {
         @Override
         public short[] pcm(Supplier<AudioProcessor> processor) {
             return this.pcm;
+        }
+
+        @Override
+        public Pcm asPcm(Supplier<AudioProcessor> processor) {
+            return this;
         }
 
         @Override
@@ -65,6 +78,11 @@ public sealed interface SonusAudio {
         @Override
         public byte[] opus(Supplier<AudioProcessor> processor) {
             return this.opus;
+        }
+
+        @Override
+        public Opus asOpus(Supplier<AudioProcessor> processor) {
+            return this;
         }
 
         @Override

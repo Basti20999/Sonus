@@ -5,7 +5,7 @@ import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
-import dev.minceraft.sonus.web.protocol.packets.WebsocketPacket;
+import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -16,7 +16,7 @@ import java.util.UUID;
 import static dev.minceraft.sonus.web.protocol.packets.servicebound.RoomCreatePacket.MAX_ROOM_PASSWORD_LENGTH;
 
 @NullMarked
-public class RoomJoinRequestPacket extends WebsocketPacket {
+public class RoomJoinRequestPacket extends WebSocketPacket {
 
     private @MonotonicNonNull UUID roomId;
     private @Nullable String password;

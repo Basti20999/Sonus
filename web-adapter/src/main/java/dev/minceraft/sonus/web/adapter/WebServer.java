@@ -19,26 +19,30 @@ public class WebServer {
     public static final String HTTP_CODEC = "http-codec";
     public static final String HTTP_AGGREGATOR = "http-aggregator";
     public static final String HTTP_SOCKET_SHAKER = "http-socket-shaker";
+    public static final String HTTP_SOCKET_PROTOCOL = "http-socket-protocol";
+    public static final String HTTP_SOCKET_FRAMER = "http-socket-framer";
+    public static final String HTTP_SOCKET_CODEC = "http-socket-codec";
+    public static final String HTTP_SOCKET_HANDLER = "http-socket-handler";
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private static final TransportType TRANSPORT = TransportType.get();
     private static final int MAX_MSG_LENGTH = 1 << 16; // 64 KiB
 
-    private final WsAdapter adapter;
+    private final WebAdapter adapter;
 
     private @MonotonicNonNull EventLoopGroup bossGroup;
     private @MonotonicNonNull EventLoopGroup workerGroup;
 
     private @MonotonicNonNull Channel channel;
 
-    public WebServer(WsAdapter adapter) {
+    public WebServer(WebAdapter adapter) {
         this.adapter = adapter;
     }
 
     public void openSocket() {
         this.adapter.getService().getConfigHolder().addReloadHookAndRun(config -> {
-            LOGGER.info("Starting WebServer...");
+            LOGGER.info("Starting http server...");
             this.shutdown();
 
             this.bossGroup = TRANSPORT.createGroup("boss");
@@ -49,7 +53,7 @@ public class WebServer {
                     .channelFactory(TRANSPORT.getServerSocketChannelFactory())
                     .childHandler(new ChannelInitializer<>() {
                         @Override
-                        protected void initChannel(Channel channel) throws Exception {
+                        protected void initChannel(Channel channel) {
                             channel.pipeline()
                                     .addLast(HTTP_CODEC, new HttpServerCodec())
                                     .addLast(HTTP_AGGREGATOR, new HttpObjectAggregator(MAX_MSG_LENGTH))
@@ -59,7 +63,7 @@ public class WebServer {
             InetSocketAddress address = config.getWebConfig().getAddress();
             try {
                 this.channel = bootstrap.bind(address).sync().channel();
-                LOGGER.info("WebServer started on address {}", address);
+                LOGGER.info("HTTP started on address {}", address);
             } catch (InterruptedException exception) {
                 throw new RuntimeException("Failed to bind to " + address, exception);
             }

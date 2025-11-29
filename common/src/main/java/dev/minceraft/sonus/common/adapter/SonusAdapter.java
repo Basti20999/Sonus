@@ -8,6 +8,7 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -26,5 +27,9 @@ public interface SonusAdapter {
 
     void unregisterCategory(ISonusPlayer player, UUID categoryId);
 
-    VoiceProtocolAdapter getProtocolAdapter();
+    void sendKeepAlive(ISonusPlayer player, long currentTime);
+
+    default @Nullable UdpSonusAdapter getUdpAdapter() {
+        return null;
+    }
 }

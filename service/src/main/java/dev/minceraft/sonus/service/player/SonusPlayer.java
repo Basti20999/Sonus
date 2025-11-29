@@ -524,7 +524,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
 
     public void tickKeepAlive(long currentTime) {
         if (this.sonusAdapter != null) {
-            this.sonusAdapter.getProtocolAdapter().sendKeepAlive(this, currentTime);
+            this.sonusAdapter.sendKeepAlive(this, currentTime);
         }
         long keepAliveTimeoutMs = this.service.getConfig().getKeepAliveTimeoutMs();
         if (this.lastKeepAlive + keepAliveTimeoutMs < currentTime) {

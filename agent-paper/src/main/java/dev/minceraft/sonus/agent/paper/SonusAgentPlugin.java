@@ -37,7 +37,8 @@ public class SonusAgentPlugin extends JavaPlugin {
     }
 
     protected YamlConfigHolder<? extends SonusAgentConfig> createConfig() {
-        return new YamlConfigHolder<>(SonusAgentConfig.class, this.getDataPath().resolve("config.yml"));
+        Path configPath = this.getDataPath().resolve("config.yml");
+        return new YamlConfigHolder<>(SonusAgentConfig.class,SonusAgentConfig::new, configPath);
     }
 
     protected AgentListener createAgentListener() {
@@ -84,7 +85,7 @@ public class SonusAgentPlugin extends JavaPlugin {
         Path definitionPath = this.getDataPath().resolve("room-definition.yml");
         if (Files.exists(definitionPath)) {
             this.getLogger().info("Loading room definition from file...");
-            this.roomDefinition = new YamlConfigHolder<>(RoomDefinition.class, definitionPath);
+            this.roomDefinition = new YamlConfigHolder<>(RoomDefinition.class, RoomDefinition::new, definitionPath);
         }
     }
 

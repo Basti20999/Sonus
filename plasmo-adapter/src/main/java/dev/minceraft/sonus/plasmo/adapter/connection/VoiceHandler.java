@@ -45,7 +45,7 @@ public class VoiceHandler implements UdpHandler {
             CaptureInfo captureInfo = new CaptureInfo(
                     SonusConstants.SAMPLE_RATE,
                     this.adapter.getService().getConfig().getMtuSize(),
-                    this.adapter.getProtocolAdapter().getCodecInfo()
+                    this.adapter.getUdpAdapter().getCodecInfo()
             );
             configPacket.setCaptureInfo(captureInfo);
 

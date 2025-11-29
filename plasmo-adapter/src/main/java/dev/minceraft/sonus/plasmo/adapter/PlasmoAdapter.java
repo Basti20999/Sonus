@@ -13,6 +13,7 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
+import java.nio.file.Path;
 import java.util.UUID;
 
 @NullMarked
@@ -31,7 +32,8 @@ public class PlasmoAdapter implements SonusAdapter {
         this.adapter = new PlasmoProtocolAdapter(this);
         this.sessionManager = new PlasmoSessionManager(this);
         this.serviceListener = new PlasmoSonusListener(this);
-        this.config = new YamlConfigHolder<>(PlasmoConfig.class, this.service.getDataDirectory().resolve("plasmo-config.yml"));
+        Path configPath = this.service.getDataDirectory().resolve("plasmo-config.yml");
+        this.config = new YamlConfigHolder<>(PlasmoConfig.class, PlasmoConfig::new, configPath);
 
         this.service.getEventManager().registerListener(this.serviceListener);
     }
@@ -60,7 +62,11 @@ public class PlasmoAdapter implements SonusAdapter {
     }
 
     @Override
-    public PlasmoProtocolAdapter getProtocolAdapter() {
+    public void sendKeepAlive(ISonusPlayer player, long currentTime) {
+    }
+
+    @Override
+    public PlasmoProtocolAdapter getUdpAdapter() {
         return this.adapter;
     }
 

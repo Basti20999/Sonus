@@ -4,5 +4,5 @@ import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public abstract class WebsocketPacket extends AbstractWebPacket<IWebSocketHandler> {
+public abstract class WebSocketPacket extends AbstractWebPacket<IWebSocketHandler> {
 }

@@ -4,13 +4,13 @@ package dev.minceraft.sonus.web.protocol.packets.clientbound;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
-import dev.minceraft.sonus.web.protocol.packets.WebsocketPacket;
+import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class CategoryAddPacket extends WebsocketPacket {
+public class CategoryAddPacket extends WebSocketPacket {
 
     private @MonotonicNonNull AudioCategory category;
 

@@ -11,6 +11,7 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.PositionUpdatePacket
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomRemovePacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
@@ -32,8 +33,8 @@ public final class WsPacketRegistry {
     private WsPacketRegistry() {
     }
 
-    public static final ContextedRegistry<ByteBuf, WebsocketPacket, WsPacketContext> REGISTRY =
-            ContextedRegistry.Builder.<ByteBuf, WebsocketPacket, WsPacketContext>createContext()
+    public static final ContextedRegistry<ByteBuf, WebSocketPacket, WsPacketContext> REGISTRY =
+            ContextedRegistry.Builder.<ByteBuf, WebSocketPacket, WsPacketContext>createContext()
                     .codec((buf, packet, ctx) -> packet.decode(buf, ctx),
                             (buf, packet, ctx) -> packet.encode(buf, ctx))
                     .idCodec((buf, __) -> VarInt.read(buf),
@@ -47,6 +48,7 @@ public final class WsPacketRegistry {
                     .register(RoomAddPacket.class, RoomAddPacket::new, ENCODE)
                     .register(RoomJoinResponsePacket.class, RoomJoinResponsePacket::new, ENCODE)
                     .register(RoomRemovePacket.class, RoomRemovePacket::new, ENCODE)
+                    .register(StateRemovePacket.class, StateRemovePacket::new, ENCODE)
                     .register(StateUpdatePacket.class, StateUpdatePacket::new, ENCODE)
                     // commonbound
                     .register(KeepAlivePacket.class, KeepAlivePacket::new, ANY)

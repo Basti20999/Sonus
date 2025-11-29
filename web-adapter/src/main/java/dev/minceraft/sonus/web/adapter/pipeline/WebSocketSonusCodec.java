@@ -1,0 +1,48 @@
+package dev.minceraft.sonus.web.adapter.pipeline;
+
+import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
+import dev.minceraft.sonus.web.adapter.messages.AbstractWebSocketMessage;
+import dev.minceraft.sonus.web.adapter.messages.ByteWebSocketMessage;
+import dev.minceraft.sonus.web.adapter.util.HttpRequestUtil;
+import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
+import dev.minceraft.sonus.web.protocol.WsPacketContext;
+import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
+import dev.minceraft.sonus.web.protocol.packets.WsPacketRegistry;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageCodec;
+import io.netty.handler.codec.http.websocketx.WebSocketCloseStatus;
+
+import java.util.List;
+
+public class WebSocketSonusCodec extends MessageToMessageCodec<AbstractWebSocketMessage, AbstractWebPacket<?>> {
+
+    private final WebSocketConnection connection;
+
+    public WebSocketSonusCodec(WebSocketConnection connection) {
+        this.connection = connection;
+    }
+
+    @Override
+    protected void encode(ChannelHandlerContext ctx, AbstractWebPacket<?> msg, List<Object> out) {
+        if (!(msg instanceof WebSocketPacket packet)) {
+            return;
+        }
+        ByteBuf buf = ctx.alloc().buffer();
+        try {
+            WsPacketRegistry.REGISTRY.encode(buf, packet, new WsPacketContext(this.connection.getVersion()));
+            out.add(new ByteWebSocketMessage(buf.retain()));
+        } finally {
+            buf.release();
+        }
+    }
+
+    @Override
+    protected void decode(ChannelHandlerContext ctx, AbstractWebSocketMessage msg, List<Object> out) {
+        if (msg instanceof ByteWebSocketMessage binary) {
+            out.add(WsPacketRegistry.REGISTRY.decode(binary.getDirectBuf(), new WsPacketContext(this.connection.getVersion())));
+        } else {
+            HttpRequestUtil.doSocketClose(ctx, WebSocketCloseStatus.INVALID_MESSAGE_TYPE);
+        }
+    }
+}

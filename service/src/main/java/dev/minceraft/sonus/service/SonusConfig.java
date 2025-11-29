@@ -27,9 +27,6 @@ public class SonusConfig implements ISonusConfig {
     private int cleanupTaskIntervalMs = 60000;
     private WebConfig webConfig = new WebConfig();
 
-    private SonusConfig() {
-    }
-
     @Override
     public InetSocketAddress getBind() {
         return this.bind;

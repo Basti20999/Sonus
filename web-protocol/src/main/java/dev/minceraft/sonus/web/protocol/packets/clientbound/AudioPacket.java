@@ -6,7 +6,7 @@ import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
-import dev.minceraft.sonus.web.protocol.packets.WebsocketPacket;
+import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -15,7 +15,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.UUID;
 
 @NullMarked
-public class AudioPacket extends WebsocketPacket {
+public class AudioPacket extends WebSocketPacket {
 
     private static final byte FLAG_HAS_CATEGORY = 1 << 0;
     private static final byte FLAG_HAS_POSITION = 1 << 1;

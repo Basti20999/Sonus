@@ -55,7 +55,7 @@ public class PlasmoConnection {
                 true, // Allow proximity
                 false, // Force mono audio
                 true, // Allow other activations
-                this.adapter.getProtocolAdapter().getCodecInfo(),
+                this.adapter.getUdpAdapter().getCodecInfo(),
                 1 // weight
         );
 
@@ -84,7 +84,7 @@ public class PlasmoConnection {
         packet.setTimestamp(System.currentTimeMillis());
         WrappedUdpPipelineData payload = new WrappedUdpPipelineData(
                 PlasmoUdpContext.newInstance(this.remoteAddress, this),
-                this.adapter.getProtocolAdapter().getPlasmoCodec(),
+                this.adapter.getUdpAdapter().getPlasmoCodec(),
                 packet
         );
         this.adapter.getService().getUdpServer().sendPacket(payload);

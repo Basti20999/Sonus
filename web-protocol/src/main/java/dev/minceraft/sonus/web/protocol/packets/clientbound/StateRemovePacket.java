@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.web.protocol.packets.clientbound;
-// Created by booky10 in Sonus (20:32 28.11.2025)
 
-import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
 import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
@@ -9,38 +8,40 @@ import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.UUID;
+
 @NullMarked
-public class PositionUpdatePacket extends WebSocketPacket {
+public class StateRemovePacket extends WebSocketPacket {
 
-    private @MonotonicNonNull Vec3d position;
+    private @MonotonicNonNull UUID playerId;
 
-    public PositionUpdatePacket(Vec3d position) {
-        this.position = position;
+    public StateRemovePacket(UUID playerId) {
+        this.playerId = playerId;
     }
 
-    public PositionUpdatePacket() {
+    public StateRemovePacket() {
     }
 
     @Override
     public void encode(ByteBuf buf, WsPacketContext context) {
-        Vec3d.encode(buf, this.position);
+        DataTypeUtil.writeUniqueId(buf, this.playerId);
     }
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.position = Vec3d.decode(buf);
+        this.playerId = DataTypeUtil.readUniqueId(buf);
     }
 
     @Override
     public void handle(IWebSocketHandler handler) {
-        handler.handlePositionUpdate(this);
+        handler.handleStateRemove(this);
     }
 
-    public Vec3d getPosition() {
-        return this.position;
+    public UUID getPlayerId() {
+        return playerId;
     }
 
-    public void setPosition(Vec3d position) {
-        this.position = position;
+    public void setPlayerId(UUID playerId) {
+        this.playerId = playerId;
     }
 }

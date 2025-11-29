@@ -1,9 +1,9 @@
 package dev.minceraft.sonus.service;
 // Created by booky10 in Sonus (01:33 17.07.2025)
 
-import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
+import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.service.IScheduledTask;
@@ -48,7 +48,8 @@ public final class SonusService implements ISonusService {
 
     public SonusService(IServicePlatform platform) {
         this.platform = platform;
-        this.config = new YamlConfigHolder<>(SonusConfig.class, this.platform.getDataPath().resolve("config.yml"));
+        Path configPath = this.platform.getDataPath().resolve("config.yml");
+        this.config = new YamlConfigHolder<>(SonusConfig.class, SonusConfig::new, configPath);
         this.players = new PlayerManager(this);
     }
 

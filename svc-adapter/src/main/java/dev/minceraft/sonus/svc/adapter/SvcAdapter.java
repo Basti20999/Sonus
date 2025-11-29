@@ -4,7 +4,7 @@ package dev.minceraft.sonus.svc.adapter;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
-import dev.minceraft.sonus.common.adapter.VoiceProtocolAdapter;
+import dev.minceraft.sonus.common.adapter.UdpSonusAdapter;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
@@ -17,6 +17,7 @@ import dev.minceraft.sonus.svc.protocol.version.VersionManager;
 import dev.minceraft.sonus.svc.protocol.voice.clientbound.GroupSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.clientbound.LocationSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.clientbound.PlayerSoundSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
@@ -114,7 +115,15 @@ public class SvcAdapter implements SonusAdapter {
     }
 
     @Override
-    public VoiceProtocolAdapter getProtocolAdapter() {
+    public void sendKeepAlive(ISonusPlayer player, long currentTime) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            connection.sendPacket(KeepAliveSvcPacket.INSTANCE);
+        }
+    }
+
+    @Override
+    public UdpSonusAdapter getUdpAdapter() {
         return this.protocolAdapter;
     }
 

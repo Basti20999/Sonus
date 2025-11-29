@@ -3,12 +3,12 @@ package dev.minceraft.sonus.web.protocol.packets.clientbound;
 
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
-import dev.minceraft.sonus.web.protocol.packets.WebsocketPacket;
+import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public class RoomJoinResponsePacket extends WebsocketPacket {
+public class RoomJoinResponsePacket extends WebSocketPacket {
 
     private boolean success;
 

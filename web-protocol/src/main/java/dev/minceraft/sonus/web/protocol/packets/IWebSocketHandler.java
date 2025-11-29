@@ -8,6 +8,7 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.PositionUpdatePacket
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomRemovePacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
@@ -41,6 +42,9 @@ public interface IWebSocketHandler {
     }
 
     default void handleRoomRemove(RoomRemovePacket packet) {
+    }
+
+    default void handleStateRemove(StateRemovePacket packet) {
     }
 
     default void handleStateUpdate(StateUpdatePacket packet) {
