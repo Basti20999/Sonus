@@ -7,8 +7,10 @@ import dev.minceraft.sonus.web.adapter.util.WebTokenUtil;
 import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.model.SonusWebPlayerState;
 import dev.minceraft.sonus.web.protocol.model.SonusWebRoom;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
+import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
@@ -50,6 +52,11 @@ public class WebSessionManager {
                 connection.sendPacket(packet);
             }
         }
+
+        // inform the player that they are fully connected
+        UUID playerId = connection.getPlayer().getUniqueId();
+        String username = connection.getPlayer().getName();
+        connection.sendPacket(new ConnectedPacket(playerId, Component.text(username)));
     }
 
     public void broadcast(AbstractWebPacket<?> packet) {
