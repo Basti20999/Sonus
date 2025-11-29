@@ -19,7 +19,7 @@ public abstract class PluginMessageSourceImpl implements IPluginMessageSource {
 
     @Override
     public UUID getPlayerId() {
-        return this.player.getUniqueId();
+        return this.player.getUniqueId(null);
     }
 
     @Override
