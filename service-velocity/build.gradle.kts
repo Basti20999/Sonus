@@ -13,6 +13,8 @@ dependencies {
     runtimeOnly(projects.service) {
         targetConfiguration = "shadow"
     }
+
+    api(libs.fastutil)
 }
 
 tasks {

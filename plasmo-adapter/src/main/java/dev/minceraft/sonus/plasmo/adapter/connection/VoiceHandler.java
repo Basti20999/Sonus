@@ -39,7 +39,6 @@ public class VoiceHandler implements UdpHandler {
             configPacket.setPermissions(Map.of());
             configPacket.setServerId(this.adapter.getConfig().getDelegate().serverId);
 
-
             CaptureInfo captureInfo = new CaptureInfo(
                     SonusConstants.SAMPLE_RATE,
                     this.adapter.getService().getConfig().getMtuSize(),
@@ -61,5 +60,6 @@ public class VoiceHandler implements UdpHandler {
 
             this.connection.sendPacket(playerListPacket);
         }
+        this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
     }
 }

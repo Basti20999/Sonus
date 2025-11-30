@@ -38,7 +38,6 @@ public class PlasmoConnection implements AutoCloseable {
     private final Map<UUID, AudioProcessor> processors = new ConcurrentHashMap<>();
 
     private final Set<VoiceActivation> voiceActivations = new HashSet<>();
-    private long lastKeepAlive;
     private @MonotonicNonNull ICipher cipher;
     private @MonotonicNonNull InetSocketAddress remoteAddress;
 
@@ -100,7 +99,7 @@ public class PlasmoConnection implements AutoCloseable {
         ByteBuf buffer = Unpooled.buffer();
         try {
             TcpPacketRegistry.REGISTRY.encode(buffer, packet);
-            this.player.sendPluginMessage(PlasmoPmChannels.CHANNEL, buffer);
+            this.player.sendPluginMessage(PlasmoPmChannels.CHANNEL, buffer.retain());
         } finally {
             buffer.release();
         }
@@ -124,14 +123,6 @@ public class PlasmoConnection implements AutoCloseable {
 
     public Set<VoiceActivation> getVoiceActivations() {
         return this.voiceActivations;
-    }
-
-    public long getLastKeepAlive() {
-        return this.lastKeepAlive;
-    }
-
-    public void setLastKeepAlive(long keepAlive) {
-        this.lastKeepAlive = keepAlive;
     }
 
     public void initCipher(byte[] publicKey) {

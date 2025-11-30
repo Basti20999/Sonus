@@ -12,6 +12,7 @@ import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceInfoPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.StaticSourceInfo;
+import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.clientbound.SourceAudioPlasmoPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -112,6 +113,18 @@ public class PlasmoAdapter implements SonusAdapter {
 
     @Override
     public void sendKeepAlive(ISonusPlayer player, long currentTime) {
+        PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
+        if (!connection.isConnected()) {
+            return;
+        }
+
+        PingPlasmoPacket packet = new PingPlasmoPacket();
+        packet.setTimestamp(currentTime);
+
+        connection.sendPacket(packet);
     }
 
     @Override

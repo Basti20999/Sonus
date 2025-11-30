@@ -54,7 +54,7 @@ public final class PlayerManager implements IPlayerManager {
                 }
                 int keepAliveInterval = config.getKeepAliveMs();
                 this.task = PlayerManager.this.service.getScheduler().schedule(PlayerManager.this::tickKeepAlive,
-                        keepAliveInterval, TimeUnit.MILLISECONDS);
+                        0, keepAliveInterval, TimeUnit.MILLISECONDS);
             }
         });
     }
