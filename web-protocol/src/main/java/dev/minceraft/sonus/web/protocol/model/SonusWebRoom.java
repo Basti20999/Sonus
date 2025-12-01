@@ -43,7 +43,7 @@ public class SonusWebRoom {
         UUID uniqueId = room.getId();
         Component name = text(room.getName());
         boolean password = room.getPassword() != null && !bypassPassword;
-        boolean joinable = !room.isVisible();
+        boolean joinable = room.isVisible();
         RoomAudioType audioType = room.getRoomAudioType();
         boolean speakToOthers = audioType.isSpeakToOthers();
         boolean listenToOthers = audioType.isListenToOthers();
