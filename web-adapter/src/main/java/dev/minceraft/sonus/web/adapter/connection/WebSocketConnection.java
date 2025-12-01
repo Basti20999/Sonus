@@ -25,7 +25,7 @@ public class WebSocketConnection implements AutoCloseable {
         this.adapter = adapter;
         this.player = player;
         this.channel = channel;
-        this.player.setAdapater(this.adapter);
+        this.player.setAdapter(this.adapter);
     }
 
     public ISonusPlayer getPlayer() {
