@@ -1,5 +1,5 @@
 package dev.minceraft.sonus.web.protocol.packets.clientbound;
-// Created by booky10 in Sonus (20:34 28.11.2025)
+// Created by booky10 in Sonus (11:41 PM 02.12.2025)
 
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
@@ -12,17 +12,17 @@ import org.jspecify.annotations.NullMarked;
 import java.util.UUID;
 
 @NullMarked
-public class RoomJoinResponsePacket extends WebSocketPacket {
+public class RoomLeaveResponsePacket extends WebSocketPacket {
 
     private @MonotonicNonNull UUID roomId;
     private boolean success;
 
-    public RoomJoinResponsePacket(UUID roomId, boolean success) {
+    public RoomLeaveResponsePacket(UUID roomId, boolean success) {
         this.roomId = roomId;
         this.success = success;
     }
 
-    public RoomJoinResponsePacket() {
+    public RoomLeaveResponsePacket() {
     }
 
     @Override
@@ -39,7 +39,7 @@ public class RoomJoinResponsePacket extends WebSocketPacket {
 
     @Override
     public void handle(IWebSocketHandler handler) {
-        handler.handleRoomJoinResponse(this);
+        handler.handleRoomLeaveResponse(this);
     }
 
     public UUID getRoomId() {

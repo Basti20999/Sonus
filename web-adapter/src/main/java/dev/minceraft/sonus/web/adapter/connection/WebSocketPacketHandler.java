@@ -6,6 +6,7 @@ import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomLeaveResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.InputSoundPacket;
@@ -49,7 +50,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
             // if player can access room, update primary room
             this.connection.getPlayer().setPrimaryRoom(room);
         }
-        this.connection.sendPacket(new RoomJoinResponsePacket(success));
+        this.connection.sendPacket(new RoomJoinResponsePacket(room.getId(), success));
     }
 
     @Override
@@ -66,7 +67,17 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
 
     @Override
     public void handleRoomLeave(RoomLeavePacket packet) {
-        this.connection.getPlayer().setPrimaryRoom(null);
+        ISonusPlayer player = this.connection.getPlayer();
+        IRoom primaryRoom = player.getPrimaryRoom();
+        // prevent accidentially leaving wrong room because of desyncs
+        boolean success;
+        if (primaryRoom != null && primaryRoom.getId().equals(packet.getRoomId())) {
+            player.setPrimaryRoom(null);
+            success = true;
+        } else {
+            success = false;
+        }
+        this.connection.sendPacket(new RoomLeaveResponsePacket(primaryRoom.getId(), success));
     }
 
     @Override
