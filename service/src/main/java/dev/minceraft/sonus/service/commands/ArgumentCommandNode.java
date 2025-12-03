@@ -28,4 +28,22 @@ public final class ArgumentCommandNode<T> extends CommandNode {
     public ArgumentType<T> getType() {
         return this.type;
     }
+
+    @Override
+    public ArgumentCommandNode<T> execute(CommandExecutor executor) {
+        super.execute(executor);
+        return this;
+    }
+
+    @Override
+    public ArgumentCommandNode<T> requires(CommandRequirement requirement) {
+        super.requires(requirement);
+        return this;
+    }
+
+    @Override
+    public ArgumentCommandNode<T> with(CommandNode node) {
+        super.with(node);
+        return this;
+    }
 }

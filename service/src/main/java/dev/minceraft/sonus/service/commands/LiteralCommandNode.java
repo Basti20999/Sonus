@@ -16,4 +16,22 @@ public final class LiteralCommandNode extends CommandNode {
     protected boolean parseAndExecuteThis(CommandContext ctx, Queue<String> args) throws CommandException {
         return true; // NO-OP
     }
+
+    @Override
+    public LiteralCommandNode execute(CommandExecutor executor) {
+        super.execute(executor);
+        return this;
+    }
+
+    @Override
+    public LiteralCommandNode requires(CommandRequirement requirement) {
+        super.requires(requirement);
+        return this;
+    }
+
+    @Override
+    public LiteralCommandNode with(CommandNode node) {
+        super.with(node);
+        return this;
+    }
 }

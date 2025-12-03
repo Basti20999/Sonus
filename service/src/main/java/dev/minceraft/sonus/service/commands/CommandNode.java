@@ -27,7 +27,7 @@ public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCom
     }
 
     public static <T> ArgumentCommandNode<T> argument(String name, ArgumentType<T> argumentType) {
-        return new ArgumentCommandNode<T>(name, argumentType);
+        return new ArgumentCommandNode<>(name, argumentType);
     }
 
     protected boolean execute(CommandContext ctx) throws CommandException {
