@@ -5,7 +5,6 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.ConfigPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerListPacket;
-import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceLineRegisterPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.CaptureInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpHandler;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
@@ -14,7 +13,6 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @NullMarked
 public class VoiceHandler implements UdpHandler {
@@ -37,7 +35,6 @@ public class VoiceHandler implements UdpHandler {
     public void handlePingPacket(PingPlasmoPacket packet) {
         if (!this.connection.isConnected()) { // Init connection
             this.sendConfig();
-            this.sendVoiceLines();
             this.connection.setConnected(true);
 
             this.connection.getPlayer().handleConnect();
@@ -60,7 +57,7 @@ public class VoiceHandler implements UdpHandler {
         configPacket.setCaptureInfo(captureInfo);
 
         configPacket.setEncryptionInfo(this.connection.getCipher().getEncryptionInfo());
-        configPacket.setSourceLines(Set.of());
+        configPacket.setSourceLines(this.connection.getSourceLines().values());
         configPacket.setActivations(this.connection.getVoiceActivations().values());
 
         this.connection.sendPacket(configPacket);
@@ -71,11 +68,5 @@ public class VoiceHandler implements UdpHandler {
         playerListPacket.setPlayers(List.copyOf(this.adapter.getSessionManager().getPlayerInfos(this.connection).values()));
 
         this.connection.sendPacket(playerListPacket);
-    }
-
-    private void sendVoiceLines() {
-        SourceLineRegisterPacket defaultLine = new SourceLineRegisterPacket();
-        defaultLine.setSourceLine(this.connection.getDefaultSourceLine());
-        this.connection.sendPacket(defaultLine);
     }
 }

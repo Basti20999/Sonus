@@ -4,12 +4,14 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.rooms.IRoom;
+import dev.minceraft.sonus.common.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
 import java.util.UUID;
 
 @NullMarked
@@ -25,6 +27,14 @@ public interface ISonusPlayer extends IAudioSource {
 
     default String getName() {
         return this.getName(null);
+    }
+
+    default GameProfile getSimpleProfile(@Nullable ISonusPlayer viewer, GameProfile.Property... properties) {
+        return new GameProfile(this.getUniqueId(viewer), this.getName(viewer), List.of(properties));
+    }
+
+    default GameProfile getSimpleProfile(GameProfile.Property... properties) {
+        return this.getSimpleProfile(null, properties);
     }
 
     void setKeepAlive(long timestamp);

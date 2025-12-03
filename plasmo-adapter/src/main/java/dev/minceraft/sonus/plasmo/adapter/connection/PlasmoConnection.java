@@ -141,6 +141,10 @@ public class PlasmoConnection implements AutoCloseable {
         return this.voiceActivations;
     }
 
+    public Map<UUID, VoiceSourceLine> getSourceLines() {
+        return this.sourceLines;
+    }
+
     public void initCipher(byte[] publicKey) {
         this.cipher = CipherAes.createFromRsaHandshake(publicKey);
     }
@@ -172,6 +176,10 @@ public class PlasmoConnection implements AutoCloseable {
 
     public void registerSourceInfo(UUID id, Supplier<SourceInfo> sourceInfo) {
         this.sources.computeIfAbsent(id, __ -> sourceInfo.get());
+    }
+
+    public void addSourceInfo(UUID id, SourceInfo sourceInfo) {
+        this.sources.put(id, sourceInfo);
     }
 
     @Nullable

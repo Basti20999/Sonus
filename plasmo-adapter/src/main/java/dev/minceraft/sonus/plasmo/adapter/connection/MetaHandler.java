@@ -39,7 +39,6 @@ public class MetaHandler implements TcpHandler {
 
     @Override
     public void handlePlayerAudioEndPacket(PlayerAudioEndPacket packet) {
-
     }
 
     @Override
@@ -71,9 +70,9 @@ public class MetaHandler implements TcpHandler {
         if (sourceInfo == null) {
             return;
         }
+
         SourceInfoPacket infoPacket = new SourceInfoPacket();
         infoPacket.setSourceInfo(sourceInfo);
         this.connection.sendPacket(infoPacket);
-        System.out.println("Sent source info for " + sourceId);
     }
 }

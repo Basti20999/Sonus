@@ -13,7 +13,7 @@ import java.util.UUID;
 
 public class DirectSourceInfo extends SourceInfo {
 
-    private final GameProfile profile;
+    private final @Nullable GameProfile profile;
     private final Vec3d relativePosition;
     private final Vec3d lookAngle;
     private final boolean cameraRelative;
@@ -28,7 +28,7 @@ public class DirectSourceInfo extends SourceInfo {
 
     public DirectSourceInfo(String addonId, UUID id, UUID voiceLineId, @Nullable String name,
                             byte state, @Nullable CodecInfo codecInfo, boolean stereo, boolean iconVisible, int angle,
-                            GameProfile profile, Vec3d relativePosition, Vec3d lookAngle, boolean cameraRelative) {
+                            @Nullable GameProfile profile, Vec3d relativePosition, Vec3d lookAngle, boolean cameraRelative) {
         super(SourceType.DIRECT, addonId, id, voiceLineId, name, state, codecInfo, stereo, iconVisible, angle);
         this.profile = profile;
         this.relativePosition = relativePosition;
@@ -46,6 +46,7 @@ public class DirectSourceInfo extends SourceInfo {
         buf.writeBoolean(this.cameraRelative);
     }
 
+    @Nullable
     public GameProfile getProfile() {
         return this.profile;
     }

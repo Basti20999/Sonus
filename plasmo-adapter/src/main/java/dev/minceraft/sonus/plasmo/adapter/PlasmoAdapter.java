@@ -8,8 +8,10 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.common.util.GameProfile;
 import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.DirectSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.PlayerSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.StaticSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
@@ -51,19 +53,27 @@ public class PlasmoAdapter implements SonusAdapter {
             return; // no plasmo session found
         }
 
-        connection.registerSourceInfo(source.getSenderId(), () -> new StaticSourceInfo(
-                ADDON_ID,
-                source.getSenderId(),
-                connection.getDefaultSourceLine().getId(),
-                null,
-                (byte) 0,
-                null,
-                true,
-                true,
-                0,
-                Vec3d.ZERO,
-                Vec3d.ZERO
-        ));
+        connection.registerSourceInfo(source.getSenderId(), () -> {
+                    GameProfile profile = null;
+                    if (source instanceof ISonusPlayer speaker) {
+                        profile = speaker.getSimpleProfile(player);
+                    }
+                    return new DirectSourceInfo(
+                            ADDON_ID,
+                            source.getSenderId(),
+                            connection.getDefaultSourceLine().getId(),
+                            null,
+                            (byte) 0,
+                            this.adapter.getCodecInfo(),
+                            true,
+                            true,
+                            0,
+                            profile,
+                            Vec3d.ZERO,
+                            Vec3d.ZERO,
+                            true);
+                }
+        );
 
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
         packet.setDistance((short) this.service.getConfig().getVoiceChatRange());
@@ -93,9 +103,9 @@ public class PlasmoAdapter implements SonusAdapter {
                         ADDON_ID,
                         source.getSenderId(),
                         connection.getDefaultSourceLine().getId(),
-                        null,
+                        speaker.getName(player),
                         (byte) 0,
-                        null,
+                        this.adapter.getCodecInfo(),
                         false,
                         true,
                         0,
@@ -107,7 +117,7 @@ public class PlasmoAdapter implements SonusAdapter {
                     connection.getDefaultSourceLine().getId(),
                     null,
                     (byte) 0,
-                    null,
+                    this.adapter.getCodecInfo(),
                     true,
                     true,
                     0,
@@ -115,6 +125,7 @@ public class PlasmoAdapter implements SonusAdapter {
                     Vec3d.ZERO
             );
         });
+
 
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
         packet.setDistance((short) 0);
