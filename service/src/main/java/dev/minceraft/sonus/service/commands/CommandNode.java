@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Queue;
 
 @NullMarked
-public abstract class CommandNode {
+public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCommandNode {
 
     protected final String name;
     protected @Nullable CommandExecutor executor;
@@ -63,6 +63,11 @@ public abstract class CommandNode {
     public CommandNode with(CommandNode node) {
         this.children.add(node);
         return this;
+    }
+
+    public void copyTo(CommandNode target) {
+        target.executor = this.executor;
+        target.children.addAll(this.children);
     }
 
     public String getName() {

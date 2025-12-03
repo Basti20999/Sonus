@@ -6,9 +6,9 @@ import org.jspecify.annotations.NullMarked;
 import java.util.Queue;
 
 @NullMarked
-public class LiteralCommandNode extends CommandNode {
+public final class LiteralCommandNode extends CommandNode {
 
-    protected LiteralCommandNode(String name) {
+    LiteralCommandNode(String name) {
         super(name);
     }
 

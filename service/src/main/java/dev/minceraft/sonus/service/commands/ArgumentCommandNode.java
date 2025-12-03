@@ -6,11 +6,11 @@ import org.jspecify.annotations.NullMarked;
 import java.util.Queue;
 
 @NullMarked
-public class ArgumentCommandNode<T> extends CommandNode {
+public final class ArgumentCommandNode<T> extends CommandNode {
 
     private final ArgumentType<T> type;
 
-    protected ArgumentCommandNode(String name, ArgumentType<T> type) {
+    ArgumentCommandNode(String name, ArgumentType<T> type) {
         super(name);
         this.type = type;
     }
