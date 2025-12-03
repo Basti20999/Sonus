@@ -1,8 +1,6 @@
 package dev.minceraft.sonus.service.commands;
 // Created by booky10 in Sonus (2:58 PM 03.12.2025)
 
-import dev.minceraft.sonus.service.SonusService;
-import dev.minceraft.sonus.service.player.SonusPlayer;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -10,12 +8,9 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.regex.Pattern;
 
 @NullMarked
 public abstract class CommandNode {
-
-    private static final Pattern ARG_SPLIT_PATTERN = Pattern.compile("\\s+");
 
     protected final String name;
     protected @Nullable CommandExecutor executor;
@@ -42,16 +37,7 @@ public abstract class CommandNode {
 
     protected abstract boolean parseAndExecuteThis(CommandContext ctx, Queue<String> args) throws CommandException;
 
-    public final boolean parseAndExecute(SonusService service, SonusPlayer player, String args) throws CommandException {
-        String[] argsSplit = ARG_SPLIT_PATTERN.split(args.trim());
-        Queue<String> argsQueue = new ArrayDeque<>(argsSplit.length);
-        argsQueue.addAll(List.of(argsSplit));
-
-        CommandContext ctx = new CommandContext(service, player);
-        return this.parseAndExecute(ctx, argsQueue);
-    }
-
-    protected final boolean parseAndExecute(CommandContext ctx, Queue<String> args) throws CommandException {
+    public final boolean parseAndExecute(CommandContext ctx, Queue<String> args) throws CommandException {
         // parse this command node
         this.parseAndExecuteThis(ctx, args);
 
