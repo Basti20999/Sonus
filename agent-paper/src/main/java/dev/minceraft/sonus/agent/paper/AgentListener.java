@@ -4,8 +4,8 @@ package dev.minceraft.sonus.agent.paper;
 import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import dev.minceraft.sonus.common.data.RotatedWorldVec3d;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -43,7 +43,7 @@ public class AgentListener implements Listener {
 
     protected final SonusAgentPlugin plugin;
 
-    protected final Map<UUID, RotatedWorldVec3d> positionUpdates = new HashMap<>();
+    protected final Map<UUID, WorldRotatedVec3d> positionUpdates = new HashMap<>();
     protected final Table<UUID, UUID, SonusPlayerState> playerStates = HashBasedTable.create();
     protected final Table<UUID, UUID, SonusPlayerState> playerStateUpdates = HashBasedTable.create();
     protected final Set<Map.Entry<Player, Player>> visibilityChanges = new HashSet<>();
@@ -166,7 +166,7 @@ public class AgentListener implements Listener {
         float yaw = location.getYaw();
         float pitch = location.getPitch();
 
-        RotatedWorldVec3d pos = new RotatedWorldVec3d(location.getX(), posY, location.getZ(), dimensionKey, yaw, pitch);
+        WorldRotatedVec3d pos = new WorldRotatedVec3d(location.getX(), posY, location.getZ(), yaw, pitch, dimensionKey);
         this.positionUpdates.put(player.getUniqueId(), pos);
         this.dirtyPlayerMeta = true;
     }

@@ -1,7 +1,7 @@
 package dev.minceraft.sonus.common;
 // Created by booky10 in Sonus (02:23 17.07.2025)
 
-import dev.minceraft.sonus.common.data.RotatedWorldVec3d;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -20,7 +20,7 @@ public interface IAudioSource {
         return null;
     }
 
-    default @Nullable RotatedWorldVec3d getPosition() {
+    default @Nullable WorldRotatedVec3d getPosition() {
         return null;
     }
 
