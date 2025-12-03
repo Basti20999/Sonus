@@ -9,6 +9,7 @@ import org.jspecify.annotations.NullMarked;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @NullMarked
 public class CommandContext {
@@ -38,6 +39,16 @@ public class CommandContext {
         @SuppressWarnings("unchecked") // checked
         T castVal = (T) val.value();
         return castVal;
+    }
+
+    public <T> Optional<T> getOr(String name, ArgumentType<T> type) throws CommandException {
+        ArgumentValue<?> val = this.arguments.get(name);
+        if (val == null || !Objects.equals(val.type(), type)) {
+            return Optional.empty();
+        }
+        @SuppressWarnings("unchecked") // checked
+        T castVal = (T) val.value();
+        return Optional.ofNullable(castVal);
     }
 
     public SonusService service() {
