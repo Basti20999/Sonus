@@ -47,4 +47,14 @@ public final class AdapterManager {
     public Set<SonusAdapter> getAdapters() {
         return this.adapters;
     }
+
+    @Nullable
+    public <T extends SonusAdapter> T getAdapter(Class<T> adapterClass) {
+        for (SonusAdapter adapter : this.adapters) {
+            if (adapterClass.isInstance(adapter)) {
+                return adapterClass.cast(adapter);
+            }
+        }
+        return null;
+    }
 }

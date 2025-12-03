@@ -18,8 +18,8 @@ public final class LiteralCommandNode extends CommandNode {
     }
 
     @Override
-    public LiteralCommandNode execute(CommandExecutor executor) {
-        super.execute(executor);
+    public LiteralCommandNode executes(CommandExecutor executor) {
+        super.executes(executor);
         return this;
     }
 

@@ -30,7 +30,7 @@ public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCom
         return new ArgumentCommandNode<>(name, argumentType);
     }
 
-    protected boolean execute(CommandContext ctx) throws CommandException {
+    protected boolean executes(CommandContext ctx) throws CommandException {
         if (this.executor != null) {
             return this.executor.execute(ctx);
         }
@@ -55,7 +55,7 @@ public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCom
         this.parseAndExecuteThis(ctx, args);
 
         if (this.children.isEmpty()) {
-            return this.execute(ctx); // final node, execute!
+            return this.executes(ctx); // final node, execute!
         } else if (this.children.size() == 1) {
             return this.children.getFirst().parseAndExecute(ctx, args);
         }
@@ -68,7 +68,7 @@ public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCom
         return false;
     }
 
-    public CommandNode execute(CommandExecutor executor) {
+    public CommandNode executes(CommandExecutor executor) {
         this.executor = executor;
         return this;
     }

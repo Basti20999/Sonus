@@ -2,7 +2,6 @@ package dev.minceraft.sonus.service.commands;
 // Created by booky10 in Sonus (2:59 PM 03.12.2025)
 
 import dev.minceraft.sonus.service.SonusService;
-import dev.minceraft.sonus.service.player.SonusPlayer;
 import org.jetbrains.annotations.UnknownNullability;
 import org.jspecify.annotations.NullMarked;
 
@@ -15,12 +14,12 @@ import java.util.Optional;
 public class CommandContext {
 
     private final SonusService service;
-    private final SonusPlayer player;
+    private final CommandSender sender;
     private final Map<String, ArgumentValue<?>> arguments = new HashMap<>();
 
-    public CommandContext(SonusService service, SonusPlayer player) {
+    public CommandContext(SonusService service, CommandSender sender) {
         this.service = service;
-        this.player = player;
+        this.sender = sender;
     }
 
     public <T> void set(ArgumentCommandNode<T> node, T value) {
@@ -55,8 +54,8 @@ public class CommandContext {
         return this.service;
     }
 
-    public SonusPlayer player() {
-        return this.player;
+    public CommandSender sender() {
+        return this.sender;
     }
 
     protected record ArgumentValue<T>(ArgumentType<T> type, @UnknownNullability T value) {

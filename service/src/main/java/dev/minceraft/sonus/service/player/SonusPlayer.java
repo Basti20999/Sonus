@@ -14,6 +14,7 @@ import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
 import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
 import dev.minceraft.sonus.service.SonusService;
+import dev.minceraft.sonus.service.commands.CommandSender;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.processing.nodes.AgcNode;
 import dev.minceraft.sonus.service.processing.util.SpatialNormProcessor;
@@ -41,7 +42,7 @@ import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
 import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL_KEY;
 
 @NullMarked
-public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
+public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoCloseable {
 
     private final SonusService service;
     private final IPlatformPlayer platform;
@@ -448,6 +449,11 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     @Override
     public boolean hasPermission(String permission, boolean defaultValue) {
         return this.platform.hasPermission(permission, defaultValue);
+    }
+
+    @Override
+    public void sendMessage(Component component) {
+        this.platform.sendMessage(component);
     }
 
     @Override
