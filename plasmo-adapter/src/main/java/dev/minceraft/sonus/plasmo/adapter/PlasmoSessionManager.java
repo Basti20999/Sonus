@@ -86,9 +86,9 @@ public class PlasmoSessionManager {
         return new VoicePlayerInfo(
                 player.getUniqueId(viewer),
                 player.getName(viewer),
-                player.isMuted(),
                 !player.isConnected(),
-                player.isDeafened()
+                player.isDeafened(),
+                player.isMuted()
         );
     }
 }

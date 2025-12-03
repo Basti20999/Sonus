@@ -64,4 +64,40 @@ public abstract class SourceInfo {
     public SourceType getSourceType() {
         return this.sourceType;
     }
+
+    public String getAddonId() {
+        return this.addonId;
+    }
+
+    public UUID getId() {
+        return this.id;
+    }
+
+    public UUID getVoiceLineId() {
+        return this.voiceLineId;
+    }
+
+    public @Nullable String getName() {
+        return this.name;
+    }
+
+    public byte getState() {
+        return this.state;
+    }
+
+    public @Nullable CodecInfo getCodecInfo() {
+        return this.codecInfo;
+    }
+
+    public boolean isStereo() {
+        return this.stereo;
+    }
+
+    public boolean isIconVisible() {
+        return this.iconVisible;
+    }
+
+    public int getAngle() {
+        return this.angle;
+    }
 }

@@ -12,19 +12,22 @@ import dev.minceraft.sonus.plasmo.protocol.cipher.ICipher;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPacketRegistry;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceActivation;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceSourceLine;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.SourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.UdpPlasmoPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.net.InetSocketAddress;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 @NullMarked
 public class PlasmoConnection implements AutoCloseable {
@@ -36,8 +39,12 @@ public class PlasmoConnection implements AutoCloseable {
     private final MetaHandler metaHandler;
     private final VoiceHandler voiceHandler;
     private final Map<UUID, AudioProcessor> processors = new ConcurrentHashMap<>();
+    private final Map<UUID, SourceInfo> sources = new ConcurrentHashMap<>();
+    private final VoiceSourceLine defaultSourceLine;
 
-    private final Set<VoiceActivation> voiceActivations = new HashSet<>();
+    private final Map<UUID, VoiceActivation> voiceActivations = new ConcurrentHashMap<>();
+    private final Map<UUID, VoiceSourceLine> sourceLines = new ConcurrentHashMap<>();
+
     private @MonotonicNonNull ICipher cipher;
     private @MonotonicNonNull InetSocketAddress remoteAddress;
 
@@ -61,8 +68,17 @@ public class PlasmoConnection implements AutoCloseable {
                 this.adapter.getUdpAdapter().getCodecInfo(),
                 1 // weight
         );
+        this.voiceActivations.put(defaultActivation.getId(), defaultActivation);
 
-        this.voiceActivations.add(defaultActivation);
+        this.defaultSourceLine = new VoiceSourceLine(
+                "proximity",
+                "pv.sourceline.proximity",
+                "plasmovoice:textures/icons/speaker.png",
+                1.0,
+                0,
+                Set.of()
+        );
+        this.sourceLines.put(this.defaultSourceLine.getId(), this.defaultSourceLine);
 
         this.player.setAdapter(this.adapter);
     }
@@ -121,7 +137,7 @@ public class PlasmoConnection implements AutoCloseable {
         return this.voiceHandler;
     }
 
-    public Set<VoiceActivation> getVoiceActivations() {
+    public Map<UUID, VoiceActivation> getVoiceActivations() {
         return this.voiceActivations;
     }
 
@@ -148,6 +164,19 @@ public class PlasmoConnection implements AutoCloseable {
     public AudioProcessor getProcessor(UUID channelId) {
         return this.processors.computeIfAbsent(channelId, __ ->
                 this.adapter.getService().createAudioProcessor(AudioProcessor.Mode.VOICE));
+    }
+
+    public VoiceSourceLine getDefaultSourceLine() {
+        return this.defaultSourceLine;
+    }
+
+    public void registerSourceInfo(UUID id, Supplier<SourceInfo> sourceInfo) {
+        this.sources.computeIfAbsent(id, __ -> sourceInfo.get());
+    }
+
+    @Nullable
+    public SourceInfo getSourceInfo(UUID sourceId) {
+        return this.sources.get(sourceId);
     }
 
     @Override

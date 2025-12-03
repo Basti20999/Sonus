@@ -4,6 +4,8 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpHandler;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.ConnectionPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceInfoPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.SourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.LanguageRequestPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerActivationDistancesPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerAudioEndPacket;
@@ -11,6 +13,8 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerInfoPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerStatePacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.SourceInfoRequestPacket;
 import org.jspecify.annotations.NullMarked;
+
+import java.util.UUID;
 
 @NullMarked
 public class MetaHandler implements TcpHandler {
@@ -61,6 +65,15 @@ public class MetaHandler implements TcpHandler {
 
     @Override
     public void handleSourceInfoRequestPacket(SourceInfoRequestPacket packet) {
-        System.out.println("SourceInfoRequestPacket received: " + packet.getSourceId());
+        UUID sourceId = packet.getSourceId();
+
+        SourceInfo sourceInfo = this.connection.getSourceInfo(sourceId);
+        if (sourceInfo == null) {
+            return;
+        }
+        SourceInfoPacket infoPacket = new SourceInfoPacket();
+        infoPacket.setSourceInfo(sourceInfo);
+        this.connection.sendPacket(infoPacket);
+        System.out.println("Sent source info for " + sourceId);
     }
 }
