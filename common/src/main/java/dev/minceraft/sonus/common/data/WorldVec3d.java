@@ -9,7 +9,7 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public class WorldVec3d extends Vec3d {
 
-    private final Key dimension;
+    protected final Key dimension;
 
     public WorldVec3d(double x, double y, double z, Key dimension) {
         super(x, y, z);

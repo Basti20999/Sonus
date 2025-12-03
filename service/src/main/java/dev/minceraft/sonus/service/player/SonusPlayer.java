@@ -6,6 +6,7 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.RotatedWorldVec3d;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldVec3d;
@@ -57,7 +58,7 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     private @MonotonicNonNull AgcNode agcNode; // automatic gain control
 
     // metadata sent by the backend server agent
-    private @Nullable WorldVec3d position;
+    private @Nullable RotatedWorldVec3d position;
     private @Nullable String team;
 
     // player state
@@ -352,11 +353,11 @@ public final class SonusPlayer implements ISonusPlayer, AutoCloseable {
     }
 
     @Override
-    public @Nullable WorldVec3d getPosition() {
+    public @Nullable RotatedWorldVec3d getPosition() {
         return this.position;
     }
 
-    public void setPosition(@Nullable WorldVec3d position) {
+    public void setPosition(@Nullable RotatedWorldVec3d position) {
         this.position = position;
     }
 
