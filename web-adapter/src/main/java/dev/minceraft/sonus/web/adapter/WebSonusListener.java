@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.web.adapter;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
@@ -27,6 +28,14 @@ public class WebSonusListener implements ISonusServiceEvents {
     }
 
     @Override
+    public void onPlayerSwitchBackend(UUID playerId) {
+        WebSocketConnection connection = this.adapter.getSessions().getConnection(playerId);
+        if (connection != null) {
+            connection.sendConnected();
+        }
+    }
+
+    @Override
     public void onPlayerQuit(UUID playerId) {
         this.adapter.getSessions().removeSession(playerId);
         this.adapter.getSessions().broadcast(new StateRemovePacket(playerId));
@@ -40,14 +49,17 @@ public class WebSonusListener implements ISonusServiceEvents {
 
     @Override
     public void onPlayerPositionUpdate(ISonusPlayer player) {
-        WebSocketConnection connection = this.adapter.getSessions().getConnection(player.getUniqueId());
-        if (connection == null) {
-            return; // No web connection
-        }
-        if (!connection.isConnected() || player.getPosition() == null) {
+        if (!player.isConnected()) {
             return;
         }
-        connection.sendPacket(new PositionUpdatePacket(player.getPosition()));
+        WebSocketConnection connection = this.adapter.getSessions().getConnection(player.getUniqueId());
+        if (connection == null) {
+            return;
+        }
+        WorldRotatedVec3d position = player.getPosition();
+        if (position != null) {
+            connection.sendPacket(new PositionUpdatePacket(position));
+        }
     }
 
     @Override
