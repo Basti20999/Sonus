@@ -16,8 +16,6 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.UUID;
 
-import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
-
 @NullMarked
 public class WebSonusListener implements ISonusServiceEvents {
 
@@ -64,10 +62,8 @@ public class WebSonusListener implements ISonusServiceEvents {
 
     @Override
     public void onGroupCreate(IRoom room) {
-        this.adapter.getSessions().broadcast(connection -> {
-            boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
-            return new RoomAddPacket(SonusWebRoom.fromRoom(room, bypassPassword));
-        });
+        this.adapter.getSessions().broadcast(connection ->
+                new RoomAddPacket(SonusWebRoom.fromRoom(room, connection.getPlayer())));
     }
 
     @Override

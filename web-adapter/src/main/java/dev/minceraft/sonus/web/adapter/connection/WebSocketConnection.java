@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static net.kyori.adventure.text.Component.text;
+
 public class WebSocketConnection implements AutoCloseable {
 
     private final WebAdapter adapter;
@@ -33,12 +35,12 @@ public class WebSocketConnection implements AutoCloseable {
 
     public void sendConnected() {
         UUID playerId = this.player.getUniqueId();
-        Component username = Component.text(this.player.getName());
+        Component username = this.player.renderComponent(text(this.player.getName()));
 
         // send some info about the current server
         UUID serverId = this.player.getServerId();
         ISonusServer server = serverId != null ? this.adapter.getService().getServer(serverId) : null;
-        Component serverName = server != null ? server.getName() : null;
+        Component serverName = server != null ? this.player.renderComponent(server.getName()) : null;
         String serverType = server != null ? server.getType() : null;
 
         this.sendPacket(new ConnectedPacket(playerId, username, serverId, serverName, serverType));

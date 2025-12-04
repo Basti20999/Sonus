@@ -12,6 +12,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
+import static net.kyori.adventure.text.Component.text;
+
 @NullMarked
 public class SonusWebPlayerState {
 
@@ -43,7 +45,7 @@ public class SonusWebPlayerState {
 
     public static SonusWebPlayerState fromState(ISonusPlayer player, ISonusPlayer viewer) {
         UUID uniqueId = player.getUniqueId(viewer);
-        TextComponent name = Component.text(player.getName(viewer));
+        Component name = viewer.renderComponent(text(player.getName(viewer)));
         boolean muted = player.isMuted();
         boolean deafened = player.isDeafened();
         IRoom primaryRoom = player.getPrimaryRoom();

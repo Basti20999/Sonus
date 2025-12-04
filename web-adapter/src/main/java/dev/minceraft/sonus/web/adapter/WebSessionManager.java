@@ -32,10 +32,9 @@ public class WebSessionManager {
     public void onConnectionEstablished(WebSocketConnection connection) {
         // send group initialization packets for everything
         ISonusPlayer player = connection.getPlayer();
-        boolean bypassPassword = player.hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
         for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
             RoomAddPacket packet = new RoomAddPacket();
-            packet.setRoom(SonusWebRoom.fromRoom(room, bypassPassword));
+            packet.setRoom(SonusWebRoom.fromRoom(room, player));
             connection.sendPacket(packet);
         }
 
