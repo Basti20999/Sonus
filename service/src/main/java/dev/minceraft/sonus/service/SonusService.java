@@ -12,6 +12,8 @@ import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.common.service.ISonusScheduler;
 import dev.minceraft.sonus.service.adapter.AdapterManager;
 import dev.minceraft.sonus.service.agent.AgentManager;
+import dev.minceraft.sonus.service.commands.CommandHolder;
+import dev.minceraft.sonus.service.commands.builtin.SonusCommand;
 import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.player.PlayerManager;
@@ -36,6 +38,7 @@ public final class SonusService implements ISonusService {
 
     private final IServicePlatform platform;
     private final PlayerManager players;
+    private final CommandHolder commands = new CommandHolder(this);
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
     private final SonusEventManager eventManager = new SonusEventManager(this);
     private final SonusScheduler scheduler = new SonusScheduler();
@@ -64,6 +67,7 @@ public final class SonusService implements ISonusService {
         this.agentManager.init();
         this.udpServer.bind();
 
+        this.initCommands();
         this.initCleanupTask();
     }
 
@@ -84,6 +88,10 @@ public final class SonusService implements ISonusService {
         });
     }
 
+    private void initCommands() {
+        new SonusCommand().register(this.commands);
+    }
+
     private void cleanup() {
         this.servers.entrySet().removeIf(entry ->
                 !SonusService.this.platform.serverExists(entry.getKey()));
@@ -99,6 +107,10 @@ public final class SonusService implements ISonusService {
 
     public IServicePlatform getPlatform() {
         return this.platform;
+    }
+
+    public CommandHolder getCommandHolder() {
+        return this.commands;
     }
 
     @Override

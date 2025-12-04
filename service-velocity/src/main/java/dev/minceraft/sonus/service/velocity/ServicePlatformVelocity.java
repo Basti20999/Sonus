@@ -3,15 +3,19 @@ package dev.minceraft.sonus.service.velocity;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import dev.minceraft.sonus.service.SonusService;
+import dev.minceraft.sonus.service.commands.CommandHolder;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -28,14 +32,19 @@ import java.util.concurrent.TimeUnit;
 public class ServicePlatformVelocity implements IServicePlatform {
 
     private final ProxyServer server;
+    private final CommandManager commandManager;
     private final Path dataPath;
+    private final Provider<VelocitySonusService> pluginProvider;
 
     private final LoadingCache<UUID, @Nullable IServer> serverCache;
 
     @Inject
-    public ServicePlatformVelocity(ProxyServer server, @DataDirectory Path dataPath) {
+    public ServicePlatformVelocity(ProxyServer server, CommandManager commandManager, @DataDirectory Path dataPath,
+                                   Provider<VelocitySonusService> pluginProvider) {
         this.server = server;
+        this.commandManager = commandManager;
         this.dataPath = dataPath;
+        this.pluginProvider = pluginProvider;
 
         this.serverCache = Caffeine.newBuilder()
                 .expireAfterAccess(10, TimeUnit.MINUTES)
@@ -92,5 +101,14 @@ public class ServicePlatformVelocity implements IServicePlatform {
     @Override
     public boolean serverExists(UUID uniqueId) {
         return this.serverCache.getIfPresent(uniqueId) != null;
+    }
+
+    @Override
+    public void registerCommands(CommandHolder holder) {
+        SonusService service = this.pluginProvider.get().getService();
+
+        holder.iterateNodes(node -> {
+
+        });
     }
 }

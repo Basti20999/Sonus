@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.service.platform;
 
+import dev.minceraft.sonus.service.commands.CommandHolder;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -23,4 +24,6 @@ public interface IServicePlatform {
     IServer getServer(UUID uniqueId);
 
     boolean serverExists(UUID uniqueId);
+
+    void registerCommands(CommandHolder holder);
 }

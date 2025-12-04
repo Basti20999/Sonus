@@ -18,7 +18,7 @@ public abstract class Command {
 
     public abstract LiteralCommandNode construct();
 
-    public void register(CommandManager commands) {
+    public void register(CommandHolder commands) {
         LiteralCommandNode node = this.construct();
         commands.register(node);
 
