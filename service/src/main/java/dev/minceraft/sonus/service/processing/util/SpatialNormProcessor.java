@@ -4,7 +4,7 @@ package dev.minceraft.sonus.service.processing.util;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
-import dev.minceraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.service.SonusService;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -17,9 +17,9 @@ public final class SpatialNormProcessor {
     private SpatialNormProcessor() {
     }
 
-    public static @Nullable WorldVec3d normalizeAudio(SonusService service, ISonusPlayer player, IAudioSource source, SonusAudio audio) {
-        WorldVec3d listenerPos = player.getPosition();
-        WorldVec3d sourcePos = source.getPosition();
+    public static @Nullable Vec3d normalizeAudio(SonusService service, ISonusPlayer player, IAudioSource source, SonusAudio audio) {
+        Vec3d listenerPos = player.getPosition();
+        Vec3d sourcePos = source.getPosition();
         if (listenerPos == null || sourcePos == null) {
             return null; // no position set, don't know where to play, don't send audio
         }
@@ -42,11 +42,10 @@ public final class SpatialNormProcessor {
         }
 
         // calculate normalized sound source position
-        return new WorldVec3d(
+        return new Vec3d(
                 listenerPos.getX() + (sourcePos.getX() - listenerPos.getX()) / distance,
                 listenerPos.getY() + (sourcePos.getY() - listenerPos.getY()) / distance,
-                listenerPos.getZ() + (sourcePos.getZ() - listenerPos.getZ()) / distance,
-                sourcePos.getDimension()
+                listenerPos.getZ() + (sourcePos.getZ() - listenerPos.getZ()) / distance
         );
     }
 }

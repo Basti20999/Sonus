@@ -1,33 +1,34 @@
 package dev.minceraft.sonus.common.data;
-// Created by booky10 in Sonus (01:22 17.07.2025)
 
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
-import org.jspecify.annotations.NullMarked;
 
-@NullMarked
-public class WorldVec3d extends Vec3d {
+public class WorldRotatedVec3d extends RotatedVec3d {
 
-    private final Key dimension;
+    protected Key dimension;
 
-    public WorldVec3d(double x, double y, double z, Key dimension) {
-        super(x, y, z);
+    public WorldRotatedVec3d(double x, double y, double z, float yaw, float pitch, Key dimension) {
+        super(x, y, z, yaw, pitch);
         this.dimension = dimension;
     }
 
-    public static WorldVec3d read(ByteBuf buf) {
+    public static WorldRotatedVec3d read(ByteBuf buf) {
         double x = buf.readDouble();
         double y = buf.readDouble();
         double z = buf.readDouble();
+        float yaw = buf.readFloat();
+        float pitch = buf.readFloat();
         Key dimension = DataTypeUtil.readKey(buf);
-        return new WorldVec3d(x, y, z, dimension);
+        return new WorldRotatedVec3d(x, y, z, yaw, pitch, dimension);
     }
 
-    public static void write(ByteBuf buf, WorldVec3d vec) {
+    public static void write(ByteBuf buf, WorldRotatedVec3d vec) {
         buf.writeDouble(vec.x);
         buf.writeDouble(vec.y);
         buf.writeDouble(vec.z);
+        buf.writeFloat(vec.yaw);
+        buf.writeFloat(vec.pitch);
         DataTypeUtil.writeKey(buf, vec.dimension);
     }
 

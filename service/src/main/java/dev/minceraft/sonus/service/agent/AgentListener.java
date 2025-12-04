@@ -3,8 +3,8 @@ package dev.minceraft.sonus.service.agent;
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
-import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.servicebound.AudioStreamMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
@@ -36,14 +36,15 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
     public void handleBackendTick(BackendTickMessage message) {
         PlayerManager playerManager = this.service.getPlayerManager();
 
-        Map<UUID, WorldVec3d> positions = message.getPositions();
+        Map<UUID, WorldRotatedVec3d> positions = message.getPositions();
         if (positions != null) {
-            for (Map.Entry<UUID, WorldVec3d> entry : positions.entrySet()) {
+            for (Map.Entry<UUID, WorldRotatedVec3d> entry : positions.entrySet()) {
                 SonusPlayer player = playerManager.getPlayer(entry.getKey());
                 if (player == null) {
                     continue;
                 }
                 player.setPosition(entry.getValue());
+                this.service.getEventManager().onPlayerPositionUpdate(player);
             }
         }
         Table<UUID, UUID, SonusPlayerState> perPlayerStates = message.getPerPlayerStates();

@@ -39,7 +39,7 @@ public class Vec3d {
         return this.z;
     }
 
-    public double distanceSquared(WorldVec3d listenerPos) {
+    public double distanceSquared(Vec3d listenerPos) {
         double dx = this.x - listenerPos.getX();
         double dy = this.y - listenerPos.getY();
         double dz = this.z - listenerPos.getZ();

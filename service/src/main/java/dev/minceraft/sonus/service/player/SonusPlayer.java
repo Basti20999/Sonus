@@ -6,9 +6,9 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.Vec3d;
-import dev.minceraft.sonus.common.data.WorldVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
@@ -58,7 +58,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private @MonotonicNonNull AgcNode agcNode; // automatic gain control
 
     // metadata sent by the backend server agent
-    private @Nullable WorldVec3d position;
+    private @Nullable WorldRotatedVec3d position;
     private @Nullable String team;
 
     // player state
@@ -142,8 +142,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             if (!Objects.equals(source.getServerId(), this.getServerId())) {
                 return false;
             }
-            WorldVec3d thisPosition = this.getPosition();
-            WorldVec3d thatPosition = source.getPosition();
+            WorldRotatedVec3d thisPosition = this.getPosition();
+            WorldRotatedVec3d thatPosition = source.getPosition();
             if (thisPosition != null && thatPosition != null) {
                 if (!thisPosition.getDimension().equals(thatPosition.getDimension())) {
                     return false; // dimensions don't match
@@ -205,7 +205,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (this.sonusAdapter == null || !this.canHear(source, true)) {
             return;
         }
-        WorldVec3d pos = SpatialNormProcessor.normalizeAudio(this.service, this, source, audio);
+        Vec3d pos = SpatialNormProcessor.normalizeAudio(this.service, this, source, audio);
         if (pos != null) { // if the position is null, the processor decided to cancel the audio packet
             this.sonusAdapter.sendSpatialAudio(this, source, audio, pos);
         }
@@ -353,11 +353,11 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     @Override
-    public @Nullable WorldVec3d getPosition() {
+    public @Nullable WorldRotatedVec3d getPosition() {
         return this.position;
     }
 
-    public void setPosition(@Nullable WorldVec3d position) {
+    public void setPosition(@Nullable WorldRotatedVec3d position) {
         this.position = position;
     }
 

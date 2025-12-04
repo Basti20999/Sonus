@@ -5,7 +5,7 @@ import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
-import dev.minceraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -43,7 +43,7 @@ public class AgentListener implements Listener {
 
     protected final SonusAgentPlugin plugin;
 
-    protected final Map<UUID, WorldVec3d> positionUpdates = new HashMap<>();
+    protected final Map<UUID, WorldRotatedVec3d> positionUpdates = new HashMap<>();
     protected final Table<UUID, UUID, SonusPlayerState> playerStates = HashBasedTable.create();
     protected final Table<UUID, UUID, SonusPlayerState> playerStateUpdates = HashBasedTable.create();
     protected final Set<Map.Entry<Player, Player>> visibilityChanges = new HashSet<>();
@@ -128,9 +128,7 @@ public class AgentListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onMove(PlayerMoveEvent event) {
-        if (event.hasChangedPosition()) {
-            this.onChangePos(event.getPlayer(), event.getTo());
-        }
+        this.onChangePos(event.getPlayer(), event.getTo());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -165,7 +163,10 @@ public class AgentListener implements Listener {
     public void onChangePos(Player player, Location location) {
         NamespacedKey dimensionKey = location.getWorld().getKey();
         double posY = location.getY() + player.getEyeHeight();
-        WorldVec3d pos = new WorldVec3d(location.getX(), posY, location.getZ(), dimensionKey);
+        float yaw = location.getYaw();
+        float pitch = location.getPitch();
+
+        WorldRotatedVec3d pos = new WorldRotatedVec3d(location.getX(), posY, location.getZ(), yaw, pitch, dimensionKey);
         this.positionUpdates.put(player.getUniqueId(), pos);
         this.dirtyPlayerMeta = true;
     }

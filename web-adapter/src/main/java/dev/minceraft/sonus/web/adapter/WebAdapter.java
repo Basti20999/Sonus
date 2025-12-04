@@ -8,7 +8,7 @@ import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
-import dev.minceraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
@@ -62,7 +62,7 @@ public class WebAdapter implements SonusAdapter {
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
-        WorldVec3d sourcePos = source.getPosition();
+        WorldRotatedVec3d sourcePos = source.getPosition();
         // we can only support spatial audio with source position
         if (sourcePos != null) {
             this.sendAudio(player, source, audio, sourcePos);

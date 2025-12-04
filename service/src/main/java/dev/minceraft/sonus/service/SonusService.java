@@ -155,6 +155,7 @@ public final class SonusService implements ISonusService {
         return new AudioProcessor(() -> this.getConfig().getMtuSize(), mode);
     }
 
+    @Override
     public SonusServer getServer(UUID serverId) {
         return this.servers.computeIfAbsent(serverId, uuid ->
                 new SonusServer(this, this.getPlatform().getServer(uuid)));
