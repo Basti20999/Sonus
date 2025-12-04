@@ -31,4 +31,6 @@ public interface IPlatformPlayer {
     Component renderComponent(Component component);
 
     String renderPlainComponent(Component component);
+
+    void sendMessage(Component component);
 }

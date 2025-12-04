@@ -126,4 +126,9 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
         Component rendered = this.renderComponent(component);
         return plainText().serialize(rendered);
     }
+
+    @Override
+    public void sendMessage(Component component) {
+        this.player.sendMessage(component);
+    }
 }
