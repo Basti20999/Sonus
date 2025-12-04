@@ -30,8 +30,8 @@ public final class ArgumentCommandNode<T> extends CommandNode {
     }
 
     @Override
-    public ArgumentCommandNode<T> execute(CommandExecutor executor) {
-        super.execute(executor);
+    public ArgumentCommandNode<T> executes(CommandExecutor executor) {
+        super.executes(executor);
         return this;
     }
 
