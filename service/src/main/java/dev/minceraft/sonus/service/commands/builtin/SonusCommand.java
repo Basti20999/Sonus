@@ -10,6 +10,7 @@ import org.jspecify.annotations.NullMarked;
 import static dev.minceraft.sonus.service.commands.CommandNode.literal;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
+import static net.kyori.adventure.text.event.ClickEvent.copyToClipboard;
 
 @NullMarked
 public class SonusCommand extends Command {
@@ -33,7 +34,8 @@ public class SonusCommand extends Command {
         }
         // TODO send full link
         String token = adapter.getSessions().generateToken(player);
-        player.sendMessage(translatable("sonus.command.sonus.web.token", text(token)));
+        player.sendMessage(translatable("sonus.command.sonus.web.token",
+                text(token).clickEvent(copyToClipboard(token))));
         return true;
     }
 }
