@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.velocitypowered.api.command.CommandManager;
+import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -32,19 +33,23 @@ import java.util.concurrent.TimeUnit;
 public class ServicePlatformVelocity implements IServicePlatform {
 
     private final ProxyServer server;
-    private final CommandManager commandManager;
+    private final CommandManager commands;
     private final Path dataPath;
-    private final Provider<VelocitySonusService> pluginProvider;
+    private final Provider<VelocitySonusService> service;
 
     private final LoadingCache<UUID, @Nullable IServer> serverCache;
 
     @Inject
-    public ServicePlatformVelocity(ProxyServer server, CommandManager commandManager, @DataDirectory Path dataPath,
-                                   Provider<VelocitySonusService> pluginProvider) {
+    public ServicePlatformVelocity(
+            ProxyServer server,
+            CommandManager commands,
+            @DataDirectory Path dataPath,
+            Provider<VelocitySonusService> service
+    ) {
         this.server = server;
-        this.commandManager = commandManager;
+        this.commands = commands;
         this.dataPath = dataPath;
-        this.pluginProvider = pluginProvider;
+        this.service = service;
 
         this.serverCache = Caffeine.newBuilder()
                 .expireAfterAccess(10, TimeUnit.MINUTES)
@@ -105,10 +110,10 @@ public class ServicePlatformVelocity implements IServicePlatform {
 
     @Override
     public void registerCommands(CommandHolder holder) {
-        SonusService service = this.pluginProvider.get().getService();
-
+        SonusService service = this.service.get().getService();
         holder.iterateNodes(node -> {
-
+            CommandMeta meta = this.commands.metaBuilder(node.getName()).plugin(this).build();
+            this.commands.register(meta, VelocityCommandConverter.convertLiteralCommandNode(service, node));
         });
     }
 }

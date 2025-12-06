@@ -20,12 +20,12 @@ public final class CommandHolder {
         this.service = service;
     }
 
-    public void dispatch(CommandSender commandSender, String label, List<String> args) throws CommandException {
+    public void dispatch(CommandSender sender, String label, List<String> args) throws CommandException {
         LiteralCommandNode node = this.nodes.get(label);
         if (node == null) {
             throw new CommandException("Can't find command with label " + label);
         }
-        CommandContext ctx = new CommandContext(this.service, commandSender);
+        CommandContext ctx = new CommandContext(this.service, sender);
         if (!node.parseAndExecute(ctx, new ArrayDeque<>(args))) {
             throw new CommandException("Can't execute " + label + " with args " + args);
         }

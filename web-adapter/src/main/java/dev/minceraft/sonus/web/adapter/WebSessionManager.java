@@ -17,8 +17,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
-
 public class WebSessionManager {
 
     private final WebAdapter adapter;
@@ -88,9 +86,21 @@ public class WebSessionManager {
         return token;
     }
 
+    public void removeTokens(ISonusPlayer player) {
+        this.tokens.values().removeIf(ref -> {
+            ISonusPlayer target = ref.get();
+            return target == null || target == player;
+        });
+    }
+
     public @Nullable ISonusPlayer consumeToken(String token) {
-        WeakReference<ISonusPlayer> player = this.tokens.remove(token);
-        return player != null ? player.get() : null;
+        WeakReference<ISonusPlayer> playerRef = this.tokens.remove(token);
+        ISonusPlayer player = playerRef != null ? playerRef.get() : null;
+        if (player != null) {
+            // remove all tokens related to this player
+            this.removeTokens(player);
+        }
+        return player;
     }
 
     public void addConnection(WebSocketConnection connection) {

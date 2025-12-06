@@ -7,5 +7,9 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public interface CommandRequirement {
 
+    static CommandRequirement requirePermission(String permission) {
+        return ctx -> ctx.sender().hasPermission(permission);
+    }
+
     boolean test(CommandContext ctx) throws CommandException;
 }
