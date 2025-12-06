@@ -6,6 +6,7 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import dev.minceraft.sonus.service.SonusService;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 @Plugin(
         id = "sonus-velocity",
@@ -14,6 +15,7 @@ import jakarta.inject.Inject;
         authors = {"booky10", "pianoman911"},
         url = "https://minceraft.dev/"
 )
+@Singleton
 public class VelocitySonusService {
 
     private final SonusService service;

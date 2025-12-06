@@ -38,7 +38,7 @@ public final class SonusService implements ISonusService {
 
     private final IServicePlatform platform;
     private final PlayerManager players;
-    private final CommandHolder commands = new CommandHolder(this);
+    private final CommandHolder commands = new CommandHolder();
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
     private final SonusEventManager eventManager = new SonusEventManager(this);
     private final SonusScheduler scheduler = new SonusScheduler();
@@ -90,6 +90,9 @@ public final class SonusService implements ISonusService {
 
     private void initCommands() {
         new SonusCommand().register(this.commands);
+
+        // register all commands in platform command registrar
+        this.platform.registerCommands(this.commands.getNodes());
     }
 
     private void cleanup() {

@@ -2,8 +2,7 @@ package dev.minceraft.sonus.service.commands;
 // Created by booky10 in Sonus (2:59 PM 03.12.2025)
 
 import org.jspecify.annotations.NullMarked;
-
-import java.util.Queue;
+import org.jspecify.annotations.Nullable;
 
 @NullMarked
 public final class ArgumentCommandNode<T> extends CommandNode {
@@ -16,13 +15,13 @@ public final class ArgumentCommandNode<T> extends CommandNode {
     }
 
     @Override
-    protected boolean parseAndExecuteThis(CommandContext ctx, Queue<String> args) throws CommandException {
-        try {
-            ctx.set(this, this.type.parse(ctx, args.remove()));
-            return true; // valid argument node
-        } catch (CommandException ignored) {
-            return false; // failed to parse
+    public void parse(CommandContext ctx, @Nullable String arg) throws CommandException {
+        if (arg == null) {
+            throw new CommandException("Missing argument");
+        } else if (!this.checkRequirement(ctx)) {
+            throw new CommandException("Requirement failed");
         }
+        ctx.set(this, this.type.parse(ctx, arg));
     }
 
     public ArgumentType<T> getType() {

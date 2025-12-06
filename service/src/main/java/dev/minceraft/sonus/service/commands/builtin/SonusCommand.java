@@ -21,7 +21,7 @@ public class SonusCommand extends Command {
     @Override
     public LiteralCommandNode construct() {
         return literal(this.getLabel())
-                .requires(ctx -> ctx.sender().hasPermission("sonus.command")
+                .requires(ctx -> ctx.sender().hasPermission("sonus.command", true)
                         && ctx.sender() instanceof SonusPlayer player && player.getAdapter() == null)
                 .executes(ctx -> this.execute(ctx.service(), (SonusPlayer) ctx.sender()));
     }

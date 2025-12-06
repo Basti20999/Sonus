@@ -2,8 +2,7 @@ package dev.minceraft.sonus.service.commands;
 // Created by booky10 in Sonus (2:58 PM 03.12.2025)
 
 import org.jspecify.annotations.NullMarked;
-
-import java.util.Queue;
+import org.jspecify.annotations.Nullable;
 
 @NullMarked
 public final class LiteralCommandNode extends CommandNode {
@@ -13,8 +12,8 @@ public final class LiteralCommandNode extends CommandNode {
     }
 
     @Override
-    protected boolean parseAndExecuteThis(CommandContext ctx, Queue<String> args) throws CommandException {
-        return true; // NO-OP
+    public void parse(CommandContext ctx, @Nullable String arg) throws CommandException {
+        // NO-OP
     }
 
     @Override

@@ -4,11 +4,9 @@ package dev.minceraft.sonus.service.commands;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
 
 @NullMarked
 public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCommandNode {
@@ -30,11 +28,19 @@ public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCom
         return new ArgumentCommandNode<>(name, argumentType);
     }
 
-    protected boolean executes(CommandContext ctx) throws CommandException {
+    public boolean hasExecutor() {
+        return this.executor != null;
+    }
+
+    public boolean execute(CommandContext ctx) throws CommandException {
         if (this.executor != null) {
             return this.executor.execute(ctx);
         }
         return false; // no executor, fail
+    }
+
+    public boolean hasRequirement() {
+        return this.requirement != null;
     }
 
     public boolean checkRequirement(CommandContext ctx) throws CommandException {
@@ -44,29 +50,7 @@ public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCom
         return true; // no requirement, pass
     }
 
-    protected abstract boolean parseAndExecuteThis(CommandContext ctx, Queue<String> args) throws CommandException;
-
-    public final boolean parseAndExecute(CommandContext ctx, Queue<String> args) throws CommandException {
-        if (!this.checkRequirement(ctx)) {
-            return false; // requirement check failed
-        }
-
-        // parse this command node
-        this.parseAndExecuteThis(ctx, args);
-
-        if (this.children.isEmpty()) {
-            return this.executes(ctx); // final node, execute!
-        } else if (this.children.size() == 1) {
-            return this.children.getFirst().parseAndExecute(ctx, args);
-        }
-        // try to match first valid
-        for (CommandNode child : this.children) {
-            if (child.parseAndExecute(ctx, new ArrayDeque<>(args))) {
-                return true;
-            }
-        }
-        return false;
-    }
+    public abstract void parse(CommandContext ctx, @Nullable String arg) throws CommandException;
 
     public CommandNode executes(CommandExecutor executor) {
         this.executor = executor;
