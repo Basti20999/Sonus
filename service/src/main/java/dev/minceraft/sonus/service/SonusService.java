@@ -52,7 +52,7 @@ public final class SonusService implements ISonusService {
     public SonusService(IServicePlatform platform) {
         this.platform = platform;
         Path configPath = this.platform.getDataPath().resolve("config.yml");
-        this.config = new YamlConfigHolder<>(SonusConfig.class, SonusConfig::new, configPath);
+        this.config = new YamlConfigHolder<>(SonusConfig.class, SonusConfig::createWithTemplates, configPath);
         this.players = new PlayerManager(this);
     }
 

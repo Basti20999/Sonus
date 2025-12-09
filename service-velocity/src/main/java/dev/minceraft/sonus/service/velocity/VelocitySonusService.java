@@ -8,9 +8,11 @@ import dev.minceraft.sonus.service.SonusService;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Plugin(
-        id = "sonus-velocity",
+        id = "sonus",
         name = "Sonus",
         version = "1.0.0",
         authors = {"booky10", "pianoman911"},

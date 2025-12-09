@@ -5,19 +5,13 @@ import org.spongepowered.configurate.yaml.NodeStyle;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import java.nio.file.Path;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 @NullMarked
 public class YamlConfigHolder<T> extends ConfigHolder<T, YamlConfigurationLoader> {
 
-    private static final YamlConfigurationLoader.Builder CONFIG_BUILDER = YamlConfigurationLoader.builder()
-            .nodeStyle(NodeStyle.BLOCK).indent(2);
-
-    public YamlConfigHolder(Class<T> clazz, Supplier<T> def, Path path) {
-        super(clazz, def, path, () -> {
-            synchronized (CONFIG_BUILDER) {
-                return CONFIG_BUILDER;
-            }
-        });
+    public YamlConfigHolder(Class<T> clazz, Function<ConfigHolder<T, YamlConfigurationLoader>, T> def, Path path) {
+        super(clazz, def, path, () -> YamlConfigurationLoader.builder()
+                .nodeStyle(NodeStyle.BLOCK).indent(2));
     }
 }

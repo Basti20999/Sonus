@@ -4,39 +4,45 @@ import dev.minceraft.sonus.common.config.serializer.AddressSerializer;
 import dev.minceraft.sonus.common.config.serializer.RoomDefinitionSerializer;
 import dev.minceraft.sonus.common.config.serializer.SubConfigSerializer;
 import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.loader.AbstractConfigurationLoader;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+@NullMarked
 public class ConfigHolder<T, L extends AbstractConfigurationLoader<?>> {
 
     private final Class<T> clazz;
-    private final Supplier<T> def;
+    private final Function<ConfigHolder<T, L>, T> def;
     private final Path path;
-    private final L loader;
+    private final Supplier<L> loader;
     private final Set<Consumer<T>> reloadHooks = new CopyOnWriteArraySet<>();
-    private final SubConfigSerializer subConfigSerializer = new SubConfigSerializer();
+    private final List<SubConfigSection.Template<?>> templates = new ArrayList<>();
 
-    private T config;
+    private volatile @Nullable T config;
 
-    public <B extends AbstractConfigurationLoader.Builder<B, L>> ConfigHolder(Class<T> clazz, Supplier<T> def, Path path,
-                                                                              Supplier<B> loaderBuilder) {
+    public <B extends AbstractConfigurationLoader.Builder<B, L>> ConfigHolder(
+            Class<T> clazz, Function<ConfigHolder<T, L>, T> def, Path path, Supplier<B> loaderBuilder
+    ) {
         this.clazz = clazz;
         this.path = path;
         this.def = def;
-        this.loader = loaderBuilder.get().defaultOptions(opts ->
+        this.loader = () -> loaderBuilder.get().defaultOptions(opts ->
                         opts.serializers(builder -> builder
                                 .register(InetSocketAddress.class, AddressSerializer.INSTANCE)
                                 .register(RoomDefinition.class, RoomDefinitionSerializer.INSTANCE)
-                                .register(SubConfigSection.class, this.subConfigSerializer)
+                                .register(SubConfigSection.class, new SubConfigSerializer(this.templates))
                         ))
                 .path(path)
                 .build();
@@ -50,32 +56,35 @@ public class ConfigHolder<T, L extends AbstractConfigurationLoader<?>> {
     public void addReloadHookAndRun(Consumer<T> consumer) {
         this.addReloadHook(consumer);
 
-        if (this.config != null) {
-            consumer.accept(this.config);
+        T config = this.config;
+        if (config != null) {
+            consumer.accept(config);
         }
     }
 
     public T reloadConfig() {
+        T config;
         try {
             synchronized (this) {
                 if (Files.exists(this.path)) {
-                    T config = this.loader.load().get(this.clazz);
-                    this.config = Objects.requireNonNull(config);
+                    config = this.loader.get().load().get(this.clazz);
+                    if (config == null) {
+                        throw new IllegalStateException("Can't load config " + this.clazz);
+                    }
                 } else {
                     // create default
-                    this.config = this.def.get();
+                    config = this.def.apply(this);
                 }
+                this.config = config;
                 this.saveConfig0();
-
-                return this.config;
             }
-        } catch (IOException exception) {
-            throw new RuntimeException("Failed to load config", exception);
-        } finally {
             // trigger reload hooks
             for (Consumer<T> runnable : this.reloadHooks) {
-                runnable.accept(this.config);
+                runnable.accept(config);
             }
+            return config;
+        } catch (IOException exception) {
+            throw new RuntimeException("Failed to load config", exception);
         }
     }
 
@@ -88,17 +97,26 @@ public class ConfigHolder<T, L extends AbstractConfigurationLoader<?>> {
     private void saveConfig0() {
         try {
             Files.createDirectories(this.path.getParent());
-            this.loader.save(this.loader.createNode().set(this.clazz, this.config));
+            L loader = this.loader.get();
+            loader.save(loader.createNode().set(this.clazz, this.config));
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
     }
 
     public T getDelegate() {
-        return this.config;
+        T config = this.config;
+        if (config == null) {
+            throw new IllegalStateException("Config currently isn't loaded");
+        }
+        return config;
     }
 
-    public void registerDefaultConfig(ISubConfig defaultConfig) {
-        this.subConfigSerializer.registerDefaultAdapterConfig(defaultConfig);
+    public <Z extends ISubConfig> void registerConfigTemplate(String id, Class<Z> clazz, SubConfigSection.Constructor<Z> constructor) {
+        this.templates.add(new SubConfigSection.Template<>(id, clazz, constructor));
+    }
+
+    public List<SubConfigSection.Template<?>> getConfigTemplates() {
+        return List.copyOf(this.templates);
     }
 }

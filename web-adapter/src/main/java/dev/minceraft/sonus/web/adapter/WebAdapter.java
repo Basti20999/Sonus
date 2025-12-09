@@ -30,7 +30,7 @@ public class WebAdapter implements SonusAdapter {
 
     @Override
     public void load(ISonusService service) {
-        service.getConfigHolder().registerDefaultConfig(new WebConfig());
+        service.getConfigHolder().registerConfigTemplate("web", WebConfig.class, WebConfig::new);
     }
 
     @Override

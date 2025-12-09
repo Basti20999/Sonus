@@ -16,7 +16,6 @@ import java.util.UUID;
 public interface SonusAdapter {
 
     default void load(ISonusService service){
-
     }
 
     void init(ISonusService service);

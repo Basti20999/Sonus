@@ -26,5 +26,5 @@ public interface ISonusConfig {
 
     int getCleanupTaskIntervalMs();
 
-    <T extends ISubConfig> T getAdapterConfig(Class<T> adapterConfigClass);
+    <T extends ISubConfig> T getSubConfig(Class<T> configClass);
 }

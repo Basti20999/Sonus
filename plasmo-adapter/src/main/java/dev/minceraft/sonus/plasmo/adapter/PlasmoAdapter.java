@@ -5,7 +5,6 @@ import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
-import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
@@ -13,7 +12,6 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
-import java.nio.file.Path;
 import java.util.UUID;
 
 @NullMarked
@@ -22,12 +20,10 @@ public class PlasmoAdapter implements SonusAdapter {
     private @MonotonicNonNull ISonusService service;
     private @MonotonicNonNull PlasmoProtocolAdapter adapter;
     private @MonotonicNonNull PlasmoSessionManager sessionManager;
-    private @MonotonicNonNull PlasmoSonusListener serviceListener;
-    private @MonotonicNonNull YamlConfigHolder<PlasmoConfig> config;
 
     @Override
     public void load(ISonusService service) {
-        service.getConfigHolder().registerDefaultConfig(new PlasmoConfig());
+        service.getConfigHolder().registerConfigTemplate("plasmo", PlasmoConfig.class, PlasmoConfig::new);
     }
 
     @Override
@@ -36,11 +32,8 @@ public class PlasmoAdapter implements SonusAdapter {
 
         this.adapter = new PlasmoProtocolAdapter(this);
         this.sessionManager = new PlasmoSessionManager(this);
-        this.serviceListener = new PlasmoSonusListener(this);
-        Path configPath = this.service.getDataDirectory().resolve("plasmo-config.yml");
-        this.config = new YamlConfigHolder<>(PlasmoConfig.class, PlasmoConfig::new, configPath);
 
-        this.service.getEventManager().registerListener(this.serviceListener);
+        this.service.getEventManager().registerListener(new PlasmoSonusListener(this));
     }
 
     @Override
@@ -75,8 +68,8 @@ public class PlasmoAdapter implements SonusAdapter {
         return this.adapter;
     }
 
-    public @MonotonicNonNull YamlConfigHolder<PlasmoConfig> getConfig() {
-        return this.config;
+    public PlasmoConfig getConfig() {
+        return this.service.getConfig().getSubConfig(PlasmoConfig.class);
     }
 
     public ISonusService getService() {

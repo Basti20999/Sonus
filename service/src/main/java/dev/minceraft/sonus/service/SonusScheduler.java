@@ -17,7 +17,7 @@ public class SonusScheduler implements ISonusScheduler {
 
     @Override
     public void execute(Runnable task) {
-        this.scheduler.execute(task);
+        this.scheduler.execute(new WrappedRunnable(task));
     }
 
     @Override

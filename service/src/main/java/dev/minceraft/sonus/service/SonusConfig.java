@@ -1,15 +1,16 @@
 package dev.minceraft.sonus.service;
 // Created by booky10 in Sonus (01:08 10.08.2025)
 
+import dev.minceraft.sonus.common.config.ConfigHolder;
 import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.config.ISubConfig;
 import dev.minceraft.sonus.common.config.SubConfigSection;
 import dev.minceraft.sonus.common.protocol.codec.OpusCodec;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
 @NullMarked
 @ConfigSerializable
@@ -26,7 +27,14 @@ public class SonusConfig implements ISonusConfig {
     private int keepAliveTimeoutMs = 30000;
     private boolean autoGainControl = true;
     private int cleanupTaskIntervalMs = 60000;
-    private @MonotonicNonNull SubConfigSection adapterConfigs;
+    private SubConfigSection adapterConfigs = SubConfigSection.EMPTY;
+
+    public static SonusConfig createWithTemplates(ConfigHolder<?, ?> holder) {
+        SonusConfig config = new SonusConfig();
+        // create default adapter configs with specified config templates
+        config.adapterConfigs = new SubConfigSection(holder.getConfigTemplates(), List.of());
+        return config;
+    }
 
     @Override
     public InetSocketAddress getBind() {
@@ -79,7 +87,7 @@ public class SonusConfig implements ISonusConfig {
     }
 
     @Override
-    public <T extends ISubConfig> T getAdapterConfig(Class<T> adapterConfigClass) {
-        return this.adapterConfigs.getAdapterConfig(adapterConfigClass);
+    public <T extends ISubConfig> T getSubConfig(Class<T> configClass) {
+        return this.adapterConfigs.getConfig(configClass);
     }
 }
