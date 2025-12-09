@@ -61,7 +61,11 @@ public final class SonusService implements ISonusService {
         this.udpServer = new UdpServer(this);
 
         LOGGER.info("Initializing sonus service...");
+        this.adapters.load();
+
+        LOGGER.info("Loading configuration...");
         this.config.reloadConfig();
+
         this.adapters.init();
         this.roomManager.init();
         this.agentManager.init();

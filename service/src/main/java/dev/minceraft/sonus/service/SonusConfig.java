@@ -2,9 +2,10 @@ package dev.minceraft.sonus.service;
 // Created by booky10 in Sonus (01:08 10.08.2025)
 
 import dev.minceraft.sonus.common.config.ISonusConfig;
-import dev.minceraft.sonus.common.config.ISonusWebConfig;
+import dev.minceraft.sonus.common.config.ISubConfig;
+import dev.minceraft.sonus.common.config.SubConfigSection;
 import dev.minceraft.sonus.common.protocol.codec.OpusCodec;
-import dev.minceraft.sonus.web.adapter.config.WebConfig;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
@@ -25,7 +26,7 @@ public class SonusConfig implements ISonusConfig {
     private int keepAliveTimeoutMs = 30000;
     private boolean autoGainControl = true;
     private int cleanupTaskIntervalMs = 60000;
-    private WebConfig webConfig = new WebConfig();
+    private @MonotonicNonNull SubConfigSection adapterConfigs;
 
     @Override
     public InetSocketAddress getBind() {
@@ -78,7 +79,7 @@ public class SonusConfig implements ISonusConfig {
     }
 
     @Override
-    public ISonusWebConfig getWebConfig() {
-        return this.webConfig;
+    public <T extends ISubConfig> T getAdapterConfig(Class<T> adapterConfigClass) {
+        return this.adapterConfigs.getAdapterConfig(adapterConfigClass);
     }
 }

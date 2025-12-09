@@ -26,6 +26,11 @@ public class PlasmoAdapter implements SonusAdapter {
     private @MonotonicNonNull YamlConfigHolder<PlasmoConfig> config;
 
     @Override
+    public void load(ISonusService service) {
+        service.getConfigHolder().registerDefaultConfig(new PlasmoConfig());
+    }
+
+    @Override
     public void init(ISonusService service) {
         this.service = service;
 

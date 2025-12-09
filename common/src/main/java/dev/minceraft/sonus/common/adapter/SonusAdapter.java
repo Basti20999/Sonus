@@ -15,6 +15,10 @@ import java.util.UUID;
 @NullMarked
 public interface SonusAdapter {
 
+    default void load(ISonusService service){
+
+    }
+
     void init(ISonusService service);
 
     void sendStaticAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio);

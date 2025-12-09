@@ -25,6 +25,17 @@ public final class AdapterManager {
         this.service = service;
     }
 
+    public void load() {
+        for (SonusAdapter adapter : this.adapters) {
+            try {
+                LOGGER.info("Loading {} adapter...", adapter.getClass().getSimpleName());
+                adapter.load(this.service);
+            } catch (Throwable throwable) {
+                LOGGER.warn("Failed to load {}", adapter.getClass().getSimpleName(), throwable);
+            }
+        }
+    }
+
     public void init() {
         for (SonusAdapter adapter : this.adapters) {
             try {

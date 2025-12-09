@@ -9,6 +9,7 @@ import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
+import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
@@ -28,9 +29,13 @@ public class WebAdapter implements SonusAdapter {
     private @MonotonicNonNull ISonusService service;
 
     @Override
+    public void load(ISonusService service) {
+        service.getConfigHolder().registerDefaultConfig(new WebConfig());
+    }
+
+    @Override
     public void init(ISonusService service) {
         this.service = service;
-
         this.server.openSocket();
 
         this.service.getEventManager().registerListener(new WebSonusListener(this));
