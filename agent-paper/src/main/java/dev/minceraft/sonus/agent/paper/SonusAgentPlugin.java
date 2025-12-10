@@ -38,7 +38,7 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     protected YamlConfigHolder<? extends SonusAgentConfig> createConfig() {
         Path configPath = this.getDataPath().resolve("config.yml");
-        return new YamlConfigHolder<>(SonusAgentConfig.class,SonusAgentConfig::new, configPath);
+        return new YamlConfigHolder<>(SonusAgentConfig.class, SonusAgentConfig::new, configPath);
     }
 
     protected AgentListener createAgentListener() {
