@@ -39,6 +39,10 @@ public final class AdapterManager {
     public void init() {
         for (SonusAdapter adapter : this.adapters) {
             try {
+                if (!adapter.getAdapterInfo().enabled()) {
+                    LOGGER.info("{} adapter is disabled, skipping initialization.", adapter.getClass().getSimpleName());
+                    continue;
+                }
                 LOGGER.info("Initializing {} adapter...", adapter.getClass().getSimpleName());
                 adapter.init(this.service);
                 UdpSonusAdapter proto = adapter.getUdpAdapter();

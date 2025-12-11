@@ -61,7 +61,7 @@ public class WebServer {
                                     .addLast(HTTP_SOCKET_SHAKER, new WebSocketHandshaker(WebServer.this.adapter));
                         }
                     });
-            InetSocketAddress address = config.getSubConfig(WebConfig.class).getAddress();
+            InetSocketAddress address = config.getSubConfig(WebConfig.class).address;
             try {
                 this.channel = bootstrap.bind(address).sync().channel();
                 LOGGER.info("HTTP started on address {}", address);

@@ -2,6 +2,7 @@ package dev.minceraft.sonus.plasmo.adapter;
 
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.adapter.AdapterInfo;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
@@ -20,16 +21,20 @@ public class PlasmoAdapter implements SonusAdapter {
     private @MonotonicNonNull ISonusService service;
     private @MonotonicNonNull PlasmoProtocolAdapter adapter;
     private @MonotonicNonNull PlasmoSessionManager sessionManager;
+    private @MonotonicNonNull AdapterInfo adapterInfo;
 
     @Override
     public void load(ISonusService service) {
+        this.service = service;
         service.getConfigHolder().registerConfigTemplate("plasmo", PlasmoConfig.class, PlasmoConfig::new);
+    }
+
+    private AdapterInfo buildAdapterInfo() {
+        return new AdapterInfo(this.service.getConfig().getSubConfig(PlasmoConfig.class).enabled);
     }
 
     @Override
     public void init(ISonusService service) {
-        this.service = service;
-
         this.adapter = new PlasmoProtocolAdapter(this);
         this.sessionManager = new PlasmoSessionManager(this);
 
@@ -66,6 +71,14 @@ public class PlasmoAdapter implements SonusAdapter {
     @Override
     public PlasmoProtocolAdapter getUdpAdapter() {
         return this.adapter;
+    }
+
+    @Override
+    public AdapterInfo getAdapterInfo() {
+        if (this.adapterInfo == null) {
+            this.adapterInfo = this.buildAdapterInfo();
+        }
+        return this.adapterInfo;
     }
 
     public PlasmoConfig getConfig() {

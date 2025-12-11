@@ -3,6 +3,7 @@ package dev.minceraft.sonus.web.adapter;
 
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.adapter.AdapterInfo;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
@@ -27,15 +28,20 @@ public class WebAdapter implements SonusAdapter {
     private final WebSessionManager sessions = new WebSessionManager(this);
     private final WebServer server = new WebServer(this);
     private @MonotonicNonNull ISonusService service;
+    private @MonotonicNonNull AdapterInfo adapterInfo;
 
     @Override
     public void load(ISonusService service) {
+        this.service = service;
         service.getConfigHolder().registerConfigTemplate("web", WebConfig.class, WebConfig::new);
+    }
+
+    private AdapterInfo buildAdapterInfo() {
+        return new AdapterInfo(this.service.getConfig().getSubConfig(WebConfig.class).enabled);
     }
 
     @Override
     public void init(ISonusService service) {
-        this.service = service;
         this.server.openSocket();
 
         this.service.getEventManager().registerListener(new WebSonusListener(this));
@@ -102,6 +108,14 @@ public class WebAdapter implements SonusAdapter {
             packet.setId(currentTime);
             connection.sendPacket(packet);
         }
+    }
+
+    @Override
+    public AdapterInfo getAdapterInfo() {
+        if (this.adapterInfo == null) {
+            this.adapterInfo = this.buildAdapterInfo();
+        }
+        return this.adapterInfo;
     }
 
     public ISonusService getService() {

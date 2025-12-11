@@ -8,9 +8,7 @@ import java.net.InetSocketAddress;
 @ConfigSerializable
 public class WebConfig implements ISubConfig {
 
-    private InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8032);
+    public boolean enabled = true;
 
-    public InetSocketAddress getAddress() {
-        return this.address;
-    }
+    public InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8032);
 }

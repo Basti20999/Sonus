@@ -35,4 +35,6 @@ public interface SonusAdapter {
     default @Nullable UdpSonusAdapter getUdpAdapter() {
         return null;
     }
+
+    AdapterInfo getAdapterInfo();
 }
