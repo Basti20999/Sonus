@@ -86,6 +86,7 @@ public class SonusAgentPlugin extends JavaPlugin {
         if (Files.exists(definitionPath)) {
             this.getLogger().info("Loading room definition from file...");
             this.roomDefinition = new YamlConfigHolder<>(RoomDefinition.class, RoomDefinition::new, definitionPath);
+            this.roomDefinition.reloadConfig();
         }
     }
 
