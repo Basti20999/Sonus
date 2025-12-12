@@ -3,15 +3,18 @@ package dev.minceraft.sonus.service.velocity;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
+import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
+import dev.minceraft.sonus.service.commands.LiteralCommandNode;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -19,6 +22,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -28,14 +32,23 @@ import java.util.concurrent.TimeUnit;
 public class ServicePlatformVelocity implements IServicePlatform {
 
     private final ProxyServer server;
+    private final CommandManager commands;
     private final Path dataPath;
+    private final Provider<VelocitySonusService> plugin;
 
     private final LoadingCache<UUID, @Nullable IServer> serverCache;
 
     @Inject
-    public ServicePlatformVelocity(ProxyServer server, @DataDirectory Path dataPath) {
+    public ServicePlatformVelocity(
+            ProxyServer server,
+            CommandManager commands,
+            @DataDirectory Path dataPath,
+            Provider<VelocitySonusService> plugin
+    ) {
         this.server = server;
+        this.commands = commands;
         this.dataPath = dataPath;
+        this.plugin = plugin;
 
         this.serverCache = Caffeine.newBuilder()
                 .expireAfterAccess(10, TimeUnit.MINUTES)
@@ -92,5 +105,14 @@ public class ServicePlatformVelocity implements IServicePlatform {
     @Override
     public boolean serverExists(UUID uniqueId) {
         return this.serverCache.getIfPresent(uniqueId) != null;
+    }
+
+    @Override
+    public void registerCommands(List<LiteralCommandNode> nodes) {
+        VelocitySonusService plugin = this.plugin.get();
+        VelocityCommandConverter converter = new VelocityCommandConverter(plugin.getService(), plugin, this.commands);
+        for (LiteralCommandNode node : nodes) {
+            converter.registerCommand(node);
+        }
     }
 }

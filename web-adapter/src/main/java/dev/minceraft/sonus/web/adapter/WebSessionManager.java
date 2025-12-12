@@ -7,10 +7,8 @@ import dev.minceraft.sonus.web.adapter.util.WebTokenUtil;
 import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.model.SonusWebPlayerState;
 import dev.minceraft.sonus.web.protocol.model.SonusWebRoom;
-import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
-import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
@@ -18,8 +16,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
-
-import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 
 public class WebSessionManager {
 
@@ -33,30 +29,28 @@ public class WebSessionManager {
 
     public void onConnectionEstablished(WebSocketConnection connection) {
         // send group initialization packets for everything
-        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
+        ISonusPlayer player = connection.getPlayer();
         for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
             RoomAddPacket packet = new RoomAddPacket();
-            packet.setRoom(SonusWebRoom.fromRoom(room, bypassPassword));
+            packet.setRoom(SonusWebRoom.fromRoom(room, player));
             connection.sendPacket(packet);
         }
 
         // broadcast new player state to everyone else
-        connection.getPlayer().updateState();
+        player.updateState();
 
         // initialize all player states
         for (ISonusPlayer target : this.adapter.getService().getPlayerManager().getPlayers()) {
             // build state update of target if player can see target
-            if (target.isConnected() && connection.getPlayer().canSee(target)) {
+            if (target.isConnected() && player.canSee(target)) {
                 StateUpdatePacket packet = new StateUpdatePacket();
-                packet.setState(SonusWebPlayerState.fromState(target, connection.getPlayer()));
+                packet.setState(SonusWebPlayerState.fromState(target, player));
                 connection.sendPacket(packet);
             }
         }
 
         // inform the player that they are fully connected
-        UUID playerId = connection.getPlayer().getUniqueId();
-        String username = connection.getPlayer().getName();
-        connection.sendPacket(new ConnectedPacket(playerId, Component.text(username)));
+        connection.sendConnected();
     }
 
     public void broadcast(AbstractWebPacket<?> packet) {
@@ -65,7 +59,7 @@ public class WebSessionManager {
 
     public void broadcast(Function<WebSocketConnection, AbstractWebPacket<?>> packet) {
         for (WebSocketConnection conn : this.connections.values()) {
-            if (conn.isConnected()) {
+            if (conn.getPlayer().isConnected()) {
                 conn.sendPacket(packet.apply(conn));
             }
         }
@@ -77,10 +71,11 @@ public class WebSessionManager {
 
     public void broadcastFrom(ISonusPlayer source, Function<WebSocketConnection, AbstractWebPacket<?>> packet) {
         for (WebSocketConnection conn : this.connections.values()) {
-            if (!conn.isConnected() || !conn.getPlayer().canSee(source)) {
+            ISonusPlayer target = conn.getPlayer();
+            if (!target.isConnected() || !target.canSee(source)) {
                 continue; // target not connected or target can't see source
             }
-            conn.getPlayer().ensureTabListed(source);
+            target.ensureTabListed(source);
             conn.sendPacket(packet.apply(conn));
         }
     }
@@ -91,9 +86,21 @@ public class WebSessionManager {
         return token;
     }
 
+    public void removeTokens(ISonusPlayer player) {
+        this.tokens.values().removeIf(ref -> {
+            ISonusPlayer target = ref.get();
+            return target == null || target == player;
+        });
+    }
+
     public @Nullable ISonusPlayer consumeToken(String token) {
-        WeakReference<ISonusPlayer> player = this.tokens.remove(token);
-        return player != null ? player.get() : null;
+        WeakReference<ISonusPlayer> playerRef = this.tokens.remove(token);
+        ISonusPlayer player = playerRef != null ? playerRef.get() : null;
+        if (player != null) {
+            // remove all tokens related to this player
+            this.removeTokens(player);
+        }
+        return player;
     }
 
     public void addConnection(WebSocketConnection connection) {

@@ -12,6 +12,8 @@ import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.common.service.ISonusScheduler;
 import dev.minceraft.sonus.service.adapter.AdapterManager;
 import dev.minceraft.sonus.service.agent.AgentManager;
+import dev.minceraft.sonus.service.commands.CommandHolder;
+import dev.minceraft.sonus.service.commands.builtin.SonusCommand;
 import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.player.PlayerManager;
@@ -36,6 +38,7 @@ public final class SonusService implements ISonusService {
 
     private final IServicePlatform platform;
     private final PlayerManager players;
+    private final CommandHolder commands = new CommandHolder();
     private final SonusPluginMessenger pluginMessageListener = new SonusPluginMessenger(this);
     private final SonusEventManager eventManager = new SonusEventManager(this);
     private final SonusScheduler scheduler = new SonusScheduler();
@@ -49,7 +52,7 @@ public final class SonusService implements ISonusService {
     public SonusService(IServicePlatform platform) {
         this.platform = platform;
         Path configPath = this.platform.getDataPath().resolve("config.yml");
-        this.config = new YamlConfigHolder<>(SonusConfig.class, SonusConfig::new, configPath);
+        this.config = new YamlConfigHolder<>(SonusConfig.class, SonusConfig::createWithTemplates, configPath);
         this.players = new PlayerManager(this);
     }
 
@@ -58,12 +61,17 @@ public final class SonusService implements ISonusService {
         this.udpServer = new UdpServer(this);
 
         LOGGER.info("Initializing sonus service...");
+        this.adapters.load();
+
+        LOGGER.info("Loading configuration...");
         this.config.reloadConfig();
+
         this.adapters.init();
         this.roomManager.init();
         this.agentManager.init();
         this.udpServer.bind();
 
+        this.initCommands();
         this.initCleanupTask();
     }
 
@@ -84,6 +92,13 @@ public final class SonusService implements ISonusService {
         });
     }
 
+    private void initCommands() {
+        new SonusCommand().register(this.commands);
+
+        // register all commands in platform command registrar
+        this.platform.registerCommands(this.commands.getNodes());
+    }
+
     private void cleanup() {
         this.servers.entrySet().removeIf(entry ->
                 !SonusService.this.platform.serverExists(entry.getKey()));
@@ -99,6 +114,10 @@ public final class SonusService implements ISonusService {
 
     public IServicePlatform getPlatform() {
         return this.platform;
+    }
+
+    public CommandHolder getCommandHolder() {
+        return this.commands;
     }
 
     @Override
@@ -155,6 +174,7 @@ public final class SonusService implements ISonusService {
         return new AudioProcessor(() -> this.getConfig().getMtuSize(), mode);
     }
 
+    @Override
     public SonusServer getServer(UUID serverId) {
         return this.servers.computeIfAbsent(serverId, uuid ->
                 new SonusServer(this, this.getPlatform().getServer(uuid)));

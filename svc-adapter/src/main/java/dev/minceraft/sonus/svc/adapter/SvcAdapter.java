@@ -3,12 +3,14 @@ package dev.minceraft.sonus.svc.adapter;
 
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.adapter.AdapterInfo;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.adapter.UdpSonusAdapter;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.svc.adapter.config.SvcConfig;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.data.SonusVolumeCategory;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddCategorySvcPacket;
@@ -29,10 +31,20 @@ public class SvcAdapter implements SonusAdapter {
     private @MonotonicNonNull SvcSessionManager sessions;
     private @MonotonicNonNull SvcProtocolAdapter protocolAdapter;
     private @MonotonicNonNull ISonusService service;
+    private @MonotonicNonNull AdapterInfo adapterInfo;
+
+    @Override
+    public void load(ISonusService service) {
+        this.service = service;
+        service.getConfigHolder().registerConfigTemplate("svc", SvcConfig.class, SvcConfig::new);
+    }
+
+    private AdapterInfo buildAdapterInfo() {
+        return new AdapterInfo(this.service.getConfig().getSubConfig(SvcConfig.class).enabled);
+    }
 
     @Override
     public void init(ISonusService service) {
-        this.service = service;
         this.sessions = new SvcSessionManager(this);
         this.protocolAdapter = new SvcProtocolAdapter(this);
 
@@ -125,6 +137,14 @@ public class SvcAdapter implements SonusAdapter {
     @Override
     public UdpSonusAdapter getUdpAdapter() {
         return this.protocolAdapter;
+    }
+
+    @Override
+    public AdapterInfo getAdapterInfo() {
+        if (this.adapterInfo == null) {
+            this.adapterInfo = this.buildAdapterInfo();
+        }
+        return this.adapterInfo;
     }
 
     public ISonusService getService() {

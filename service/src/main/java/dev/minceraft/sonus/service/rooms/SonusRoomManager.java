@@ -6,10 +6,9 @@ import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IServer;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 @NullMarked
 public class SonusRoomManager implements ISonusRoomManager {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
+    private static final ComponentLogger LOGGER = ComponentLogger.logger("Sonus");
 
     public final SonusService service;
     private final Map<UUID, IRoom> rooms = new ConcurrentHashMap<>();

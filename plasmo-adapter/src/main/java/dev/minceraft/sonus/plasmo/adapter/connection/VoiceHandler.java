@@ -47,7 +47,7 @@ public class VoiceHandler implements UdpHandler {
     private void sendConfig() {
         ConfigPacket configPacket = new ConfigPacket();
         configPacket.setPermissions(Map.of());
-        configPacket.setServerId(this.adapter.getConfig().getDelegate().serverId);
+        configPacket.setServerId(this.adapter.getConfig().serverId);
 
         CaptureInfo captureInfo = new CaptureInfo(
                 SonusConstants.SAMPLE_RATE,

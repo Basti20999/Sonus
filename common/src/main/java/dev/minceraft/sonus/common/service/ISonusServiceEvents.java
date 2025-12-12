@@ -20,6 +20,9 @@ public interface ISonusServiceEvents {
     default void onPlayerStateUpdate(ISonusPlayer player) {
     }
 
+    default void onPlayerPositionUpdate(ISonusPlayer player) {
+    }
+
     default void onChannelRegistered(UUID playerId, Set<Key> channel) {
     }
 

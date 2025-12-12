@@ -10,6 +10,7 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.PositionUpdatePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomLeaveResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
@@ -47,6 +48,7 @@ public final class WsPacketRegistry {
                     .register(PositionUpdatePacket.class, PositionUpdatePacket::new, ENCODE)
                     .register(RoomAddPacket.class, RoomAddPacket::new, ENCODE)
                     .register(RoomJoinResponsePacket.class, RoomJoinResponsePacket::new, ENCODE)
+                    .register(RoomLeaveResponsePacket.class, RoomLeaveResponsePacket::new, ENCODE)
                     .register(RoomRemovePacket.class, RoomRemovePacket::new, ENCODE)
                     .register(StateRemovePacket.class, StateRemovePacket::new, ENCODE)
                     .register(StateUpdatePacket.class, StateUpdatePacket::new, ENCODE)

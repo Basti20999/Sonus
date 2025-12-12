@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.web.adapter;
 
 import dev.minceraft.sonus.network.TransportType;
+import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.pipeline.WebSocketHandshaker;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -60,7 +61,7 @@ public class WebServer {
                                     .addLast(HTTP_SOCKET_SHAKER, new WebSocketHandshaker(WebServer.this.adapter));
                         }
                     });
-            InetSocketAddress address = config.getWebConfig().getAddress();
+            InetSocketAddress address = config.getSubConfig(WebConfig.class).address;
             try {
                 this.channel = bootstrap.bind(address).sync().channel();
                 LOGGER.info("HTTP started on address {}", address);

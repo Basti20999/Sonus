@@ -45,7 +45,7 @@ public class AudioPacket extends WebSocketPacket {
     @Override
     public void encode(ByteBuf buf, WsPacketContext context) {
         boolean senderIsChannel = this.senderId.equals(this.channelId);
-        byte flags = (byte) (0
+        buf.writeByte(0
                 | (this.categoryId != null ? FLAG_HAS_CATEGORY : 0)
                 | (this.position != null ? FLAG_HAS_POSITION : 0)
                 | (senderIsChannel ? FLAG_SENDER_IS_CHANNEL : 0));
@@ -54,7 +54,6 @@ public class AudioPacket extends WebSocketPacket {
             DataTypeUtil.writeUniqueId(buf, this.senderId);
         }
         DataTypeUtil.VAR_INT.writeByteArray(buf, this.audio.opus());
-        buf.writeByte(flags);
         if (this.categoryId != null) {
             DataTypeUtil.writeUniqueId(buf, this.categoryId);
         }

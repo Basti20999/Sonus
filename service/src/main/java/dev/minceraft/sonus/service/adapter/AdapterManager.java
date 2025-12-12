@@ -25,9 +25,24 @@ public final class AdapterManager {
         this.service = service;
     }
 
+    public void load() {
+        for (SonusAdapter adapter : this.adapters) {
+            try {
+                LOGGER.info("Loading {} adapter...", adapter.getClass().getSimpleName());
+                adapter.load(this.service);
+            } catch (Throwable throwable) {
+                LOGGER.warn("Failed to load {}", adapter.getClass().getSimpleName(), throwable);
+            }
+        }
+    }
+
     public void init() {
         for (SonusAdapter adapter : this.adapters) {
             try {
+                if (!adapter.getAdapterInfo().enabled()) {
+                    LOGGER.info("{} adapter is disabled, skipping initialization.", adapter.getClass().getSimpleName());
+                    continue;
+                }
                 LOGGER.info("Initializing {} adapter...", adapter.getClass().getSimpleName());
                 adapter.init(this.service);
                 UdpSonusAdapter proto = adapter.getUdpAdapter();
@@ -46,5 +61,15 @@ public final class AdapterManager {
 
     public Set<SonusAdapter> getAdapters() {
         return this.adapters;
+    }
+
+    @Nullable
+    public <T extends SonusAdapter> T getAdapter(Class<T> adapterClass) {
+        for (SonusAdapter adapter : this.adapters) {
+            if (adapterClass.isInstance(adapter)) {
+                return adapterClass.cast(adapter);
+            }
+        }
+        return null;
     }
 }

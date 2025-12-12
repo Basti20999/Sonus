@@ -3,11 +3,14 @@ package dev.minceraft.sonus.service.server;
 
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.AudioCategory;
+import dev.minceraft.sonus.common.data.ISonusServer;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.platform.IServer;
 import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.player.SonusPlayer;
+import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @NullMarked
-public final class SonusServer {
+public final class SonusServer implements ISonusServer {
 
     private final SonusService service;
     private final IServer platform;
@@ -69,12 +72,19 @@ public final class SonusServer {
         }
     }
 
-    public String getName() {
+    @Override
+    public UUID getUniqueId() {
+        return this.platform.getUniqueId();
+    }
+
+    @Override
+    public Component getName() {
         return this.platform.getName();
     }
 
-    public UUID getUniqueId() {
-        return this.platform.getUniqueId();
+    @Override
+    public @Nullable String getType() {
+        return this.platform.getType();
     }
 
     public record CategoryData(

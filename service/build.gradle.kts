@@ -8,6 +8,9 @@ dependencies {
     api(projects.protocol)
     api(libs.speex4j)
 
+    // included in all service implementations
+    compileOnlyApi(libs.adventure.text.logger.slf4j)
+
     implementation(projects.network)
     implementation(projects.svcAdapter)
     implementation(projects.plasmoAdapter)

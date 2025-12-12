@@ -42,6 +42,7 @@ jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 checkerqual = { module = "org.checkerframework:checker-qual", version.ref = "checkerqual" }
 adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
 adventure-text-serializer-gson = { module = "net.kyori:adventure-text-serializer-gson", version.ref = "adventure" }
+adventure-text-logger-slf4j = { module = "net.kyori:adventure-text-logger-slf4j", version.ref = "adventure" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }

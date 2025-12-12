@@ -3,12 +3,14 @@ package dev.minceraft.sonus.web.adapter;
 
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.adapter.AdapterInfo;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
-import dev.minceraft.sonus.common.data.WorldVec3d;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
+import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
@@ -26,11 +28,20 @@ public class WebAdapter implements SonusAdapter {
     private final WebSessionManager sessions = new WebSessionManager(this);
     private final WebServer server = new WebServer(this);
     private @MonotonicNonNull ISonusService service;
+    private @MonotonicNonNull AdapterInfo adapterInfo;
+
+    @Override
+    public void load(ISonusService service) {
+        this.service = service;
+        service.getConfigHolder().registerConfigTemplate("web", WebConfig.class, WebConfig::new);
+    }
+
+    private AdapterInfo buildAdapterInfo() {
+        return new AdapterInfo(this.service.getConfig().getSubConfig(WebConfig.class).enabled);
+    }
 
     @Override
     public void init(ISonusService service) {
-        this.service = service;
-
         this.server.openSocket();
 
         this.service.getEventManager().registerListener(new WebSonusListener(this));
@@ -62,7 +73,7 @@ public class WebAdapter implements SonusAdapter {
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
-        WorldVec3d sourcePos = source.getPosition();
+        WorldRotatedVec3d sourcePos = source.getPosition();
         // we can only support spatial audio with source position
         if (sourcePos != null) {
             this.sendAudio(player, source, audio, sourcePos);
@@ -97,6 +108,14 @@ public class WebAdapter implements SonusAdapter {
             packet.setId(currentTime);
             connection.sendPacket(packet);
         }
+    }
+
+    @Override
+    public AdapterInfo getAdapterInfo() {
+        if (this.adapterInfo == null) {
+            this.adapterInfo = this.buildAdapterInfo();
+        }
+        return this.adapterInfo;
     }
 
     public ISonusService getService() {
