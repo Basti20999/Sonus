@@ -27,6 +27,16 @@ public class StaticRoom extends AbstractRoom {
     }
 
     @Override
+    protected void sendAudioEnd0(IAudioSource source, long sequence) {
+        for (ISonusPlayer member : this.members.values()) {
+            if (member.getSenderId().equals(source.getSenderId())) {
+                continue;
+            }
+            member.sendAudioEnd(source, sequence);
+        }
+    }
+
+    @Override
     public boolean isVisible() {
         return true;
     }

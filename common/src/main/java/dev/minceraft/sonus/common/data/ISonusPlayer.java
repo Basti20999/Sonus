@@ -57,6 +57,8 @@ public interface ISonusPlayer extends IAudioSource {
 
     void sendSpatialNormedAudio(IAudioSource source, SonusAudio audio);
 
+    void sendAudioEnd(IAudioSource source, long sequence);
+
     boolean canAccessRoom(IRoom room, @Nullable String password);
 
     void joinRoom(IRoom room);
@@ -86,6 +88,8 @@ public interface ISonusPlayer extends IAudioSource {
     void setConnected(boolean connected);
 
     void handleAudioInput(SonusAudio audio);
+
+    void handleAudioInputEnd(long sequence);
 
     void sendPluginMessage(Key key, ByteBuf data);
 

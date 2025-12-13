@@ -41,8 +41,17 @@ public abstract class AbstractRoom implements IRoom {
         this.sendAudio0(realSource, audio);
     }
 
+    @Override
+    public void sendAudioEnd(@Nullable IAudioSource source, long sequence) {
+        IAudioSource realSource = Objects.requireNonNullElse(source, this);
+        this.sendAudioEnd0(realSource, sequence);
+    }
+
     @ApiStatus.OverrideOnly
     protected abstract void sendAudio0(IAudioSource source, SonusAudio audio);
+
+    @ApiStatus.OverrideOnly
+    protected abstract void sendAudioEnd0(IAudioSource source, long sequence);
 
     @Override
     public boolean addMember(ISonusPlayer player) {

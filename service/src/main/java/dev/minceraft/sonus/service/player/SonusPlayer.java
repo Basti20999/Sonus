@@ -6,9 +6,9 @@ import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
-import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
@@ -87,7 +88,17 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
                 num -> Math.max(num, audio.sequenceNumber()) + 1L);
         SonusAudio sequencedAudio = audio.withSequenceNumber(sequence);
         this.processAudioInput(sequencedAudio);
-        this.broadcastAudioInput(sequencedAudio);
+        this.handleRoomBroadcast(room -> room.sendAudio(this, sequencedAudio));
+    }
+
+    @Override
+    public void handleAudioInputEnd(long sequence) {
+        if (!this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
+            return;
+        }
+        long finalSequence = this.sequenceNumber.updateAndGet(
+                num -> Math.max(num, sequence));
+        this.handleRoomBroadcast(room -> room.sendAudioEnd(this, finalSequence));
     }
 
     private void processAudioInput(SonusAudio audio) {
@@ -103,20 +114,20 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
     }
 
-    private void broadcastAudioInput(SonusAudio audio) {
+    private void handleRoomBroadcast(Consumer<IRoom> consumer) {
         // first, process all rooms which are configured to prevent audio input
         // being passed to other rooms
         boolean preventSpeakToOthers = false;
         for (IRoom room : this.voiceRooms.values()) {
             if (!room.getRoomAudioType().isSpeakToOthers()) {
-                room.sendAudio(this, audio);
+                consumer.accept(room);
                 preventSpeakToOthers = true;
             }
         }
         // if no rooms exist which prevent audio input being passed, send audio to all rooms
         if (!preventSpeakToOthers) {
             for (IRoom room : this.voiceRooms.values()) {
-                room.sendAudio(this, audio);
+                consumer.accept(room);
             }
         }
     }
@@ -209,6 +220,14 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (pos != null) { // if the position is null, the processor decided to cancel the audio packet
             this.sonusAdapter.sendSpatialAudio(this, source, audio, pos);
         }
+    }
+
+    @Override
+    public void sendAudioEnd(IAudioSource source, long sequence) {
+        if (this.sonusAdapter == null || !this.canHear(source, true)) {
+            return;
+        }
+        this.sonusAdapter.sendAudioEnd(this, source, sequence);
     }
 
     @Override

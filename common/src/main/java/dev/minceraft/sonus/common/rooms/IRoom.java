@@ -37,6 +37,8 @@ public interface IRoom extends IAudioSource {
 
     void sendAudio(@Nullable IAudioSource source, SonusAudio audio);
 
+    void sendAudioEnd(@Nullable IAudioSource source, long sequence);
+
     default boolean checkDiscarded(@Nullable Set<UUID> serverIds) {
         return false; // never discarded by default
     }

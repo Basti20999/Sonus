@@ -81,6 +81,11 @@ public class WebAdapter implements SonusAdapter {
     }
 
     @Override
+    public void sendAudioEnd(ISonusPlayer player, IAudioSource source, long sequence) {
+        // No-op
+    }
+
+    @Override
     public void registerCategory(ISonusPlayer player, AudioCategory category) {
         WebSocketConnection connection = this.sessions.getConnection(player.getUniqueId());
         if (connection != null) {

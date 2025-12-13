@@ -9,6 +9,8 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.UUID;
 
+import static dev.minceraft.sonus.common.rooms.options.RoomDefinition.RelationState.HIDE;
+
 @NullMarked
 public class DefinedRoom extends AbstractRoom {
 
@@ -30,6 +32,19 @@ public class DefinedRoom extends AbstractRoom {
                 case STATIC -> receiver.sendStaticAudio(source, audio);
                 case SPATIAL -> receiver.sendSpatialAudio(source, audio);
                 case SPATIAL_NORMALIZED -> receiver.sendSpatialNormedAudio(source, audio);
+            }
+        }
+    }
+
+    @Override
+    protected void sendAudioEnd0(IAudioSource source, long sequence) {
+        for (ISonusPlayer receiver : this.members.values()) {
+            if (receiver.getSenderId().equals(source.getSenderId())) {
+                continue;
+            }
+            RoomDefinition.RelationState state = this.definition.getState(source, receiver);
+            if (state != HIDE) {
+                receiver.sendAudioEnd(source, sequence);
             }
         }
     }

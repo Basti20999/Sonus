@@ -11,6 +11,7 @@ import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.util.GameProfile;
 import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceAudioEndPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.DirectSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.PlayerSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.StaticSourceInfo;
@@ -136,6 +137,20 @@ public class PlasmoAdapter implements SonusAdapter {
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setSourceId(source.getSenderId());
         packet.setSourceState((byte) 0);
+
+        connection.sendPacket(packet);
+    }
+
+    @Override
+    public void sendAudioEnd(ISonusPlayer player, IAudioSource source, long sequence) {
+        PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
+
+        SourceAudioEndPacket packet = new SourceAudioEndPacket();
+        packet.setSequenceNumber(sequence);
+        packet.setSourceId(source.getSenderId());
 
         connection.sendPacket(packet);
     }

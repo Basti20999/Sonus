@@ -28,6 +28,8 @@ import java.util.UUID;
 @NullMarked
 public class SvcAdapter implements SonusAdapter {
 
+    private static final byte[] EMPTY_BUFFER = new byte[0];
+
     private @MonotonicNonNull SvcSessionManager sessions;
     private @MonotonicNonNull SvcProtocolAdapter protocolAdapter;
     private @MonotonicNonNull ISonusService service;
@@ -101,6 +103,22 @@ public class SvcAdapter implements SonusAdapter {
         packet.setData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setDistance((float) this.service.getConfig().getVoiceChatRange());
+        connection.sendPacket(packet);
+    }
+
+    @Override
+    public void sendAudioEnd(ISonusPlayer player, IAudioSource source, long sequence) {
+        SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection == null) {
+            return; // no svc session found
+        }
+
+        GroupSoundSvcPacket packet = new GroupSoundSvcPacket(); // Generic sound packet
+        packet.setChannelId(source.getSenderId());
+        packet.setSender(source.getSenderId());
+        packet.setCategory(SonusVolumeCategory.generateId(source.getCategoryId()));
+        packet.setData(EMPTY_BUFFER);
+        packet.setSequenceNumber(sequence);
         connection.sendPacket(packet);
     }
 

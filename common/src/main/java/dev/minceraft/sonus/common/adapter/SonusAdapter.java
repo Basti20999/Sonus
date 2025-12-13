@@ -26,6 +26,8 @@ public interface SonusAdapter {
 
     void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio);
 
+    void sendAudioEnd(ISonusPlayer player, IAudioSource source, long sequence);
+
     void registerCategory(ISonusPlayer player, AudioCategory category);
 
     void unregisterCategory(ISonusPlayer player, UUID categoryId);
