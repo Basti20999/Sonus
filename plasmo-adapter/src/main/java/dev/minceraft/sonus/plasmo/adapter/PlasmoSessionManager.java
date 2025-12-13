@@ -3,15 +3,16 @@ package dev.minceraft.sonus.plasmo.adapter;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.AbstractPlasmoPacket;
-import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
-import net.kyori.adventure.util.TriState;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_CONNECT_PLASMO;
 
@@ -19,49 +20,51 @@ import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_CONNECT_PLASM
 public class PlasmoSessionManager {
 
     private final PlasmoAdapter adapter;
-    private final Map<UUID, PlasmoConnection> usersByUniqueId = new HashMap<>();
-    private final Map<UUID, PlasmoConnection> usersBySecret = new HashMap<>();
+    private final Map<UUID, PlasmoConnection> usersByUniqueId = new ConcurrentHashMap<>();
+    private final Map<UUID, PlasmoConnection> usersBySecret = new ConcurrentHashMap<>();
 
     public PlasmoSessionManager(PlasmoAdapter adapter) {
         this.adapter = adapter;
-
-        this.adapter.getService().getScheduler().schedule(this::tickKeepAlive,
-                0,
-                this.adapter.getService().getConfig().getKeepAliveMs(),
-                TimeUnit.MILLISECONDS);
     }
 
-    public void tickKeepAlive() {
-        PingPlasmoPacket packet = new PingPlasmoPacket();
-        packet.setTime(System.currentTimeMillis());
-        broadcastPacket(packet);
+    public void broadcast(AbstractPlasmoPacket<?> packet) {
+        this.broadcast(__ -> packet);
     }
 
-    public void broadcastPacket(AbstractPlasmoPacket<?> packet) {
+    public void broadcast(Function<PlasmoConnection, AbstractPlasmoPacket<?>> packet) {
         for (PlasmoConnection conn : this.usersByUniqueId.values()) {
-            if (!conn.isConnected()) {
-                continue;
+            if (conn.isConnected()) {
+                conn.sendPacket(packet.apply(conn));
             }
-            conn.sendPacket(packet);
         }
     }
 
-    public void broadcastState(PlasmoConnection connection) {
+    public boolean removeSession(UUID playerId) {
+        try (PlasmoConnection conn = this.usersByUniqueId.remove(playerId)) {
+            return conn != null;
+        }
+    }
 
+    public Map<UUID, VoicePlayerInfo> getPlayerInfos(PlasmoConnection listener) {
+        Collection<? extends ISonusPlayer> players = this.adapter.getService().getPlayerManager().getPlayers();
+        Map<UUID, VoicePlayerInfo> states = new HashMap<>(players.size());
+        for (ISonusPlayer player : players) {
+            if (!player.isConnected() || !player.canSee(listener.getPlayer())) {
+                continue;
+            }
+            states.put(player.getUniqueId(), this.buildPlayerInfo(listener.getPlayer(), player));
+        }
+        return states;
     }
 
     @Nullable
     public PlasmoConnection getConnectionBySecret(UUID secret) {
-        synchronized (this) {
-            return this.usersBySecret.get(secret);
-        }
+        return this.usersBySecret.get(secret);
     }
 
     @Nullable
     public PlasmoConnection getConnectionByUniqueId(UUID uniqueId) {
-        synchronized (this) {
-            return this.usersByUniqueId.get(uniqueId);
-        }
+        return this.usersByUniqueId.get(uniqueId);
     }
 
     @Nullable
@@ -74,10 +77,18 @@ public class PlasmoSessionManager {
             return null;
         }
         PlasmoConnection plasmoConnection = new PlasmoConnection(this.adapter, player);
-        synchronized (this) {
-            this.usersBySecret.put(plasmoConnection.getSecret(), plasmoConnection);
-            this.usersByUniqueId.put(playerId, plasmoConnection);
-        }
+        this.usersBySecret.put(plasmoConnection.getSecret(), plasmoConnection);
+        this.usersByUniqueId.put(playerId, plasmoConnection);
         return plasmoConnection;
+    }
+
+    public VoicePlayerInfo buildPlayerInfo(ISonusPlayer viewer, ISonusPlayer player) {
+        return new VoicePlayerInfo(
+                player.getUniqueId(viewer),
+                player.getName(viewer),
+                !player.isConnected(),
+                player.isDeafened(),
+                player.isMuted()
+        );
     }
 }

@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.plasmo.protocol.tcp.clientbound;
 
 import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpHandler;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPlasmoPacket;
 import io.netty.buffer.ByteBuf;
@@ -22,14 +23,14 @@ public class DistanceVisualizePacket extends TcpPlasmoPacket<DistanceVisualizePa
     public void encode(ByteBuf buf) {
         buf.writeInt(this.radius);
         buf.writeInt(this.hexColor);
-        Vec3d.encode(buf, this.position);
+        DataTypeUtil.writeNullable(buf, this.position, Vec3d::encode);
     }
 
     @Override
     public void decode(ByteBuf buf) {
         this.radius = buf.readInt();
         this.hexColor = buf.readInt();
-        this.position = Vec3d.decode(buf);
+        this.position = DataTypeUtil.readNullable(buf, Vec3d::decode);
     }
 
     @Override

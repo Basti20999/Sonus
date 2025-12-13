@@ -8,8 +8,14 @@ import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.common.util.GameProfile;
 import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
-import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
+import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.DirectSourceInfo;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.PlayerSourceInfo;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.StaticSourceInfo;
+import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.udp.clientbound.SourceAudioPlasmoPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
@@ -17,6 +23,8 @@ import java.util.UUID;
 
 @NullMarked
 public class PlasmoAdapter implements SonusAdapter {
+
+    private static final String ADDON_ID = "sonus-plasmo-adapter";
 
     private @MonotonicNonNull ISonusService service;
     private @MonotonicNonNull PlasmoProtocolAdapter adapter;
@@ -43,7 +51,41 @@ public class PlasmoAdapter implements SonusAdapter {
 
     @Override
     public void sendStaticAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
+        PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
 
+        connection.registerSourceInfo(source.getSenderId(), () -> {
+                    GameProfile profile = null;
+                    if (source instanceof ISonusPlayer speaker) {
+                        profile = speaker.getSimpleProfile(player);
+                    }
+                    return new DirectSourceInfo(
+                            ADDON_ID,
+                            source.getSenderId(),
+                            connection.getDefaultSourceLine().getId(),
+                            null,
+                            (byte) 0,
+                            this.adapter.getCodecInfo(),
+                            true,
+                            true,
+                            0,
+                            profile,
+                            Vec3d.ZERO,
+                            Vec3d.ZERO,
+                            true);
+                }
+        );
+
+        SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
+        packet.setDistance((short) this.service.getConfig().getVoiceChatRange());
+        packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
+        packet.setSequenceNumber(audio.sequenceNumber());
+        packet.setSourceId(source.getSenderId());
+        packet.setSourceState((byte) 0);
+
+        connection.sendPacket(packet);
     }
 
     @Override
@@ -53,7 +95,49 @@ public class PlasmoAdapter implements SonusAdapter {
 
     @Override
     public void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio) {
+        PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
 
+        connection.registerSourceInfo(source.getSenderId(), () -> {
+            if (source instanceof ISonusPlayer speaker) {
+                return new PlayerSourceInfo(
+                        ADDON_ID,
+                        source.getSenderId(),
+                        connection.getDefaultSourceLine().getId(),
+                        speaker.getName(player),
+                        (byte) 0,
+                        this.adapter.getCodecInfo(),
+                        false,
+                        true,
+                        0,
+                        this.sessionManager.buildPlayerInfo(player, speaker));
+            }
+            return new StaticSourceInfo(
+                    ADDON_ID,
+                    source.getSenderId(),
+                    connection.getDefaultSourceLine().getId(),
+                    null,
+                    (byte) 0,
+                    this.adapter.getCodecInfo(),
+                    true,
+                    true,
+                    0,
+                    Vec3d.ZERO,
+                    Vec3d.ZERO
+            );
+        });
+
+
+        SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
+        packet.setDistance((short) 0);
+        packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
+        packet.setSequenceNumber(audio.sequenceNumber());
+        packet.setSourceId(source.getSenderId());
+        packet.setSourceState((byte) 0);
+
+        connection.sendPacket(packet);
     }
 
     @Override
@@ -66,6 +150,18 @@ public class PlasmoAdapter implements SonusAdapter {
 
     @Override
     public void sendKeepAlive(ISonusPlayer player, long currentTime) {
+        PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
+        if (!connection.isConnected()) {
+            return;
+        }
+
+        PingPlasmoPacket packet = new PingPlasmoPacket();
+        packet.setTimestamp(currentTime);
+
+        connection.sendPacket(packet);
     }
 
     @Override
@@ -91,16 +187,5 @@ public class PlasmoAdapter implements SonusAdapter {
 
     public PlasmoSessionManager getSessionManager() {
         return this.sessionManager;
-    }
-
-    public VoicePlayerInfo buildPlayerInfo(ISonusPlayer player) {
-        // TODO: respect viewer?
-        return new VoicePlayerInfo(
-                player.getUniqueId(),
-                player.getName(),
-                player.isMuted(),
-                player.isConnected(),
-                player.isDeafened()
-        );
     }
 }

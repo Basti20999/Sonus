@@ -66,7 +66,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private boolean muted;
     private boolean deafened;
 
-    private long lastKeepAlive;
+    private long lastKeepAlive = System.currentTimeMillis();
 
     // track server reference
     private @Nullable SonusServer server;

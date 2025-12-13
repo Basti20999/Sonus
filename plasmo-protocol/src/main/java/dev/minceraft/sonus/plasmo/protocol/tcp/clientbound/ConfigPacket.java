@@ -11,8 +11,8 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @NullMarked
@@ -22,8 +22,8 @@ public class ConfigPacket extends ConfigPlayerInfoPacket<ConfigPacket> {
 
     private @MonotonicNonNull CaptureInfo captureInfo;
     private @Nullable EncryptionInfo encryptionInfo;
-    private @MonotonicNonNull Set<VoiceSourceLine> sourceLines;
-    private @MonotonicNonNull Set<VoiceActivation> activations;
+    private @MonotonicNonNull Collection<VoiceSourceLine> sourceLines;
+    private @MonotonicNonNull Collection<VoiceActivation> activations;
 
     public ConfigPacket() {
     }
@@ -79,19 +79,19 @@ public class ConfigPacket extends ConfigPlayerInfoPacket<ConfigPacket> {
         this.encryptionInfo = encryptionInfo;
     }
 
-    public Set<VoiceSourceLine> getSourceLines() {
+    public Collection<VoiceSourceLine> getSourceLines() {
         return this.sourceLines;
     }
 
-    public void setSourceLines(Set<VoiceSourceLine> sourceLines) {
+    public void setSourceLines(Collection<VoiceSourceLine> sourceLines) {
         this.sourceLines = sourceLines;
     }
 
-    public Set<VoiceActivation> getActivations() {
+    public Collection<VoiceActivation> getActivations() {
         return this.activations;
     }
 
-    public void setActivations(Set<VoiceActivation> activations) {
+    public void setActivations(Collection<VoiceActivation> activations) {
         this.activations = activations;
     }
 

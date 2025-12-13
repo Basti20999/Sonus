@@ -14,7 +14,7 @@ import java.util.UUID;
 public class SourceAudioPlasmoPacket extends BaseAudioPlasmoPacket<SourceAudioPlasmoPacket> {
 
     private @MonotonicNonNull UUID sourceId;
-    private byte sourceStats;
+    private byte sourceState;
     private short distance;
 
     public SourceAudioPlasmoPacket() {
@@ -24,7 +24,7 @@ public class SourceAudioPlasmoPacket extends BaseAudioPlasmoPacket<SourceAudioPl
     public void encode(ByteBuf buf) {
         super.encode(buf);
         DataTypeUtil.writeUniqueId(buf, this.sourceId);
-        buf.writeByte(this.sourceStats);
+        buf.writeByte(this.sourceState);
         buf.writeShort(this.distance);
     }
 
@@ -32,7 +32,7 @@ public class SourceAudioPlasmoPacket extends BaseAudioPlasmoPacket<SourceAudioPl
     public void decode(ByteBuf buf) {
         super.decode(buf);
         this.sourceId = DataTypeUtil.readUniqueId(buf);
-        this.sourceStats = buf.readByte();
+        this.sourceState = buf.readByte();
         this.distance = buf.readShort();
     }
 
@@ -49,12 +49,12 @@ public class SourceAudioPlasmoPacket extends BaseAudioPlasmoPacket<SourceAudioPl
         this.sourceId = sourceId;
     }
 
-    public byte getSourceStats() {
-        return this.sourceStats;
+    public byte getSourceState() {
+        return this.sourceState;
     }
 
-    public void setSourceStats(byte sourceStats) {
-        this.sourceStats = sourceStats;
+    public void setSourceState(byte sourceState) {
+        this.sourceState = sourceState;
     }
 
     public short getDistance() {
