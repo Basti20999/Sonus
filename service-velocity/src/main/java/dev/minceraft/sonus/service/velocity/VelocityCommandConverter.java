@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
@@ -58,10 +59,10 @@ public final class VelocityCommandConverter {
     private void convertChild(
             List<CommandNode> nodes,
             List<Map.Entry<ArgumentCommandNode<?>, String>> enumValues,
-            CommandNode node
+            CommandNode node, ArgumentBuilder<CommandSource, ?> brigNode
     ) {
         if (node instanceof LiteralCommandNode literal) {
-            this.convertNode(nodes, enumValues, literalArgumentBuilder(literal.getName()));
+            brigNode.then(this.convertNode(nodes, enumValues, literalArgumentBuilder(literal.getName())));
             return;
         }
         if (!(node instanceof ArgumentCommandNode<?> arg)) {
@@ -73,7 +74,7 @@ public final class VelocityCommandConverter {
             for (Enum<?> value : argType.getValues()) {
                 String name = value.name().toLowerCase(Locale.ROOT);
                 enumValues.addLast(Map.entry(arg, name));
-                this.convertNode(nodes, enumValues, literalArgumentBuilder(name));
+                brigNode.then(this.convertNode(nodes, enumValues, literalArgumentBuilder(name)));
                 enumValues.removeLast();
             }
         }
@@ -84,7 +85,8 @@ public final class VelocityCommandConverter {
             case STRING -> StringArgumentType.string();
             default -> throw new UnsupportedOperationException();
         };
-        this.convertNode(nodes, enumValues, requiredArgumentBuilder(arg.getName(), brigArgType));
+        RequiredArgumentBuilder<CommandSource, ?> builder = requiredArgumentBuilder(arg.getName(), brigArgType);
+        brigNode.then(this.convertNode(nodes, enumValues, builder));
     }
 
     private void parseAncestor(
@@ -101,7 +103,7 @@ public final class VelocityCommandConverter {
         ancestor.parse(sctx, argVal);
     }
 
-    private void convertNode(
+    private ArgumentBuilder<CommandSource, ?> convertNode(
             List<CommandNode> nodes,
             List<Map.Entry<ArgumentCommandNode<?>, String>> enumValues,
             ArgumentBuilder<CommandSource, ?> builder
@@ -128,9 +130,10 @@ public final class VelocityCommandConverter {
         // recursively convert all children
         for (CommandNode child : node.getChildren()) {
             nodes.addLast(child);
-            this.convertChild(nodes, enumValues, child);
+            this.convertChild(nodes, enumValues, child, builder);
             nodes.removeLast();
         }
+        return builder;
     }
 
     private CommandContext createContext(CommandSource source) {
