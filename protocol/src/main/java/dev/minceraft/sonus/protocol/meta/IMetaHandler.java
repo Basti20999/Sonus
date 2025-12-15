@@ -2,6 +2,7 @@ package dev.minceraft.sonus.protocol.meta;
 // Created by booky10 in Sonus (01:14 17.07.2025)
 
 import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
+import dev.minceraft.sonus.protocol.meta.agentbound.TriggerCommandUpdateMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.AudioStreamMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.RegisterAudioCategoryMessage;
@@ -24,5 +25,8 @@ public interface IMetaHandler {
     }
 
     default void handlePlayerConnectionState(PlayerConnectionStateMessage message) {
+    }
+
+    default void handleTriggerCommandUpdate(TriggerCommandUpdateMessage message) {
     }
 }

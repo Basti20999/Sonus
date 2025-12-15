@@ -6,6 +6,7 @@ import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
 import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
+import dev.minceraft.sonus.protocol.meta.agentbound.TriggerCommandUpdateMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.papermc.paper.connection.PlayerConnection;
@@ -64,5 +65,14 @@ public class AgentMessageListener implements PluginMessageListener, IMetaHandler
                 new VoiceConnectionStateChangeEvent(player, false).callEvent();
             }
         }
+    }
+
+    @Override
+    public void handleTriggerCommandUpdate(TriggerCommandUpdateMessage message) {
+        Player player = Bukkit.getPlayer(message.getPlayerId());
+        if (player == null) {
+            return;
+        }
+        player.updateCommands();
     }
 }
