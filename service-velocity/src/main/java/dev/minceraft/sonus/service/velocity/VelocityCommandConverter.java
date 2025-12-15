@@ -1,6 +1,8 @@
 package dev.minceraft.sonus.service.velocity;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.ArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.velocitypowered.api.command.BrigadierCommand;
@@ -16,12 +18,18 @@ import dev.minceraft.sonus.service.commands.CommandContext;
 import dev.minceraft.sonus.service.commands.CommandNode;
 import dev.minceraft.sonus.service.commands.CommandSender;
 import dev.minceraft.sonus.service.commands.LiteralCommandNode;
+import dev.minceraft.sonus.service.commands.arguments.EnumArgument;
 import dev.minceraft.sonus.service.player.SonusPlayer;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import static com.velocitypowered.api.command.BrigadierCommand.literalArgumentBuilder;
+import static com.velocitypowered.api.command.BrigadierCommand.requiredArgumentBuilder;
 
 @NullMarked
 public final class VelocityCommandConverter {
@@ -42,29 +50,76 @@ public final class VelocityCommandConverter {
     }
 
     public BrigadierCommand convertRootNode(LiteralCommandNode node) {
-        LiteralArgumentBuilder<CommandSource> builder = BrigadierCommand.literalArgumentBuilder(node.getName());
-
-        List<CommandNode> stack = new LinkedList<>();
-        stack.add(node);
-        this.convertNode(stack, builder);
-
+        LiteralArgumentBuilder<CommandSource> builder = literalArgumentBuilder(node.getName());
+        this.convertNode(new LinkedList<>(List.of(node)), new LinkedList<>(), builder);
         return new BrigadierCommand(builder);
     }
 
-    private void convertNode(List<CommandNode> nodes, ArgumentBuilder<CommandSource, ?> builder) {
+    private void convertChild(
+            List<CommandNode> nodes,
+            List<Map.Entry<ArgumentCommandNode<?>, String>> enumValues,
+            CommandNode node
+    ) {
+        if (node instanceof LiteralCommandNode literal) {
+            this.convertNode(nodes, enumValues, literalArgumentBuilder(literal.getName()));
+            return;
+        }
+        if (!(node instanceof ArgumentCommandNode<?> arg)) {
+            throw new UnsupportedOperationException(String.valueOf(node));
+        }
+
+        if (arg.getType() instanceof EnumArgument<?> argType) {
+            // special argument type, create literals for all values
+            for (Enum<?> value : argType.getValues()) {
+                String name = value.name().toLowerCase(Locale.ROOT);
+                enumValues.addLast(Map.entry(arg, name));
+                this.convertNode(nodes, enumValues, literalArgumentBuilder(name));
+                enumValues.removeLast();
+            }
+        }
+
+        ArgumentType<?> brigArgType = switch (arg.getType().getType()) {
+            case WORD -> StringArgumentType.word();
+            case GREEDY -> StringArgumentType.greedyString();
+            case STRING -> StringArgumentType.string();
+            default -> throw new UnsupportedOperationException();
+        };
+        this.convertNode(nodes, enumValues, requiredArgumentBuilder(arg.getName(), brigArgType));
+    }
+
+    private void parseAncestor(
+            CommandNode ancestor, CommandContext sctx,
+            Map<ArgumentCommandNode<?>, String> enumValues,
+            com.mojang.brigadier.context.CommandContext<CommandSource> ctx
+    ) {
+        if (!(ancestor instanceof ArgumentCommandNode<?> argAnc)) {
+            return; // nothing to parse
+        }
+        String argVal = argAnc.getType() instanceof EnumArgument<?>
+                ? enumValues.get(ancestor)
+                : ctx.getArgument(ancestor.getName(), String.class);
+        ancestor.parse(sctx, argVal);
+    }
+
+    private void convertNode(
+            List<CommandNode> nodes,
+            List<Map.Entry<ArgumentCommandNode<?>, String>> enumValues,
+            ArgumentBuilder<CommandSource, ?> builder
+    ) {
         CommandNode node = nodes.getLast();
         if (node.hasRequirement()) {
             builder.requires(source -> node.checkRequirement(this.createContext(source)));
         }
         if (node.hasExecutor()) {
+            List<CommandNode> nodesCopy = List.copyOf(nodes);
+            @SuppressWarnings("unchecked") // generic array creation
+            Map<ArgumentCommandNode<?>, String> enumValueMap = Map.ofEntries(enumValues.toArray(new Map.Entry[0]));
+
             builder.executes(ctx -> {
                 CommandContext sctx = this.createContext(ctx.getSource());
-                // iterate through ancestor nodes and extract all arguemnts
-                for (CommandNode ancestor : nodes) {
-                    if (ancestor instanceof ArgumentCommandNode<?>) {
-                        String argVal = ctx.getArgument(ancestor.getName(), String.class);
-                        ancestor.parse(sctx, argVal);
-                    }
+                // iterate through ancestor nodes and extract all arguments
+                for (CommandNode ancestor : nodesCopy) {
+                    this.parseAncestor(ancestor, sctx, enumValueMap, ctx);
                 }
                 // execute node with all the provided context
                 return node.execute(sctx) ? Command.SINGLE_SUCCESS : 0;
@@ -73,7 +128,7 @@ public final class VelocityCommandConverter {
         // recursively convert all children
         for (CommandNode child : node.getChildren()) {
             nodes.addLast(child);
-            this.convertNode(nodes, builder);
+            this.convertChild(nodes, enumValues, child);
             nodes.removeLast();
         }
     }

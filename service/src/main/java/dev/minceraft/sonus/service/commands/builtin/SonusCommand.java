@@ -23,11 +23,14 @@ public class SonusCommand extends Command {
     public LiteralCommandNode construct() {
         return literal(this.getLabel())
                 .requires(ctx -> ctx.sender().hasPermission("sonus.command", true)
-                        && ctx.sender() instanceof SonusPlayer player && player.getAdapter() == null)
+                        && ctx.sender() instanceof SonusPlayer)
                 .executes(ctx -> this.execute(ctx.service(), (SonusPlayer) ctx.sender()));
     }
 
     private boolean execute(SonusService service, SonusPlayer player) {
+        if (player.getAdapter() != null || player.isConnected()) {
+            return false; // already connecting/connected
+        }
         WebAdapter adapter = service.getAdapters().getAdapter(WebAdapter.class);
         if (adapter == null) {
             return false;
