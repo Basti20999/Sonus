@@ -24,7 +24,8 @@ public class SonusCommand extends Command {
         return literal(this.getLabel())
                 .requires(ctx -> ctx.sender().hasPermission("sonus.command", true)
                         && ctx.sender() instanceof SonusPlayer)
-                .executes(ctx -> this.execute(ctx.service(), (SonusPlayer) ctx.sender()));
+                .executes(ctx -> this.execute(ctx.service(), (SonusPlayer) ctx.sender()))
+                .with(new GroupCommand().construct());
     }
 
     private boolean execute(SonusService service, SonusPlayer player) {

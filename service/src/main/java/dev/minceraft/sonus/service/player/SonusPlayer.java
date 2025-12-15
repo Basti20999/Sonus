@@ -322,6 +322,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         // trigger state update
         this.updateState();
         this.prevPrimaryRoom = null;
+
+        this.updateCommands();
     }
 
     @Override
@@ -418,12 +420,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         this.setConnected(connected, true);
     }
 
-    public void setConnected(boolean connected, boolean sendToAgent) {
-        if (this.connected == connected) {
-            return; // no change
-        }
-        this.connected = connected;
-
+    public void updateCommands() {
         // trigger command updates, some commands are not available if connected or only if connected
         //
         // velocity doesn't support directly updating commands, so we need
@@ -434,6 +431,15 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         } else {
             this.sendMetaPacket(new TriggerCommandUpdateMessage(this.getUniqueId()));
         }
+    }
+
+    public void setConnected(boolean connected, boolean sendToAgent) {
+        if (this.connected == connected) {
+            return; // no change
+        }
+        this.connected = connected;
+
+        this.updateCommands();
 
         if (sendToAgent) {
             PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();

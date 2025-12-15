@@ -39,6 +39,8 @@ public class SvcConnection implements AutoCloseable {
     private @MonotonicNonNull InetSocketAddress remoteAddress;
     private SvcPacketContext ctx = SvcPacketContext.INITIAL;
 
+    private @Nullable UUID currentRoomId; // Needed for group self join updates
+
     public SvcConnection(SvcProtocolAdapter protocolAdapter, ISonusPlayer player) {
         this.protocolAdapter = protocolAdapter;
         this.player = player;
@@ -154,6 +156,15 @@ public class SvcConnection implements AutoCloseable {
     public AudioProcessor getProcessor(UUID channelId) {
         return this.processors.computeIfAbsent(channelId, __ ->
                 this.protocolAdapter.getAdapter().getService().createAudioProcessor(AudioProcessor.Mode.VOICE));
+    }
+
+    @Nullable
+    public UUID getCurrentRoomId() {
+        return this.currentRoomId;
+    }
+
+    public void setCurrentRoomId(@Nullable UUID currentRoomId) {
+        this.currentRoomId = currentRoomId;
     }
 
     @Override

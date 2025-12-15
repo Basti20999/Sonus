@@ -77,6 +77,7 @@ public final class VelocityCommandConverter {
                 brigNode.then(this.convertNode(nodes, enumValues, literalArgumentBuilder(name)));
                 enumValues.removeLast();
             }
+            return;
         }
 
         ArgumentType<?> brigArgType = switch (arg.getType().getType()) {
