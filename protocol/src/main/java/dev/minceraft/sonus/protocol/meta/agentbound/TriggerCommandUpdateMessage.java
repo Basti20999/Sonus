@@ -14,6 +14,13 @@ public class TriggerCommandUpdateMessage implements IMetaMessage {
 
     private @MonotonicNonNull UUID playerId;
 
+    public TriggerCommandUpdateMessage(UUID playerId) {
+        this.playerId = playerId;
+    }
+
+    public TriggerCommandUpdateMessage() {
+    }
+
     @Override
     public void encode(ByteBuf buf) {
         DataTypeUtil.writeUniqueId(buf, this.playerId);
@@ -31,5 +38,9 @@ public class TriggerCommandUpdateMessage implements IMetaMessage {
 
     public UUID getPlayerId() {
         return this.playerId;
+    }
+
+    public void setPlayerId(UUID playerId) {
+        this.playerId = playerId;
     }
 }

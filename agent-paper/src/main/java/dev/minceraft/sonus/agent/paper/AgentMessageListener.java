@@ -69,10 +69,11 @@ public class AgentMessageListener implements PluginMessageListener, IMetaHandler
 
     @Override
     public void handleTriggerCommandUpdate(TriggerCommandUpdateMessage message) {
+        // some service implementations may not be able to update
+        // commands and instead delegate this to the agent implementation
         Player player = Bukkit.getPlayer(message.getPlayerId());
-        if (player == null) {
-            return;
+        if (player != null) {
+            player.updateCommands();
         }
-        player.updateCommands();
     }
 }

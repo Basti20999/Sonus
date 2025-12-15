@@ -13,6 +13,7 @@ import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
 import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
+import dev.minceraft.sonus.protocol.meta.agentbound.TriggerCommandUpdateMessage;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.commands.CommandSender;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
@@ -422,6 +423,18 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             return; // no change
         }
         this.connected = connected;
+
+        // trigger command updates, some commands are not available if connected or only if connected
+        //
+        // velocity doesn't support directly updating commands, so we need
+        // to tell the agent to fire a command update packet; still, some platforms may
+        // support this feature, so leave it up to the platform
+        if (this.service.getPlatform().isCommandUpdateSupported()) {
+            this.platform.updateCommands();
+        } else {
+            this.sendMetaPacket(new TriggerCommandUpdateMessage(this.getUniqueId()));
+        }
+
         if (sendToAgent) {
             PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();
             packet.setPlayerId(this.getUniqueId());

@@ -33,4 +33,8 @@ public interface IPlatformPlayer {
     String renderPlainComponent(Component component);
 
     void sendMessage(Component component);
+
+    default void updateCommands() {
+        throw new UnsupportedOperationException();
+    }
 }

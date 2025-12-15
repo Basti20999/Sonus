@@ -27,4 +27,6 @@ public interface IServicePlatform {
     boolean serverExists(UUID uniqueId);
 
     void registerCommands(List<LiteralCommandNode> nodes);
+
+    boolean isCommandUpdateSupported();
 }

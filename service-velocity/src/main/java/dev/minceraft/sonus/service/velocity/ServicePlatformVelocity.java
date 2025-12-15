@@ -115,4 +115,11 @@ public class ServicePlatformVelocity implements IServicePlatform {
             converter.registerCommand(node);
         }
     }
+
+    @Override
+    public boolean isCommandUpdateSupported() {
+        // velocity just injects the proxy commands and forwards the packet to the player
+        // without saving the command graph, so velocity doesn't support command updating
+        return false;
+    }
 }
