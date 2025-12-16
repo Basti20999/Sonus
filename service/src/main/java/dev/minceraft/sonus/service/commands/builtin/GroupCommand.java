@@ -15,6 +15,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
@@ -80,9 +81,9 @@ public class GroupCommand extends Command {
                                     return this.joinGroup(ctx.service(), player, name, null);
                                 })))
                 .with(literal("leave")
-                .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups.leave") &&
-                        ((SonusPlayer) ctx.sender()).getPrimaryRoom() != null)
-                .executes(ctx -> this.leaveGroup(ctx.service(), (SonusPlayer) ctx.sender())));
+                        .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups.leave") &&
+                                ((SonusPlayer) ctx.sender()).getPrimaryRoom() != null)
+                        .executes(ctx -> this.leaveGroup(ctx.service(), (SonusPlayer) ctx.sender())));
     }
 
     private boolean listGroups(SonusService service, SonusPlayer player) {
@@ -92,12 +93,25 @@ public class GroupCommand extends Command {
         } else {
             Component message = Component.translatable("sonus.command.groups.list.header")
                     .arguments(Component.text(rooms.size()));
-            for (IRoom room : rooms) {
-                message = message.append(
-                        Component.translatable("sonus.command.groups.list.entry")
-                                .arguments(Component.text(room.getName()), Component.text(room.getMembers().size()))
-                                .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, room.getName(), null)))
-                );
+
+            Iterator<IRoom> iterator = rooms.iterator();
+            while (iterator.hasNext()) {
+                IRoom room = iterator.next();
+                if (room.getPassword() == null) {
+                    message = message.append(
+                            Component.translatable("sonus.command.groups.list.entry.no-password")
+                                    .arguments(Component.text(room.getName()), Component.text(room.getMembers().size()))
+                                    .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, room.getName(), null)))
+                    );
+                } else {
+                    message = message.append(
+                            Component.translatable("sonus.command.groups.list.entry.password")
+                                    .arguments(Component.text(room.getName()), Component.text(room.getMembers().size()))
+                    );
+                }
+                if (iterator.hasNext()) {
+                    message = message.append(Component.newline());
+                }
             }
 
             player.sendMessage(message);
@@ -114,7 +128,11 @@ public class GroupCommand extends Command {
 
     private boolean createGroup(SonusService service, SonusPlayer player, String name, RoomAudioType type, @Nullable String password) {
         IRoom room = service.getRoomManager().createStaticRoom(name, password, type, false);
-        return this.joinGroup(service, player, room.getId(), password);
+        this.joinGroup(service, player, room.getId(), password);
+
+        player.sendMessage(Component.translatable("sonus.command.groups.create.success")
+                .arguments(Component.text(name)));
+        return true;
     }
 
     private boolean joinGroup(SonusService service, SonusPlayer player, String name, @Nullable String password) {
@@ -125,7 +143,8 @@ public class GroupCommand extends Command {
             }
         }
         if (matched.isEmpty()) {
-            player.sendMessage(Component.translatable("sonus.command.groups.join.not_found", name));
+            player.sendMessage(Component.translatable("sonus.command.groups.join.not_found")
+                    .arguments(Component.text(name)));
         } else if (matched.size() == 1) {
             IRoom room = matched.iterator().next();
             this.joinGroup(service, player, room.getId(), password);

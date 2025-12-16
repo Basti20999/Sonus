@@ -61,19 +61,22 @@ public class SvcSonusListener implements ISonusServiceEvents {
             PlayerStateSvcPacket packet = new PlayerStateSvcPacket();
             packet.setState(this.adapter.getSessions().buildPlayerState(connection.getPlayer(), player));
 
-            IRoom currentRoom = player.getPrimaryRoom();
-            if (currentRoom == null) {
-                // Send empty JoinedGroup packet to indicate no current room
-                connection.sendPacket(new JoinedGroupSvcPacket());
-            } else if (currentRoom.getId() != connection.getCurrentRoomId()) {
-                // if the player's primary room differs from the connection's current room,
-                // send a GroupJoined packet to update it
+            // If the player himself is receiving an update, ensure his current room is synced
+            if (connection.getPlayer() == player) {
+                IRoom currentRoom = player.getPrimaryRoom();
+                if (currentRoom == null) {
+                    // Send empty JoinedGroup packet to indicate no current room
+                    connection.sendPacket(new JoinedGroupSvcPacket());
+                } else if (currentRoom.getId() != connection.getCurrentRoomId()) {
+                    // if the player's primary room differs from the connection's current room,
+                    // send a GroupJoined packet to update it
 
-                JoinedGroupSvcPacket joinPacket = new JoinedGroupSvcPacket();
-                joinPacket.setGroupId(currentRoom.getId());
-                connection.sendPacket(joinPacket);
+                    JoinedGroupSvcPacket joinPacket = new JoinedGroupSvcPacket();
+                    joinPacket.setGroupId(currentRoom.getId());
+                    connection.sendPacket(joinPacket);
 
-                connection.setCurrentRoomId(currentRoom.getId());
+                    connection.setCurrentRoomId(currentRoom.getId());
+                }
             }
 
             return packet;
