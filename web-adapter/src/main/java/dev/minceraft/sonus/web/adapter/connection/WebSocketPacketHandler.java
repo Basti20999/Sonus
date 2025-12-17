@@ -77,7 +77,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         } else {
             success = false;
         }
-        this.connection.sendPacket(new RoomLeaveResponsePacket(primaryRoom.getId(), success));
+        this.connection.sendPacket(new RoomLeaveResponsePacket(packet.getRoomId(), success));
     }
 
     @Override
