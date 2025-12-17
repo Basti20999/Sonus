@@ -54,7 +54,7 @@ public class WebSocketHandshaker extends ChannelInboundHandlerAdapter {
 
     private void handleRequest(ChannelHandlerContext ctx, HttpRequest request, int version, String route) throws HttpErrorException {
         if (!route.startsWith(API_TOKEN_PARAM_PREFIX)) {
-            return; // we only support one route for now
+            throw new HttpErrorException(HttpResponseStatus.NOT_FOUND);
         }
         String token = route.substring(API_TOKEN_PARAM_PREFIX.length()).trim();
         if (!WebTokenUtil.isValidToken(token)) {
