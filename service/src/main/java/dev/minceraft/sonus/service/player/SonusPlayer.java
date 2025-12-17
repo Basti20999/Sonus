@@ -581,7 +581,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
         long keepAliveTimeoutMs = this.service.getConfig().getKeepAliveTimeoutMs();
         if (this.lastKeepAlive + keepAliveTimeoutMs < currentTime) {
-            this.service.getPlayerManager().unregisterPlayer(this.getUniqueId());
+            this.service.getEventManager().onPlayerQuit(this);
         }
     }
 }

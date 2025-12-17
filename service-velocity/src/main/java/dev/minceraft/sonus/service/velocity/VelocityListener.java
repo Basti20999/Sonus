@@ -10,12 +10,14 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.agent.PluginMessageSourceImpl;
+import dev.minceraft.sonus.service.player.SonusPlayer;
 import net.kyori.adventure.key.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public class VelocityListener {
 
@@ -34,7 +36,11 @@ public class VelocityListener {
 
     @Subscribe
     public void onQuit(DisconnectEvent event) {
-        this.service.getEventManager().onPlayerQuit(event.getPlayer().getUniqueId());
+        UUID playerId = event.getPlayer().getUniqueId();
+        SonusPlayer player = this.service.getPlayerManager().getPlayer(playerId);
+        if (player != null) {
+            this.service.getEventManager().onPlayerQuit(player);
+        }
     }
 
     @Subscribe

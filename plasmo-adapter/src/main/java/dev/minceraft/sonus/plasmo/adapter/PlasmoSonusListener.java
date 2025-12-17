@@ -36,13 +36,13 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
     }
 
     @Override
-    public void onPlayerQuit(UUID playerId) {
+    public void onPlayerQuit(ISonusPlayer player) {
         // remove backend-specific session
-        this.adapter.getSessionManager().removeSession(playerId);
+        this.adapter.getSessionManager().removeSession(player.getUniqueId());
 
         // completely remove player
         PlayerDisconnectPacket packet = new PlayerDisconnectPacket();
-        packet.setUniqueId(playerId);
+        packet.setUniqueId(player.getUniqueId());
         this.adapter.getSessionManager().broadcast(packet);
     }
 

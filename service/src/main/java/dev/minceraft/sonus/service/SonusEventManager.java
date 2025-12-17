@@ -44,15 +44,15 @@ public class SonusEventManager implements ISonusEventManager {
     }
 
     @Override
-    public void onPlayerQuit(UUID playerId) {
+    public void onPlayerQuit(ISonusPlayer player) {
         for (ISonusServiceEvents listener : this.listeners) {
             try {
-                listener.onPlayerQuit(playerId);
+                listener.onPlayerQuit(player);
             } catch (Exception exception) {
                 LOGGER.error("Error in onPlayerQuit for listener {}", listener.getClass().getSimpleName(), exception);
             }
         }
-        this.service.getPlayerManager().unregisterPlayer(playerId);
+        this.service.getPlayerManager().unregisterPlayer(player.getUniqueId());
     }
 
     @Override

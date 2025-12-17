@@ -34,12 +34,12 @@ public class SvcSonusListener implements ISonusServiceEvents {
     }
 
     @Override
-    public void onPlayerQuit(UUID playerId) {
+    public void onPlayerQuit(ISonusPlayer player) {
         // remove backend-specific session
-        this.adapter.getSessions().removeSession(playerId);
+        this.adapter.getSessions().removeSession(player.getUniqueId());
         // completely remove player
         RemovePlayerStatePacket packet = new RemovePlayerStatePacket();
-        packet.setPlayerId(playerId);
+        packet.setPlayerId(player.getUniqueId());
         this.adapter.getSessions().broadcast(packet);
     }
 
