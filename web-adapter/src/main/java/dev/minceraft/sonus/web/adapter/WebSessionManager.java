@@ -11,16 +11,16 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
 import org.jspecify.annotations.Nullable;
 
-import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class WebSessionManager {
 
     private final WebAdapter adapter;
-    private final Map<String, WeakReference<ISonusPlayer>> tokens = new ConcurrentHashMap<>();
+    private final Map<String, UUID> tokens = new ConcurrentHashMap<>();
     private final Map<UUID, WebSocketConnection> connections = new ConcurrentHashMap<>();
 
     public WebSessionManager(WebAdapter adapter) {
@@ -82,25 +82,25 @@ public class WebSessionManager {
 
     public String generateToken(ISonusPlayer player) {
         String token = WebTokenUtil.generateToken();
-        this.tokens.put(token, new WeakReference<>(player));
+        this.tokens.put(token, player.getUniqueId());
         return token;
     }
 
-    public void removeTokens(ISonusPlayer player) {
-        this.tokens.values().removeIf(ref -> {
-            ISonusPlayer target = ref.get();
-            return target == null || target == player;
-        });
+    public void removeTokens(UUID playerId) {
+        this.tokens.values().removeIf(Predicate.isEqual(playerId));
     }
 
     public @Nullable ISonusPlayer consumeToken(String token) {
-        WeakReference<ISonusPlayer> playerRef = this.tokens.remove(token);
-        ISonusPlayer player = playerRef != null ? playerRef.get() : null;
-        if (player != null) {
-            // remove all tokens related to this player
-            this.removeTokens(player);
+        UUID playerId = this.tokens.remove(token);
+        if (playerId != null) {
+            this.removeTokens(playerId);
         }
-        return player;
+
+        ISonusPlayer player = this.adapter.getService().getPlayerManager().getPlayer(playerId);
+        if (player != null && player.isOnline()) {
+            return player;
+        }
+        return null;
     }
 
     public void addConnection(WebSocketConnection connection) {
