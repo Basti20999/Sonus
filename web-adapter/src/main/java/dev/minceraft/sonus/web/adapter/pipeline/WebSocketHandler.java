@@ -22,6 +22,7 @@ public class WebSocketHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
             if (msg instanceof WebSocketPacket packet) {
+                System.out.println("SERVICEBOUND "+packet);
                 packet.handle(this.connection.getWebSocketHandler());
             }
         } finally {
@@ -34,5 +35,10 @@ public class WebSocketHandler extends ChannelInboundHandlerAdapter {
         LOGGER.error("Caught exception in web connection to {} for {}",
                 this.connection.getPlayer().getUniqueId(), ctx.channel(), cause);
         ctx.close();
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) {
+        this.connection.getWebSocketHandler().handleDisconnect();
     }
 }
