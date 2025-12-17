@@ -39,7 +39,7 @@ public class RoomJoinRequestPacket extends WebSocketPacket {
     public void decode(ByteBuf buf, WsPacketContext context) {
         this.roomId = DataTypeUtil.readUniqueId(buf);
         this.password = DataTypeUtil.readNullable(buf, ew ->
-                Utf8String.read(ew, MAX_ROOM_PASSWORD_LENGTH));
+                Utf8String.read(ew, MAX_ROOM_PASSWORD_LENGTH).trim());
     }
 
     @Override

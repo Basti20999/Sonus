@@ -43,13 +43,18 @@ public class RoomCreatePacket extends WebSocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.name = Utf8String.read(buf, MAX_ROOM_NAME_LENGTH);
+        this.name = Utf8String.read(buf, MAX_ROOM_NAME_LENGTH).trim();
         this.password = DataTypeUtil.readNullable(buf, ew ->
-                Utf8String.read(ew, MAX_ROOM_PASSWORD_LENGTH));
+                Utf8String.read(ew, MAX_ROOM_PASSWORD_LENGTH).trim());
         this.speakToOthers = buf.readBoolean();
         this.listenToOthers = buf.readBoolean();
-        if (this.speakToOthers && !this.listenToOthers) {
-            throw new IllegalStateException("Can't create room with passthrough speaking without listening " + this.name);
+
+        if (this.name.isEmpty()) {
+            throw new IllegalStateException("Can't create room with empty name " + this);
+        } else if (this.password != null && this.password.isEmpty()) {
+            throw new IllegalStateException("Can't create room with non-null but empty password " + this);
+        } else if (this.speakToOthers && !this.listenToOthers) {
+            throw new IllegalStateException("Can't create room with passthrough speaking without listening " + this);
         }
     }
 
