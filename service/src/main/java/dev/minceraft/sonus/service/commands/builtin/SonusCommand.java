@@ -5,12 +5,13 @@ import dev.minceraft.sonus.service.commands.Command;
 import dev.minceraft.sonus.service.commands.LiteralCommandNode;
 import dev.minceraft.sonus.service.player.SonusPlayer;
 import dev.minceraft.sonus.web.adapter.WebAdapter;
+import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import org.jspecify.annotations.NullMarked;
 
 import static dev.minceraft.sonus.service.commands.CommandNode.literal;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.Component.translatable;
-import static net.kyori.adventure.text.event.ClickEvent.copyToClipboard;
+import static net.kyori.adventure.text.event.ClickEvent.openUrl;
 
 @NullMarked
 public class SonusCommand extends Command {
@@ -36,10 +37,14 @@ public class SonusCommand extends Command {
         if (adapter == null) {
             return false;
         }
-        // TODO send full link
+
+        String linkPattern = service.getConfig().getSubConfig(WebConfig.class).linkPattern;
         String token = adapter.getSessions().generateToken(player);
-        player.sendMessage(translatable("sonus.command.sonus.web.token",
-                text(token).clickEvent(copyToClipboard(token))));
+        String url = String.format(linkPattern, token);
+
+        player.sendMessage(translatable("sonus.command.sonus.web.token")
+                .clickEvent(openUrl(url))
+                .arguments(text(url)));
         return true;
     }
 }

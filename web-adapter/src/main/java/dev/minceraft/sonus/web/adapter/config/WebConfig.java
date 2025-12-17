@@ -11,4 +11,6 @@ public class WebConfig implements ISubConfig {
     public boolean enabled = true;
 
     public InetSocketAddress address = new InetSocketAddress("127.0.0.1", 8032);
+
+    public String linkPattern = "https://sonus.example.com/%s";
 }
