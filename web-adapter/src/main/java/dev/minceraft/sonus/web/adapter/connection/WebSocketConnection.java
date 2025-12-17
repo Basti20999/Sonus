@@ -79,6 +79,7 @@ public class WebSocketConnection implements AutoCloseable {
 
     @Override
     public void close() {
+        this.channel.close();
         this.processors.values().removeIf(processor -> {
             processor.close();
             return true;
