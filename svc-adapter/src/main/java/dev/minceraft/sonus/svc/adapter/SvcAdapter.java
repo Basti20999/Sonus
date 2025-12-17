@@ -147,7 +147,7 @@ public class SvcAdapter implements SonusAdapter {
     @Override
     public void sendKeepAlive(ISonusPlayer player, long currentTime) {
         SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
-        if (connection == null) {
+        if (connection != null) {
             connection.sendPacket(KeepAliveSvcPacket.INSTANCE);
         }
     }
