@@ -34,4 +34,7 @@ public interface ISonusServiceEvents {
 
     default void onGroupRemove(IRoom room) {
     }
+
+    default void onConnectionState(ISonusPlayer player) {
+    }
 }

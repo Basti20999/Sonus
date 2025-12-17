@@ -4,6 +4,7 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
+import dev.minceraft.sonus.service.player.SonusPlayer;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
@@ -118,5 +119,17 @@ public class SonusEventManager implements ISonusEventManager {
                 LOGGER.error("Error in onGroupRemove for listener {}", listener.getClass().getSimpleName(), exception);
             }
         }
+    }
+
+    @Override
+    public void onConnectionState(ISonusPlayer player) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onConnectionState(player);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onConnectionState for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+        ((SonusPlayer) player).updateCommands();
     }
 }

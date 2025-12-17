@@ -12,6 +12,7 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
+import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.UUID;
@@ -69,5 +70,18 @@ public class WebSonusListener implements ISonusServiceEvents {
     @Override
     public void onGroupRemove(IRoom room) {
         this.adapter.getSessions().broadcast(new RoomRemovePacket(room.getId()));
+    }
+
+    @Override
+    public void onConnectionState(ISonusPlayer player) {
+        if (this.adapter.getSessions().getConnection(player.getUniqueId()) != null) {
+            this.sendConnectionStateMessage(player, player.isConnected());
+        }
+    }
+
+    public void sendConnectionStateMessage(ISonusPlayer player, boolean connected) {
+        player.sendMessage(Component.translatable(connected
+                ? "sonus.web.connection.active"
+                : "sonus.web.connection.inactive"));
     }
 }
