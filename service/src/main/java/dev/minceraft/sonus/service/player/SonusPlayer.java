@@ -494,6 +494,11 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     @Override
+    public boolean isOnline() {
+        return this.platform.isOnline();
+    }
+
+    @Override
     public boolean canSee(ISonusPlayer target) {
         if (this == target) {
             return true; // the player can always view themselves, regardless of what happens

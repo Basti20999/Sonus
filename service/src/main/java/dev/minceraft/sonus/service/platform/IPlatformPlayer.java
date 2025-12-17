@@ -37,4 +37,6 @@ public interface IPlatformPlayer {
     default void updateCommands() {
         throw new UnsupportedOperationException();
     }
+
+    boolean isOnline();
 }

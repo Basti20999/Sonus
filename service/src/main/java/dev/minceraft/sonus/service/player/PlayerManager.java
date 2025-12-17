@@ -81,7 +81,7 @@ public final class PlayerManager implements IPlayerManager {
         SonusPlayer player = this.players.get(playerId);
         if (player == null) {
             IPlatformPlayer platform = this.service.getPlatform().getPlayer(playerId);
-            if (platform != null) {
+            if (platform != null && platform.isOnline()) {
                 player = new SonusPlayer(this.service, platform);
                 this.players.put(playerId, player);
             }

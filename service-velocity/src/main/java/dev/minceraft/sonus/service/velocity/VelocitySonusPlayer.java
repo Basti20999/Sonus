@@ -131,4 +131,9 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     public void sendMessage(Component component) {
         this.player.sendMessage(component);
     }
+
+    @Override
+    public boolean isOnline() {
+        return this.player.isActive();
+    }
 }
