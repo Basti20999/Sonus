@@ -22,7 +22,6 @@ public class WebSocketHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
             if (msg instanceof WebSocketPacket packet) {
-                System.out.println("SERVICEBOUND "+packet);
                 packet.handle(this.connection.getWebSocketHandler());
             }
         } finally {
