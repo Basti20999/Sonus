@@ -69,7 +69,7 @@ public class PlasmoAdapter implements SonusAdapter {
         ));
 
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
-        packet.setDistance((short) 0);
+        packet.setDistance((short) this.getService().getConfig().getVoiceChatRange());
         packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setSourceId(source.getSenderId());
@@ -97,6 +97,14 @@ public class PlasmoAdapter implements SonusAdapter {
                 pos,
                 Vec3d.ZERO
         ));
+
+        SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
+        packet.setDistance((short) this.getService().getConfig().getVoiceChatRange());
+        packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
+        packet.setSequenceNumber(audio.sequenceNumber());
+        packet.setSourceId(source.getSenderId());
+        packet.setSourceState((byte) 0);
+        connection.sendPacket(packet);
     }
 
     @Override
@@ -137,7 +145,7 @@ public class PlasmoAdapter implements SonusAdapter {
 
 
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
-        packet.setDistance((short) 0);
+        packet.setDistance((short) this.getService().getConfig().getVoiceChatRange());
         packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
         packet.setSourceId(source.getSenderId());
