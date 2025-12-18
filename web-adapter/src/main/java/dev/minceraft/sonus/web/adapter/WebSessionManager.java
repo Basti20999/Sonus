@@ -72,11 +72,10 @@ public class WebSessionManager {
     public void broadcastFrom(ISonusPlayer source, Function<WebSocketConnection, AbstractWebPacket<?>> packet) {
         for (WebSocketConnection conn : this.connections.values()) {
             ISonusPlayer target = conn.getPlayer();
-            if (!target.isConnected() || !target.canSee(source)) {
-                continue; // target not connected or target can't see source
+            // ensure target is connected and target can see source
+            if (target.isConnected() && target.canSee(source)) {
+                conn.sendPacket(packet.apply(conn));
             }
-            target.ensureTabListed(source);
-            conn.sendPacket(packet.apply(conn));
         }
     }
 

@@ -25,7 +25,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -57,7 +56,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private @Nullable IRoom primaryRoom;
     // visibility states of other players
     private Map<UUID, SonusPlayerState> perPlayerStates = Map.of();
-    private @MonotonicNonNull AgcNode agcNode; // automatic gain control
+    private @Nullable AgcNode agcNode; // automatic gain control
 
     // metadata sent by the backend server agent
     private @Nullable WorldRotatedVec3d position;
@@ -531,12 +530,16 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @ApiStatus.Internal
     public void setStates(Map<UUID, SonusPlayerState> states) {
+        this.sendMessage(Component.text(states.toString()));
         if (!states.equals(this.perPlayerStates)) {
             this.perPlayerStates = Map.copyOf(states);
         }
     }
 
-    public void handleQuit() {
+    @Override
+    public void disconnect() {
+        this.service.getEventManager().onPlayerDisconnect(this);
+
         // leave all rooms (includes primary + server rooms)
         for (IRoom room : Set.copyOf(this.voiceRooms.values())) {
             this.leaveRoom(room);
@@ -572,6 +575,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     public void close() {
         try (AgcNode ignoredAgcNode = this.agcNode) {
             // NO-OP
+        } finally {
+            this.agcNode = null;
         }
     }
 
@@ -581,7 +586,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
         long keepAliveTimeoutMs = this.service.getConfig().getKeepAliveTimeoutMs();
         if (this.lastKeepAlive + keepAliveTimeoutMs < currentTime) {
-            this.service.getEventManager().onPlayerQuit(this);
+            this.disconnect();
         }
     }
 }

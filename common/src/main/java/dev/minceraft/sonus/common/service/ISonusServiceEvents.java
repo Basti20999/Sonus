@@ -14,6 +14,9 @@ public interface ISonusServiceEvents {
     default void onPlayerSwitchBackend(UUID playerId) {
     }
 
+    default void onPlayerDisconnect(ISonusPlayer player) {
+    }
+
     default void onPlayerQuit(ISonusPlayer player) {
     }
 

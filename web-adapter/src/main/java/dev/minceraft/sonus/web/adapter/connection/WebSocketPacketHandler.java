@@ -3,7 +3,6 @@ package dev.minceraft.sonus.web.adapter.connection;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
-import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePacket;
@@ -89,7 +88,6 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
     }
 
     public void handleDisconnect() {
-        ISonusEventManager events = this.connection.getAdapter().getService().getEventManager();
-        events.onPlayerQuit(this.connection.getPlayer());
+        this.connection.getPlayer().disconnect();
     }
 }

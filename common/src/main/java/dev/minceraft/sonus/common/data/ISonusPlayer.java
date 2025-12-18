@@ -112,4 +112,6 @@ public interface ISonusPlayer extends IAudioSource {
     void sendMessage(Component message);
 
     boolean isOnline();
+
+    void disconnect();
 }
