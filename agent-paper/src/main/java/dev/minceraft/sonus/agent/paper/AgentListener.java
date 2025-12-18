@@ -18,11 +18,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerHideEntityEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.event.player.PlayerShowEntityEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.jspecify.annotations.NullMarked;
@@ -43,9 +41,12 @@ public class AgentListener implements Listener {
 
     protected final SonusAgentPlugin plugin;
 
+    protected final Map<UUID, WorldRotatedVec3d> positions = new HashMap<>();
     protected final Map<UUID, WorldRotatedVec3d> positionUpdates = new HashMap<>();
+
     protected final Table<UUID, UUID, SonusPlayerState> playerStates = HashBasedTable.create();
     protected final Table<UUID, UUID, SonusPlayerState> playerStateUpdates = HashBasedTable.create();
+
     protected final Set<Map.Entry<Player, Player>> visibilityChanges = new HashSet<>();
 
     protected final Map<UUID, @Nullable String> teams = new HashMap<>();
@@ -99,6 +100,8 @@ public class AgentListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         // remove cached data for player
         UUID playerId = event.getPlayer().getUniqueId();
+        this.positions.remove(playerId);
+        this.positionUpdates.remove(playerId);
         this.playerStates.rowMap().remove(playerId);
         this.playerStates.columnMap().remove(playerId);
         this.playerStateUpdates.rowMap().remove(playerId);
@@ -119,16 +122,6 @@ public class AgentListener implements Listener {
         }
 
         this.plugin.getApi().getConnectedPlayers().remove(playerId);
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onTeleport(PlayerTeleportEvent event) {
-        this.onMove(event);
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onMove(PlayerMoveEvent event) {
-        this.onChangePos(event.getPlayer(), event.getTo());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -167,24 +160,37 @@ public class AgentListener implements Listener {
         float pitch = location.getPitch();
 
         WorldRotatedVec3d pos = new WorldRotatedVec3d(location.getX(), posY, location.getZ(), yaw, pitch, dimensionKey);
+        this.positions.put(player.getUniqueId(), pos);
         this.positionUpdates.put(player.getUniqueId(), pos);
         this.dirtyPlayerMeta = true;
     }
 
-    public void tickTeams() {
-        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (this.isPlayerIgnored(player)) {
-                continue;
-            }
-            Team playerTeam = scoreboard.getPlayerTeam(player);
-            String name = playerTeam == null ? null : playerTeam.getName();
+    public void tickPosition(Player player) {
+        WorldRotatedVec3d lastPos = this.positions.get(player.getUniqueId());
+        if (lastPos == null) {
+            this.onChangePos(player, player.getLocation());
+            return;
+        }
+        Location currentPos = player.getLocation();
+        if (currentPos.getX() != lastPos.getX() ||
+                currentPos.getY() + player.getEyeHeight() != lastPos.getY() ||
+                currentPos.getZ() != lastPos.getZ() ||
+                currentPos.getYaw() != lastPos.getYaw() ||
+                currentPos.getPitch() != lastPos.getPitch() ||
+                !currentPos.getWorld().getKey().equals(lastPos.getDimension())) {
+            this.onChangePos(player, currentPos);
+        }
+    }
 
-            String old = this.teams.put(player.getUniqueId(), name);
-            if (!Objects.equals(old, name)) {
-                this.teamUpdates.put(player.getUniqueId(), name);
-                this.dirtyPlayerMeta = true;
-            }
+    public void tickTeam(Player player) {
+        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Team playerTeam = scoreboard.getPlayerTeam(player);
+        String name = playerTeam == null ? null : playerTeam.getName();
+
+        String old = this.teams.put(player.getUniqueId(), name);
+        if (!Objects.equals(old, name)) {
+            this.teamUpdates.put(player.getUniqueId(), name);
+            this.dirtyPlayerMeta = true;
         }
     }
 
@@ -202,8 +208,15 @@ public class AgentListener implements Listener {
 
     @EventHandler
     public void onTickEnd(ServerTickEndEvent event) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (this.isPlayerIgnored(player)) {
+                return;
+            }
+            this.tickPosition(player);
+            this.tickTeam(player);
+        }
         this.tickVisibilityChanges();
-        this.tickTeams();
+
         this.tickDirtyPlayerMeta();
     }
 
