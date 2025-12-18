@@ -58,7 +58,7 @@ public class PlasmoConnection implements AutoCloseable {
         int voiceChatRange = (int) this.adapter.getService().getConfig().getVoiceChatRange();
         VoiceActivation defaultActivation = new VoiceActivation(
                 "proximity",
-                "pv.activation.proximity",
+                this.adapter.getTranslationHolder().registerTranslationKey("pv.activation.proximity"),
                 "plasmovoice:textures/icons/microphone.png",
                 List.of(voiceChatRange),
                 voiceChatRange,
@@ -66,13 +66,13 @@ public class PlasmoConnection implements AutoCloseable {
                 false, // Force mono audio
                 true, // Allow other activations
                 this.adapter.getUdpAdapter().getCodecInfo(),
-                1 // weight
+                100 // weight
         );
         this.voiceActivations.put(defaultActivation.getId(), defaultActivation);
 
         this.defaultSourceLine = new VoiceSourceLine(
                 "proximity",
-                "pv.sourceline.proximity",
+                this.adapter.getTranslationHolder().registerTranslationKey("pv.sourceline.proximity"),
                 "plasmovoice:textures/icons/speaker.png",
                 1.0,
                 0,
@@ -172,6 +172,24 @@ public class PlasmoConnection implements AutoCloseable {
 
     public VoiceSourceLine getDefaultSourceLine() {
         return this.defaultSourceLine;
+    }
+    
+    public void registerVoiceSourceLine(VoiceSourceLine sourceLine) {
+        this.sourceLines.put(sourceLine.getId(), sourceLine);
+    }
+
+    public void unregisterVoiceSourceLine(UUID sourceLineId) {
+        if (sourceLineId.equals(this.defaultSourceLine.getId())) {
+            return; // cannot unregister default source line
+        }
+        this.sourceLines.remove(sourceLineId);
+    }
+
+    public VoiceSourceLine getSourceLine(@Nullable UUID sourceLineId) {
+        if (sourceLineId == null) {
+            return this.defaultSourceLine;
+        }
+        return this.sourceLines.getOrDefault(sourceLineId, this.defaultSourceLine);
     }
 
     public void registerSourceInfo(UUID id, Supplier<SourceInfo> sourceInfo) {

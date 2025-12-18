@@ -30,6 +30,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -520,13 +521,18 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     @Override
-    public Component renderComponent(Component component) {
-        return this.platform.renderComponent(component);
+    public Locale getLocale() {
+        return this.platform.getLocale();
     }
 
     @Override
-    public String renderPlainComponent(Component component) {
-        return this.platform.renderPlainComponent(component);
+    public Component renderComponent(Component component, Locale locale) {
+        return this.platform.renderComponent(component, locale);
+    }
+
+    @Override
+    public String renderPlainComponent(Component component, Locale locale) {
+        return this.platform.renderPlainComponent(component, locale);
     }
 
     @ApiStatus.Internal

@@ -4,6 +4,7 @@ import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpHandler;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.ConnectionPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.LanguagePacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceInfoPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.SourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.LanguageRequestPacket;
@@ -14,6 +15,8 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerStatePacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.SourceInfoRequestPacket;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 @NullMarked
@@ -29,7 +32,14 @@ public class MetaHandler implements TcpHandler {
 
     @Override
     public void handleLanguageRequestPacket(LanguageRequestPacket packet) {
+        Locale locale = Locale.forLanguageTag(packet.getLanguage().replace('_', '-'));
+        Map<String, String> translations = this.adapter.getTranslationHolder().getTranslations(this.connection.getPlayer(), locale);
 
+        LanguagePacket response = new LanguagePacket();
+        response.setLanguage(packet.getLanguage());
+        response.setLanguageMap(translations);
+
+        this.connection.sendPacket(response);
     }
 
     @Override

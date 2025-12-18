@@ -12,6 +12,7 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @NullMarked
@@ -105,9 +106,19 @@ public interface ISonusPlayer extends IAudioSource {
 
     boolean canSee(ISonusPlayer target);
 
-    Component renderComponent(Component component);
+    Locale getLocale();
 
-    String renderPlainComponent(Component component);
+    Component renderComponent(Component component, Locale locale);
+
+    default Component renderComponent(Component component) {
+        return this.renderComponent(component, this.getLocale());
+    }
+
+    String renderPlainComponent(Component component, Locale locale);
+
+    default String renderPlainComponent(Component component) {
+        return this.renderPlainComponent(component, this.getLocale());
+    }
 
     void sendMessage(Component message);
 

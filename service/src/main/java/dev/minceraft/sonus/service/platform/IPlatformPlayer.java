@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.UUID;
 
 @NullMarked
@@ -28,9 +29,19 @@ public interface IPlatformPlayer {
 
     boolean canSeeFallback(IPlatformPlayer target);
 
-    Component renderComponent(Component component);
+    Locale getLocale();
 
-    String renderPlainComponent(Component component);
+    Component renderComponent(Component component, Locale locale);
+
+    default Component renderComponent(Component component) {
+        return this.renderComponent(component, this.getLocale());
+    }
+
+    String renderPlainComponent(Component component, Locale locale);
+
+    default String renderPlainComponent(Component component) {
+        return this.renderPlainComponent(component, this.getLocale());
+    }
 
     void sendMessage(Component component);
 
