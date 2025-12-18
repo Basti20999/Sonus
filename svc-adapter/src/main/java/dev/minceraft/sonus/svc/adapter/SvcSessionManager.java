@@ -10,14 +10,12 @@ import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.JoinedGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.PlayerStatesSvcPacket;
-import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
@@ -31,10 +29,6 @@ public class SvcSessionManager {
 
     public SvcSessionManager(SvcAdapter adapter) {
         this.adapter = adapter;
-
-        int keepAliveInterval = this.adapter.getService().getConfig().getKeepAliveMs();
-        this.adapter.getService().getScheduler().schedule(
-                this::tickKeepAlive, 0, keepAliveInterval, TimeUnit.MILLISECONDS);
     }
 
     public void addConnection(SvcConnection connection) {
@@ -76,10 +70,6 @@ public class SvcSessionManager {
             packet.setWrongPassword(false);
             connection.sendPacket(packet);
         }
-    }
-
-    public void tickKeepAlive() {
-        this.broadcast(KeepAliveSvcPacket.INSTANCE);
     }
 
     public void broadcast(AbstractSvcPacket<?> packet) {

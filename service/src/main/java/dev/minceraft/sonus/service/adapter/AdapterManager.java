@@ -55,6 +55,17 @@ public final class AdapterManager {
         }
     }
 
+    public void shutdown() {
+        for (SonusAdapter adapter : this.adapters) {
+            try {
+                LOGGER.info("Shutting down {} adapter...", adapter.getClass().getSimpleName());
+                adapter.shutdown(this.service);
+            } catch (Throwable throwable) {
+                LOGGER.warn("Failed to shutdown {}", adapter.getClass().getSimpleName(), throwable);
+            }
+        }
+    }
+
     public @Nullable UdpSonusAdapter getAdapter(byte magicByte) {
         return this.adaptersByMagic[magicByte & 0xFF];
     }

@@ -106,6 +106,8 @@ public final class SonusService implements ISonusService {
 
     public void shutdown() {
         LOGGER.info("Shutting down sonus service...");
+        this.adapters.shutdown();
+
         if (this.udpServer != null) {
             this.udpServer.shutdown();
         }

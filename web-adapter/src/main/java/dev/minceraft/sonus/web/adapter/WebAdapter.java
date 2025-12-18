@@ -47,6 +47,11 @@ public class WebAdapter implements SonusAdapter {
         this.service.getEventManager().registerListener(new WebSonusListener(this));
     }
 
+    @Override
+    public void shutdown(ISonusService service) {
+        this.server.shutdown();
+    }
+
     private void sendAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio, @Nullable Vec3d pos) {
         WebSocketConnection connection = this.sessions.getConnection(player.getUniqueId());
         if (connection == null) {

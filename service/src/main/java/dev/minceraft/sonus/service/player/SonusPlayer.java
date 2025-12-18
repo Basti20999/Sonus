@@ -582,7 +582,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     public void tickKeepAlive(long currentTime) {
-        if (this.sonusAdapter != null) {
+        if (this.sonusAdapter != null && this.isConnected()) {
             this.sonusAdapter.sendKeepAlive(this, currentTime);
         }
         long keepAliveTimeoutMs = this.service.getConfig().getKeepAliveTimeoutMs();
