@@ -41,6 +41,9 @@ public class PlasmoSessionManager {
 
     public boolean removeSession(UUID playerId) {
         try (PlasmoConnection conn = this.usersByUniqueId.remove(playerId)) {
+            if (conn != null) {
+                this.usersBySecret.remove(conn.getSecret());
+            }
             return conn != null;
         }
     }
