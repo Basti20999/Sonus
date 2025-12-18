@@ -79,7 +79,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @Override
     public void handleAudioInput(SonusAudio audio) {
-        if (this.muted || !this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
+        if (this.muted || this.deafened
+                || !this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
             return;
         }
 
