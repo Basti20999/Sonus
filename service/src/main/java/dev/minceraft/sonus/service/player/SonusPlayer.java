@@ -543,7 +543,6 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @ApiStatus.Internal
     public void setStates(Map<UUID, SonusPlayerState> states) {
-        this.sendMessage(Component.text(states.toString()));
         if (!states.equals(this.perPlayerStates)) {
             this.perPlayerStates = Map.copyOf(states);
         }
