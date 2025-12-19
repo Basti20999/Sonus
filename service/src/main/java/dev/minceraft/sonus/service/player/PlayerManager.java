@@ -71,7 +71,7 @@ public final class PlayerManager implements IPlayerManager {
             if (removed == null) {
                 return false;
             }
-            removed.handleQuit();
+            removed.disconnect();
             return true;
         }
     }

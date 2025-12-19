@@ -105,7 +105,7 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     public boolean canSeeFallback(IPlatformPlayer target) {
         // if the source and target are on the same server, this fallback method
         // should only be called if there is no state present yet during login, so hide the target there
-        return this.server != ((VelocitySonusPlayer) target).server;
+        return false;
     }
 
     @Override

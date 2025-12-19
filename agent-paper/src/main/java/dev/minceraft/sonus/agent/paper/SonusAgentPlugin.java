@@ -52,6 +52,8 @@ public class SonusAgentPlugin extends JavaPlugin {
     @Override
     public void onLoad() {
         this.config = this.createConfig();
+        this.config.reloadConfig();
+
         this.api = this.createApi();
         Bukkit.getServicesManager().register(SonusAgentApi.class, this.api, this, ServicePriority.Normal);
     }

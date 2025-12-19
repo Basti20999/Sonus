@@ -9,8 +9,9 @@ import dev.minceraft.sonus.service.commands.arguments.RoomTypeArgument;
 import dev.minceraft.sonus.service.commands.arguments.StringArgument;
 import dev.minceraft.sonus.service.player.SonusPlayer;
 import dev.minceraft.sonus.service.rooms.TransientStaticRoom;
-import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ComponentBuilder;
 import net.kyori.adventure.text.event.ClickEvent;
+import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
@@ -21,7 +22,10 @@ import java.util.UUID;
 
 import static dev.minceraft.sonus.service.commands.CommandNode.argument;
 import static dev.minceraft.sonus.service.commands.CommandNode.literal;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
 
+@NullMarked
 public class GroupCommand extends Command {
 
     public GroupCommand() {
@@ -89,32 +93,30 @@ public class GroupCommand extends Command {
     private boolean listGroups(SonusService service, SonusPlayer player) {
         Collection<IRoom> rooms = service.getRoomManager().getRooms(TransientStaticRoom.class);
         if (rooms.isEmpty()) {
-            player.sendMessage(Component.translatable("sonus.command.groups.list.empty"));
+            player.sendMessage(translatable("sonus.command.groups.list.empty"));
         } else {
-            Component message = Component.translatable("sonus.command.groups.list.header")
-                    .arguments(Component.text(rooms.size()));
+            ComponentBuilder<?, ?> message = translatable()
+                    .key("sonus.command.groups.list.header")
+                    .arguments(text(rooms.size()));
 
             Iterator<IRoom> iterator = rooms.iterator();
             while (iterator.hasNext()) {
                 IRoom room = iterator.next();
                 if (room.getPassword() == null) {
-                    message = message.append(
-                            Component.translatable("sonus.command.groups.list.entry.no-password")
-                                    .arguments(Component.text(room.getName()), Component.text(room.getMembers().size()))
-                                    .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, room.getName(), null)))
+                    message.append(translatable("sonus.command.groups.list.entry.no-password",
+                            text(room.getName()), text(room.getMembers().size()))
+                            .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, room.getName(), null)))
                     );
                 } else {
-                    message = message.append(
-                            Component.translatable("sonus.command.groups.list.entry.password")
-                                    .arguments(Component.text(room.getName()), Component.text(room.getMembers().size()))
-                    );
+                    message.append(translatable("sonus.command.groups.list.entry.password",
+                            text(room.getName()), text(room.getMembers().size())));
                 }
                 if (iterator.hasNext()) {
-                    message = message.append(Component.newline());
+                    message.appendNewline();
                 }
             }
 
-            player.sendMessage(message);
+            player.sendMessage(message.build());
         }
 
         return true;
@@ -122,16 +124,14 @@ public class GroupCommand extends Command {
 
     private boolean leaveGroup(SonusService service, SonusPlayer player) {
         player.setPrimaryRoom(null);
-        player.sendMessage(Component.translatable("sonus.command.groups.leave.success"));
+        player.sendMessage(translatable("sonus.command.groups.leave.success"));
         return true;
     }
 
     private boolean createGroup(SonusService service, SonusPlayer player, String name, RoomAudioType type, @Nullable String password) {
         IRoom room = service.getRoomManager().createStaticRoom(name, password, type, false);
         this.joinGroup(service, player, room.getId(), password);
-
-        player.sendMessage(Component.translatable("sonus.command.groups.create.success")
-                .arguments(Component.text(name)));
+        player.sendMessage(translatable("sonus.command.groups.create.success", text(name)));
         return true;
     }
 
@@ -142,24 +142,23 @@ public class GroupCommand extends Command {
                 matched.add(room);
             }
         }
+
         if (matched.isEmpty()) {
-            player.sendMessage(Component.translatable("sonus.command.groups.join.not_found")
-                    .arguments(Component.text(name)));
+            player.sendMessage(translatable("sonus.command.groups.join.not_found", text(name)));
         } else if (matched.size() == 1) {
             IRoom room = matched.iterator().next();
             this.joinGroup(service, player, room.getId(), password);
         } else {
-            Component message = Component.translatable("sonus.command.groups.join.multiple")
-                    .arguments(Component.text(matched.size()));
+            ComponentBuilder<?, ?> message = translatable()
+                    .key("sonus.command.groups.join.multiple")
+                    .arguments(text(matched.size()));
             for (IRoom iRoom : matched) {
-                message = message.append(
-                        Component.translatable("sonus.command.groups.join.multiple.entry")
-                                .arguments(Component.text(iRoom.getName()), Component.text(iRoom.getMembers().size()))
-                                .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, name, password)))
+                message.append(translatable("sonus.command.groups.join.multiple.entry")
+                        .arguments(text(iRoom.getName()), text(iRoom.getMembers().size()))
+                        .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, name, password)))
                 );
             }
-
-            player.sendMessage(message);
+            player.sendMessage(message.build());
         }
 
         return true;
@@ -170,12 +169,11 @@ public class GroupCommand extends Command {
         boolean success = room != null && player.canAccessRoom(room, password);
         if (success) {
             player.setPrimaryRoom(room);
-
-            player.sendMessage(Component.translatable("sonus.command.groups.join.success", room.getName()));
+            player.sendMessage(translatable("sonus.command.groups.join.success",
+                    text(room.getName())));
         } else {
-            player.sendMessage(Component.translatable("sonus.command.groups.join.failure"));
+            player.sendMessage(translatable("sonus.command.groups.join.failure"));
         }
-
         return true;
     }
 }

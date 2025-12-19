@@ -44,6 +44,17 @@ public class SonusEventManager implements ISonusEventManager {
     }
 
     @Override
+    public void onPlayerDisconnect(ISonusPlayer player) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onPlayerDisconnect(player);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onPlayerDisconnect for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+    }
+
+    @Override
     public void onPlayerQuit(ISonusPlayer player) {
         for (ISonusServiceEvents listener : this.listeners) {
             try {

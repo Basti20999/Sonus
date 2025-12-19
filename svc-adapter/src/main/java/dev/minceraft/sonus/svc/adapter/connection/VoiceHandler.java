@@ -22,6 +22,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     private final SvcProtocolAdapter protocolAdapter;
     private final SvcConnection connection;
+    private State state = State.WAITING_AUTH;
 
     public VoiceHandler(SvcProtocolAdapter protocolAdapter, SvcConnection connection) {
         this.protocolAdapter = protocolAdapter;
@@ -30,6 +31,9 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     @Override
     public void handleAuthenticate(AuthenticateSvcPacket packet) {
+        if (this.state != State.WAITING_AUTH) {
+            return;
+        }
         if (!packet.getSecret().equals(this.connection.getSecret())) {
             return; // Ignore packets with mismatched secret
         }
@@ -39,10 +43,14 @@ public class VoiceHandler implements IVoiceSvcHandler {
             return;
         }
         this.connection.sendPacket(new AuthenticateAckSvcPacket());
+        this.state = State.WAITING_CHECK;
     }
 
     @Override
     public void handleConnectionCheck(ConnectionCheckSvcPacket packet) {
+        if (this.state != State.WAITING_CHECK) {
+            return;
+        }
         LOGGER.info("Successfully connected {}({}) to Sonus SVC backend - version {}",
                 this.connection.getPlayer().getName(), this.connection.getPlayer().getUniqueId(), this.connection.getVersion());
 
@@ -55,15 +63,22 @@ public class VoiceHandler implements IVoiceSvcHandler {
         this.connection.sendPacket(new ConnectionCheckAckSvcPacket());
 
         this.connection.getPlayer().handleConnect();
+        this.state = State.CONNECTED;
     }
 
     @Override
     public void handleKeepAlivePacket(KeepAliveSvcPacket packet) {
-        this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
+        if (this.state == State.CONNECTED) {
+            this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
+        }
     }
 
     @Override
     public void handleMicPacket(MicSvcPacket packet) {
+        if (this.state != State.CONNECTED) {
+            return;
+        }
+
         byte[] raw = packet.getData();
         if (raw.length == 0) { // Audio end
             this.connection.getPlayer().handleAudioInputEnd(packet.getSequenceNumber());
@@ -78,5 +93,11 @@ public class VoiceHandler implements IVoiceSvcHandler {
     @Override
     public void handlePingPacket(PingSvcPacket packet) {
         // NO-OP, we never send ping packets
+    }
+
+    public enum State {
+        WAITING_AUTH,
+        WAITING_CHECK,
+        CONNECTED,
     }
 }
