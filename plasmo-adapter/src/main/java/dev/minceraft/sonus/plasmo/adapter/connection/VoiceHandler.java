@@ -19,6 +19,7 @@ public class VoiceHandler implements UdpHandler {
 
     private final PlasmoAdapter adapter;
     private final PlasmoConnection connection;
+    private State state = State.WAITING_ACK;
 
     public VoiceHandler(PlasmoAdapter adapter, PlasmoConnection connection) {
         this.adapter = adapter;
@@ -27,19 +28,22 @@ public class VoiceHandler implements UdpHandler {
 
     @Override
     public void handlePlayerAudioPacket(PlayerAudioPlasmoPacket packet) {
-        short[] pcm = this.connection.getProcessor(packet.getActivationId()).decode(packet.getAudioData());
-        this.connection.getPlayer().handleAudioInput(new SonusAudio.Pcm(pcm, packet.getSequenceNumber()));
+        if (this.state == State.CONNECTED) {
+            short[] pcm = this.connection.getProcessor(packet.getActivationId()).decode(packet.getAudioData());
+            this.connection.getPlayer().handleAudioInput(new SonusAudio.Pcm(pcm, packet.getSequenceNumber()));
+        }
     }
 
     @Override
     public void handlePingPacket(PingPlasmoPacket packet) {
-        if (!this.connection.isConnected()) { // Init connection
+        if (this.state == State.WAITING_ACK) {
             this.sendConfig();
             this.connection.setConnected(true);
 
             this.connection.getPlayer().handleConnect();
 
             this.sendPlayerList();
+            this.state = State.CONNECTED;
         }
         this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
     }
@@ -68,5 +72,10 @@ public class VoiceHandler implements UdpHandler {
         playerListPacket.setPlayers(List.copyOf(this.adapter.getSessionManager().getPlayerInfos(this.connection).values()));
 
         this.connection.sendPacket(playerListPacket);
+    }
+
+    public enum State {
+        WAITING_ACK,
+        CONNECTED,
     }
 }

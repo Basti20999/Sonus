@@ -22,6 +22,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
     private static final UUID MIC_CHANNEL_ID = new UUID(9018035903106730674L, -6405133132459802568L);
 
     private final WebSocketConnection connection;
+    private State state = State.WAITING_ACK;
 
     public WebSocketPacketHandler(WebSocketConnection connection) {
         this.connection = connection;
@@ -29,16 +30,23 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
 
     @Override
     public void handleKeepAlive(KeepAlivePacket packet) {
-        this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
+        if (this.state == State.CONNECTED) {
+            this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
+        }
     }
 
     @Override
     public void handlePing(PingPacket packet) {
-        this.connection.sendPacket(packet);
+        if (this.state == State.CONNECTED) {
+            this.connection.sendPacket(packet);
+        }
     }
 
     @Override
     public void handleInputSound(InputSoundPacket packet) {
+        if (this.state != State.CONNECTED) {
+            return;
+        }
         SonusAudio.Pcm pcm = packet.getAudio().asPcm(() -> this.connection.getProcessor(MIC_CHANNEL_ID));
         this.connection.getPlayer().handleAudioInput(pcm);
     }
@@ -50,11 +58,14 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
             // if player can access room, update primary room
             this.connection.getPlayer().setPrimaryRoom(room);
         }
-        this.connection.sendPacket(new RoomJoinResponsePacket(room.getId(), success));
+        this.connection.sendPacket(new RoomJoinResponsePacket(roomId, success));
     }
 
     @Override
     public void handleRoomCreate(RoomCreatePacket packet) {
+        if (this.state != State.CONNECTED) {
+            return;
+        }
         ISonusRoomManager rooms = this.connection.getAdapter().getService().getRoomManager();
         IRoom room = rooms.createStaticRoom(packet.getName(), packet.getPassword(), packet.getAudioType(), false);
         this.tryJoinRoom(room.getId(), packet.getPassword());
@@ -62,14 +73,19 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
 
     @Override
     public void handleRoomJoinRequest(RoomJoinRequestPacket packet) {
-        this.tryJoinRoom(packet.getRoomId(), packet.getPassword());
+        if (this.state == State.CONNECTED) {
+            this.tryJoinRoom(packet.getRoomId(), packet.getPassword());
+        }
     }
 
     @Override
     public void handleRoomLeave(RoomLeavePacket packet) {
+        if (this.state != State.CONNECTED) {
+            return;
+        }
         ISonusPlayer player = this.connection.getPlayer();
         IRoom primaryRoom = player.getPrimaryRoom();
-        // prevent accidentially leaving wrong room because of desyncs
+        // prevent accidentally leaving wrong room because of desyncs
         boolean success;
         if (primaryRoom != null && primaryRoom.getId().equals(packet.getRoomId())) {
             player.setPrimaryRoom(null);
@@ -88,6 +104,13 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
     }
 
     public void handleDisconnect() {
+        this.state = State.DISCONNECTED;
         this.connection.getPlayer().disconnect();
+    }
+
+    public enum State {
+        WAITING_ACK,
+        CONNECTED,
+        DISCONNECTED,
     }
 }
