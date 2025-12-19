@@ -442,6 +442,11 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         this.lastKeepAlive = System.currentTimeMillis();
 
         this.service.getEventManager().onConnectionState(this);
+        if (connected) {
+            // initialize position
+            this.service.getEventManager().onPlayerPositionUpdate(this);
+        }
+
         if (sendToAgent) {
             PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();
             packet.setPlayerId(this.getUniqueId());
@@ -558,6 +563,9 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         // mark as disconnected
         this.setConnected(false);
         this.updateState();
+
+        // clear adapter
+        this.sonusAdapter = null;
     }
 
     public void updateServer() {
