@@ -91,10 +91,10 @@ public class WebSessionManager {
 
     public @Nullable ISonusPlayer consumeToken(String token) {
         UUID playerId = this.tokens.remove(token);
-        if (playerId != null) {
-            this.removeTokens(playerId);
+        if (playerId == null) {
+            return null;
         }
-
+        this.removeTokens(playerId);
         ISonusPlayer player = this.adapter.getService().getPlayerManager().getPlayer(playerId);
         if (player != null && player.isOnline()) {
             return player;
