@@ -99,6 +99,10 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
     @Override
     public void handleStateInfo(StateInfoPacket packet) {
         ISonusPlayer player = this.connection.getPlayer();
+        if (this.state == State.WAITING_ACK) {
+            player.handleConnect();
+            this.state = State.CONNECTED;
+        }
         player.setMuted(packet.isMuted());
         player.setDeafened(packet.isDeafened());
     }
