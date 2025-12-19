@@ -53,10 +53,9 @@ public class GroupCommand extends Command {
                                             RoomAudioType type = ctx.get("type", RoomTypeArgument.INSTANCE);
 
                                             return this.createGroup(ctx.service(), player, name, type, null);
-                                        }))
-                                .with(argument("password", StringArgument.INSTANCE)
-                                        .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups.create.password"))
-                                        .with(argument("type", RoomTypeArgument.INSTANCE)
+                                        })
+                                        .with(argument("password", StringArgument.INSTANCE)
+                                                .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups.create.password"))
                                                 .executes(ctx -> {
                                                     SonusPlayer player = (SonusPlayer) ctx.sender();
                                                     String name = ctx.get("name", StringArgument.INSTANCE);
