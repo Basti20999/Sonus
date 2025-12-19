@@ -187,7 +187,7 @@ public class PlasmoAdapter implements SonusAdapter {
                 0,
                 Set.of()
         );
-        connection.registerVoiceSourceLine(sourceLine);
+        connection.registerVoiceSourceLine(category.getUniqueId(), sourceLine);
 
         SourceLineRegisterPacket packet = new SourceLineRegisterPacket();
         packet.setSourceLine(sourceLine);

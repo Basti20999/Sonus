@@ -44,6 +44,7 @@ public class PlasmoConnection implements AutoCloseable {
 
     private final Map<UUID, VoiceActivation> voiceActivations = new ConcurrentHashMap<>();
     private final Map<UUID, VoiceSourceLine> sourceLines = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> sonusPlasmoSourceLineMap = new ConcurrentHashMap<>();
 
     private @MonotonicNonNull ICipher cipher;
     private @MonotonicNonNull InetSocketAddress remoteAddress;
@@ -173,9 +174,10 @@ public class PlasmoConnection implements AutoCloseable {
     public VoiceSourceLine getDefaultSourceLine() {
         return this.defaultSourceLine;
     }
-    
-    public void registerVoiceSourceLine(VoiceSourceLine sourceLine) {
+
+    public void registerVoiceSourceLine(UUID sonusId, VoiceSourceLine sourceLine) {
         this.sourceLines.put(sourceLine.getId(), sourceLine);
+        this.sonusPlasmoSourceLineMap.put(sonusId, sourceLine.getId());
     }
 
     public void unregisterVoiceSourceLine(UUID sourceLineId) {
@@ -183,13 +185,18 @@ public class PlasmoConnection implements AutoCloseable {
             return; // cannot unregister default source line
         }
         this.sourceLines.remove(sourceLineId);
+        this.sonusPlasmoSourceLineMap.values().removeIf(id -> id.equals(sourceLineId));
     }
 
     public VoiceSourceLine getSourceLine(@Nullable UUID sourceLineId) {
         if (sourceLineId == null) {
             return this.defaultSourceLine;
         }
-        return this.sourceLines.getOrDefault(sourceLineId, this.defaultSourceLine);
+        UUID plasmoSourceLineId = this.getPlasmoSourceLineId(sourceLineId);
+        if (plasmoSourceLineId == null) {
+            return this.defaultSourceLine;
+        }
+        return this.sourceLines.getOrDefault(plasmoSourceLineId, this.defaultSourceLine);
     }
 
     public void registerSourceInfo(UUID id, Supplier<SourceInfo> sourceInfo) {
@@ -198,6 +205,11 @@ public class PlasmoConnection implements AutoCloseable {
 
     public void addSourceInfo(UUID id, SourceInfo sourceInfo) {
         this.sources.put(id, sourceInfo);
+    }
+
+    @Nullable
+    public UUID getPlasmoSourceLineId(UUID sonusSourceLineId) {
+        return this.sonusPlasmoSourceLineMap.get(sonusSourceLineId);
     }
 
     @Nullable
