@@ -20,6 +20,9 @@ public interface SonusAdapter {
 
     void init(ISonusService service);
 
+    default void shutdown(ISonusService service) {
+    }
+
     void sendStaticAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio);
 
     void sendSpatialAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio, Vec3d pos);

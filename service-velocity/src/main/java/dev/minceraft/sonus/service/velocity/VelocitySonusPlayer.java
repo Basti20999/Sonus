@@ -108,9 +108,8 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
         return false;
     }
 
-    // why doesn't velocity expose their internal method for this?
     @Override
-    public Component renderComponent(Component component) {
+    public Locale getLocale() {
         Locale locale = this.player.getEffectiveLocale();
         if (locale == null && this.player.hasSentPlayerSettings()) {
             locale = this.player.getPlayerSettings().getLocale();
@@ -118,12 +117,18 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
         if (locale == null) {
             locale = Locale.getDefault();
         }
+        return locale;
+    }
+
+    // why doesn't velocity expose their internal method for this?
+    @Override
+    public Component renderComponent(Component component, Locale locale) {
         return GlobalTranslator.render(component, locale);
     }
 
     @Override
-    public String renderPlainComponent(Component component) {
-        Component rendered = this.renderComponent(component);
+    public String renderPlainComponent(Component component, Locale locale) {
+        Component rendered = this.renderComponent(component, locale);
         return plainText().serialize(rendered);
     }
 

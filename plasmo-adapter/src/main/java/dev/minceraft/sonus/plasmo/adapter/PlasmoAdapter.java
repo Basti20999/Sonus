@@ -11,6 +11,9 @@ import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceAudioEndPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceLineRegisterPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceLineUnregisterPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceSourceLine;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.PlayerSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.StaticSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
@@ -18,13 +21,15 @@ import dev.minceraft.sonus.plasmo.protocol.udp.clientbound.SourceAudioPlasmoPack
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.Set;
 import java.util.UUID;
+
+import static dev.minceraft.sonus.plasmo.adapter.PlasmoConstants.ADDON_ID;
 
 @NullMarked
 public class PlasmoAdapter implements SonusAdapter {
 
-    private static final String ADDON_ID = "sonus-plasmo-adapter";
-
+    private final PlasmoTranslationHolder translationHolder = new PlasmoTranslationHolder();
     private @MonotonicNonNull ISonusService service;
     private @MonotonicNonNull PlasmoProtocolAdapter adapter;
     private @MonotonicNonNull PlasmoSessionManager sessionManager;
@@ -58,7 +63,7 @@ public class PlasmoAdapter implements SonusAdapter {
         connection.registerSourceInfo(source.getSenderId(), () -> new PlayerSourceInfo(
                 ADDON_ID,
                 source.getSenderId(),
-                connection.getDefaultSourceLine().getId(),
+                connection.getSourceLine(source.getCategoryId()).getId(),
                 null,
                 (byte) 0,
                 this.adapter.getCodecInfo(),
@@ -87,7 +92,7 @@ public class PlasmoAdapter implements SonusAdapter {
         connection.registerSourceInfo(source.getSenderId(), () -> new StaticSourceInfo(
                 ADDON_ID,
                 source.getSenderId(),
-                connection.getDefaultSourceLine().getId(),
+                connection.getSourceLine(source.getCategoryId()).getId(),
                 null,
                 (byte) 0,
                 this.adapter.getCodecInfo(),
@@ -119,7 +124,7 @@ public class PlasmoAdapter implements SonusAdapter {
                 return new PlayerSourceInfo(
                         ADDON_ID,
                         source.getSenderId(),
-                        connection.getDefaultSourceLine().getId(),
+                        connection.getSourceLine(source.getCategoryId()).getId(),
                         speaker.getName(player),
                         (byte) 0,
                         this.adapter.getCodecInfo(),
@@ -131,7 +136,7 @@ public class PlasmoAdapter implements SonusAdapter {
             return new StaticSourceInfo(
                     ADDON_ID,
                     source.getSenderId(),
-                    connection.getDefaultSourceLine().getId(),
+                    connection.getSourceLine(source.getCategoryId()).getId(),
                     null,
                     (byte) 0,
                     this.adapter.getCodecInfo(),
@@ -170,10 +175,38 @@ public class PlasmoAdapter implements SonusAdapter {
 
     @Override
     public void registerCategory(ISonusPlayer player, AudioCategory category) {
+        PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
+        VoiceSourceLine sourceLine = new VoiceSourceLine(
+                category.getUniqueId().toString(),
+                player.renderPlainComponent(category.getName()), // prerender the name component
+                PlasmoConstants.DEFAULT_SOURCE_LINE_ICON,
+                1.0,
+                0,
+                Set.of()
+        );
+        connection.registerVoiceSourceLine(sourceLine);
+
+        SourceLineRegisterPacket packet = new SourceLineRegisterPacket();
+        packet.setSourceLine(sourceLine);
+
+        connection.sendPacket(packet);
     }
 
     @Override
     public void unregisterCategory(ISonusPlayer player, UUID categoryId) {
+        PlasmoConnection connection = this.sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return; // no plasmo session found
+        }
+
+        connection.unregisterVoiceSourceLine(categoryId);
+
+        SourceLineUnregisterPacket packet = new SourceLineUnregisterPacket();
+        packet.setSourceLineId(categoryId);
+        connection.sendPacket(packet);
     }
 
     @Override
@@ -203,6 +236,10 @@ public class PlasmoAdapter implements SonusAdapter {
             this.adapterInfo = this.buildAdapterInfo();
         }
         return this.adapterInfo;
+    }
+
+    public PlasmoTranslationHolder getTranslationHolder() {
+        return this.translationHolder;
     }
 
     public PlasmoConfig getConfig() {
