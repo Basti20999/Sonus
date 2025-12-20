@@ -6,6 +6,7 @@ import dev.minceraft.sonus.web.adapter.pipeline.WebSocketHandshaker;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 public class WebServer {
 
@@ -50,6 +52,7 @@ public class WebServer {
             this.workerGroup = TRANSPORT.createGroup("worker");
 
             ServerBootstrap bootstrap = new ServerBootstrap()
+                    .option(ChannelOption.SO_REUSEADDR, true)
                     .group(this.bossGroup, this.workerGroup)
                     .channelFactory(TRANSPORT.getServerSocketChannelFactory())
                     .childHandler(new ChannelInitializer<>() {
@@ -73,13 +76,13 @@ public class WebServer {
 
     public void shutdown() {
         if (this.channel != null) {
-            this.channel.close().syncUninterruptibly();
+            this.channel.close();
         }
         if (this.bossGroup != null) {
-            this.bossGroup.shutdownGracefully().syncUninterruptibly();
+            this.bossGroup.shutdownGracefully(1L, 5L, TimeUnit.SECONDS).syncUninterruptibly();
         }
         if (this.workerGroup != null) {
-            this.workerGroup.shutdownGracefully().syncUninterruptibly();
+            this.workerGroup.shutdownGracefully(1L, 5L, TimeUnit.SECONDS).syncUninterruptibly();
         }
     }
 }

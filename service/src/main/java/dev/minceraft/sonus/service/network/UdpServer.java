@@ -12,6 +12,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -22,6 +23,7 @@ import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @NullMarked
 public class UdpServer implements IUdpServer {
@@ -43,6 +45,7 @@ public class UdpServer implements IUdpServer {
     public void bind() {
         ISonusConfig config = this.service.getConfig();
         ChannelFuture future = new Bootstrap()
+                .option(ChannelOption.SO_REUSEADDR, true) // allow re-use
                 .group(this.bossGroup)
                 .channelFactory(TRANSPORT.getDatagramChannelFactory())
                 .handler(new ChannelInitializer<>() {
@@ -70,9 +73,9 @@ public class UdpServer implements IUdpServer {
     public void shutdown() {
         LOGGER.info("Shutting down sonus server...");
         if (this.channel != null) {
-            this.channel.close().awaitUninterruptibly();
+            this.channel.close();
         }
-        this.bossGroup.shutdownGracefully().awaitUninterruptibly();
+        this.bossGroup.shutdownGracefully(1L, 5L, TimeUnit.SECONDS).awaitUninterruptibly();
     }
 
     @Override
