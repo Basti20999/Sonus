@@ -556,20 +556,17 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         for (IRoom room : Set.copyOf(this.voiceRooms.values())) {
             this.leaveRoom(room);
         }
-        // invalidate server
-        this.updateServer(null);
 
         // mark as disconnected
         this.setConnected(false);
-        this.updateState();
-
-        // clear adapter
         this.sonusAdapter = null;
+
+        this.updateState();
     }
 
     public void updateServer() {
-        UUID serverId = this.platform.getServerId();
-        if (serverId != null) {
+        UUID serverId;
+        if (this.isConnected() && (serverId = this.platform.getServerId()) != null) {
             this.updateServer(this.service.getPlayerManager().getServer(serverId));
         } else {
             this.updateServer(null);
