@@ -6,7 +6,6 @@ import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
-import dev.minceraft.sonus.common.service.IScheduledTask;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.common.service.ISonusScheduler;
@@ -18,18 +17,12 @@ import dev.minceraft.sonus.service.network.UdpServer;
 import dev.minceraft.sonus.service.platform.IServicePlatform;
 import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.rooms.SonusRoomManager;
-import dev.minceraft.sonus.service.server.SonusServer;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 @NullMarked
 public final class SonusService implements ISonusService {
@@ -45,7 +38,6 @@ public final class SonusService implements ISonusService {
     private final SonusRoomManager roomManager = new SonusRoomManager(this);
     private final AdapterManager adapters = new AdapterManager(this);
     private final AgentManager agentManager = new AgentManager(this);
-    private final Map<UUID, SonusServer> servers = new ConcurrentHashMap<>();
     private final YamlConfigHolder<SonusConfig> config;
     private @MonotonicNonNull UdpServer udpServer;
 
@@ -72,24 +64,6 @@ public final class SonusService implements ISonusService {
         this.udpServer.bind();
 
         this.initCommands();
-        this.initCleanupTask();
-    }
-
-    private void initCleanupTask() {
-        this.config.addReloadHookAndRun(new Consumer<>() {
-
-            private @MonotonicNonNull IScheduledTask task;
-
-            @Override
-            public void accept(SonusConfig config) {
-                if (this.task != null) {
-                    this.task.cancel();
-                }
-
-                this.task = SonusService.this.scheduler.schedule(SonusService.this::cleanup,
-                        0, config.getCleanupTaskIntervalMs(), TimeUnit.MICROSECONDS);
-            }
-        });
     }
 
     private void initCommands() {
@@ -97,11 +71,6 @@ public final class SonusService implements ISonusService {
 
         // register all commands in platform command registrar
         this.platform.registerCommands(this.commands.getNodes());
-    }
-
-    private void cleanup() {
-        this.servers.entrySet().removeIf(entry ->
-                !SonusService.this.platform.serverExists(entry.getKey()));
     }
 
     public void shutdown() {
@@ -174,11 +143,5 @@ public final class SonusService implements ISonusService {
     @Override
     public AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
         return new AudioProcessor(() -> this.getConfig().getMtuSize(), mode);
-    }
-
-    @Override
-    public SonusServer getServer(UUID serverId) {
-        return this.servers.computeIfAbsent(serverId, uuid ->
-                new SonusServer(this, this.getPlatform().getServer(uuid)));
     }
 }

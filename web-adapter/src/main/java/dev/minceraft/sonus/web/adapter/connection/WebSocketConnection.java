@@ -39,7 +39,7 @@ public class WebSocketConnection implements AutoCloseable {
 
         // send some info about the current server
         UUID serverId = this.player.getServerId();
-        ISonusServer server = serverId != null ? this.adapter.getService().getServer(serverId) : null;
+        ISonusServer server = serverId != null ? this.adapter.getService().getPlayerManager().getServer(serverId) : null;
         Component serverName = server != null ? this.player.renderComponent(server.getName()) : null;
         String serverType = server != null ? server.getType() : null;
 

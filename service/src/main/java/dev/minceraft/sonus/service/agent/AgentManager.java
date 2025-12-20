@@ -25,7 +25,7 @@ public class AgentManager implements IAgentManager {
             .build(new CacheLoader<>() {
                 @Override
                 public AgentListener load(UUID key) {
-                    SonusServer server = AgentManager.this.service.getServer(key);
+                    SonusServer server = AgentManager.this.service.getPlayerManager().getServer(key);
                     return new AgentListener(AgentManager.this.service, server);
                 }
             });

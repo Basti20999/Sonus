@@ -3,7 +3,6 @@ package dev.minceraft.sonus.common;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
-import dev.minceraft.sonus.common.data.ISonusServer;
 import dev.minceraft.sonus.common.protocol.tcp.IPluginMessenger;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
@@ -12,7 +11,6 @@ import dev.minceraft.sonus.common.service.ISonusScheduler;
 import org.jspecify.annotations.NullMarked;
 
 import java.nio.file.Path;
-import java.util.UUID;
 
 @NullMarked
 public interface ISonusService {
@@ -36,6 +34,4 @@ public interface ISonusService {
     IPlayerManager getPlayerManager();
 
     AudioProcessor createAudioProcessor(AudioProcessor.Mode mode);
-
-    ISonusServer getServer(UUID serverId);
 }
