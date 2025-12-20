@@ -71,7 +71,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private long lastKeepAlive = System.currentTimeMillis();
 
     // track server reference
-    private @Nullable SonusServer server;
+    private volatile @Nullable SonusServer server;
 
     public SonusPlayer(SonusService service, IPlatformPlayer platform) {
         this.service = service;
@@ -576,12 +576,13 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
     }
 
-    public void updateServer(@Nullable SonusServer server) {
-        if (server == this.server) {
+    public synchronized void updateServer(@Nullable SonusServer server) {
+        SonusServer prevServer = this.server;
+        if (server == prevServer) {
             return; // nothing changed
         }
-        if (this.server != null) {
-            this.server.onQuit(this);
+        if (prevServer != null) {
+            prevServer.onDisconnect(this);
         }
         this.server = server;
     }

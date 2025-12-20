@@ -69,7 +69,7 @@ public final class SonusServer implements ISonusServer {
         }
     }
 
-    public void onQuit(SonusPlayer player) {
+    public void onDisconnect(SonusPlayer player) {
         for (CategoryData category : this.categories.values()) {
             category.informedPlayers.remove(player.getUniqueId());
         }
