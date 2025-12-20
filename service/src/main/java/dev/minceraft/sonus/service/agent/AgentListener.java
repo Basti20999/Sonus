@@ -76,8 +76,8 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
     @Override
     public void handleAudioStream(AudioStreamMessage message) {
         SonusPlayer player = this.service.getPlayerManager().getPlayer(message.getPlayerId());
-        if (player == null) {
-            return; // no player found
+        if (player == null || player.getAdapter() == null) {
+            return; // no player found or no adapter set yet
         }
         List<AudioStreamMessage.Frame> frames = message.getFrames();
         if (frames.isEmpty()) {

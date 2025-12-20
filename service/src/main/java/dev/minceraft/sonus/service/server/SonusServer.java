@@ -32,14 +32,17 @@ public final class SonusServer implements ISonusServer {
 
     public void ensureCategory(SonusPlayer player, UUID categoryId) {
         CategoryData categoryData = this.categories.get(categoryId);
-        if (categoryData == null || !categoryData.informedPlayers().add(player.getUniqueId())) {
-            return; // either unknown category or player already knew about category
+        if (categoryData == null) {
+            return; // unknown category
+        }
+        SonusAdapter adapter = player.getAdapter();
+        if (adapter == null) {
+            return; // no updater set yet
+        } else if (!categoryData.informedPlayers().add(player.getUniqueId())) {
+            return; // player already knew about category
         }
         // send registration packet
-        SonusAdapter adapter = player.getAdapter();
-        if (adapter != null) {
-            adapter.registerCategory(player, categoryData.category());
-        }
+        adapter.registerCategory(player, categoryData.category());
     }
 
     public void registerCategory(AudioCategory category) {
