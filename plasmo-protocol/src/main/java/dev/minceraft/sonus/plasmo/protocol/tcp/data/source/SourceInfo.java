@@ -16,11 +16,11 @@ public abstract class SourceInfo {
     protected final UUID id;
     protected final UUID voiceLineId;
     protected final @Nullable String name;
-    protected final byte state;
     protected final @Nullable CodecInfo codecInfo;
     protected final boolean stereo;
     protected final boolean iconVisible;
     protected final int angle;
+    protected byte state;
 
     protected SourceInfo(SourceType sourceType, String addonId, UUID id, UUID voiceLineId, @Nullable String name,
                          byte state, @Nullable CodecInfo codecInfo, boolean stereo, boolean iconVisible, int angle) {
@@ -83,6 +83,22 @@ public abstract class SourceInfo {
 
     public byte getState() {
         return this.state;
+    }
+    
+    public void setState(byte state) {
+        this.state = state;
+    }
+    
+    public void resetState() {
+        this.state = 0;
+    }
+    
+    public void markDirty(){
+        this.state = 1;
+    }
+    
+    public void markVeryDirty(){
+        this.state = 10;
     }
 
     public @Nullable CodecInfo getCodecInfo() {

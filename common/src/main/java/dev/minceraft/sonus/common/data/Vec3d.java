@@ -4,6 +4,8 @@ package dev.minceraft.sonus.common.data;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.Objects;
+
 @NullMarked
 public class Vec3d {
 
@@ -41,6 +43,14 @@ public class Vec3d {
         return this.z;
     }
 
+    public Vec3d add(Vec3d other) {
+        return new Vec3d(this.x + other.x, this.y + other.y, this.z + other.z);
+    }
+
+    public Vec3d sub(Vec3d other) {
+        return new Vec3d(this.x - other.x, this.y - other.y, this.z - other.z);
+    }
+
     public double distanceSquared(Vec3d listenerPos) {
         double dx = this.x - listenerPos.getX();
         double dy = this.y - listenerPos.getY();
@@ -51,5 +61,16 @@ public class Vec3d {
     @Override
     public String toString() {
         return "Vec3d[" + this.x + ", " + this.y + ", " + this.z + ']';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Vec3d vec3d)) return false;
+        return Double.compare(x, vec3d.x) == 0 && Double.compare(y, vec3d.y) == 0 && Double.compare(z, vec3d.z) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, z);
     }
 }

@@ -14,9 +14,9 @@ import java.util.UUID;
 public class DirectSourceInfo extends SourceInfo {
 
     private final @Nullable GameProfile profile;
-    private final Vec3d relativePosition;
-    private final Vec3d lookAngle;
-    private final boolean cameraRelative;
+    private Vec3d relativePosition;
+    private Vec3d lookAngle;
+    private boolean cameraRelative;
 
     public DirectSourceInfo(ByteBuf buf) {
         super(buf, SourceType.DIRECT);
@@ -55,11 +55,23 @@ public class DirectSourceInfo extends SourceInfo {
         return this.relativePosition;
     }
 
+    public void setRelativePosition(Vec3d relativePosition) {
+        this.relativePosition = relativePosition;
+    }
+
     public Vec3d getLookAngle() {
         return this.lookAngle;
     }
 
+    public void setLookAngle(Vec3d lookAngle) {
+        this.lookAngle = lookAngle;
+    }
+
     public boolean isCameraRelative() {
         return this.cameraRelative;
+    }
+
+    public void setCameraRelative(boolean cameraRelative) {
+        this.cameraRelative = cameraRelative;
     }
 }

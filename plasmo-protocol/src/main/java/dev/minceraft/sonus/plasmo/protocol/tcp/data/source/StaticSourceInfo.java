@@ -10,8 +10,8 @@ import java.util.UUID;
 
 public class StaticSourceInfo extends SourceInfo {
 
-    private final Vec3d position;
-    private final Vec3d lookAngle;
+    private Vec3d position;
+    private Vec3d lookAngle;
 
     public StaticSourceInfo(ByteBuf buf) {
         super(buf, SourceType.STATIC);
@@ -38,7 +38,15 @@ public class StaticSourceInfo extends SourceInfo {
         return this.position;
     }
 
+    public void setPosition(Vec3d position) {
+        this.position = position;
+    }
+
     public Vec3d getLookAngle() {
         return this.lookAngle;
+    }
+
+    public void setLookAngle(Vec3d lookAngle) {
+        this.lookAngle = lookAngle;
     }
 }

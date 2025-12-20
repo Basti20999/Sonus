@@ -199,8 +199,8 @@ public class PlasmoConnection implements AutoCloseable {
         return this.sourceLines.getOrDefault(plasmoSourceLineId, this.defaultSourceLine);
     }
 
-    public void registerSourceInfo(UUID id, Supplier<SourceInfo> sourceInfo) {
-        this.sources.computeIfAbsent(id, __ -> sourceInfo.get());
+    public SourceInfo registerSourceInfo(UUID id, Supplier<SourceInfo> sourceInfo) {
+        return this.sources.computeIfAbsent(id, __ -> sourceInfo.get());
     }
 
     public void addSourceInfo(UUID id, SourceInfo sourceInfo) {

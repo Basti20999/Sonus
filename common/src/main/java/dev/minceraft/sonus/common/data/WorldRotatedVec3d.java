@@ -4,6 +4,8 @@ import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 
+import java.util.Objects;
+
 public class WorldRotatedVec3d extends RotatedVec3d {
 
     protected Key dimension;
@@ -34,5 +36,18 @@ public class WorldRotatedVec3d extends RotatedVec3d {
 
     public Key getDimension() {
         return this.dimension;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof WorldRotatedVec3d)) return false;
+        if (!super.equals(o)) return false;
+        WorldRotatedVec3d that = (WorldRotatedVec3d) o;
+        return Objects.equals(dimension, that.dimension);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), dimension);
     }
 }
