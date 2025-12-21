@@ -30,7 +30,7 @@ public class OpusNativesLoader extends NativesLoader {
     public OpusNativesLoader() {
         super("opus4j.jar");
         try {
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandles.Lookup lookup = MethodHandles.publicLookup();
             this.applicationClass = this.loadClass("de.maxhenkel.opus4j.OpusEncoder$Application");
 
             Class<?> encoderClass = this.loadClass("de.maxhenkel.opus4j.OpusEncoder");

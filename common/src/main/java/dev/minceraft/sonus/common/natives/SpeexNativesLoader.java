@@ -19,7 +19,7 @@ public class SpeexNativesLoader extends NativesLoader {
     public SpeexNativesLoader() {
         super("speex4j.jar");
         try {
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandles.Lookup lookup = MethodHandles.publicLookup();
 
             Class<?> agcClass = this.loadClass("de.maxhenkel.speex4j.AutomaticGainControl");
             this.agcCtor = lookup.findConstructor(agcClass,

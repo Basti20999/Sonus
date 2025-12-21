@@ -23,7 +23,7 @@ public class LameNativesLoader extends NativesLoader {
     public LameNativesLoader() {
         super("lame4j.jar");
         try {
-            MethodHandles.Lookup lookup = MethodHandles.lookup();
+            MethodHandles.Lookup lookup = MethodHandles.publicLookup();
 
             Class<?> decoderClass = this.loadClass("de.maxhenkel.lame4j.Mp3Decoder");
             this.decoderCtor = lookup.findConstructor(decoderClass,
