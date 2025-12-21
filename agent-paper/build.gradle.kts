@@ -10,8 +10,6 @@ plugins {
 dependencies {
     api(projects.protocol)
     compileOnly(libs.paper.api)
-
-    api(libs.lame4j) // mp3 decoder
 }
 
 configure<BukkitPluginDescription> {

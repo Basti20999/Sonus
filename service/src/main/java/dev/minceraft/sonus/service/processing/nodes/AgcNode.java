@@ -1,12 +1,12 @@
 package dev.minceraft.sonus.service.processing.nodes;
 
-import de.maxhenkel.speex4j.AutomaticGainControl;
-import de.maxhenkel.speex4j.UnknownPlatformException;
-import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.audio.SonusAudio;
+import dev.minceraft.sonus.common.natives.SpeexNativesLoader;
+import dev.minceraft.sonus.common.natives.SpeexNativesLoader.AutomaticGainControl;
 import dev.minceraft.sonus.service.processing.AudioPipelineNode;
 
-import java.io.IOException;
+import static dev.minceraft.sonus.common.SonusConstants.FRAME_SIZE;
+import static dev.minceraft.sonus.common.SonusConstants.SAMPLE_RATE;
 
 public final class AgcNode implements AudioPipelineNode, AutoCloseable {
 
@@ -14,13 +14,9 @@ public final class AgcNode implements AudioPipelineNode, AutoCloseable {
 
     private final AutomaticGainControl agc;
 
-    public AgcNode() {
-        try {
-            this.agc = new AutomaticGainControl(SonusConstants.FRAME_SIZE, SonusConstants.SAMPLE_RATE);
-            this.agc.setTarget(TARGET);
-        } catch (IOException | UnknownPlatformException exception) {
-            throw new RuntimeException(exception);
-        }
+    public AgcNode(SpeexNativesLoader speex) {
+        this.agc = speex.new AutomaticGainControl(FRAME_SIZE, SAMPLE_RATE);
+        this.agc.setTarget(TARGET);
     }
 
     private static int dbSample(double dbfs) {

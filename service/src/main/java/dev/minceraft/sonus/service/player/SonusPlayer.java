@@ -110,7 +110,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (this.service.getConfig().agcEnabled()) {
             // do automatic gain control on input audio to prevent destruction of ears
             if (this.agcNode == null) {
-                this.agcNode = new AgcNode();
+                this.agcNode = new AgcNode(this.service.getSpeexNatives());
             }
             this.agcNode.process(audio);
         }

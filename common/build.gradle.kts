@@ -1,3 +1,7 @@
+val natives: Configuration by configurations.creating {
+    isTransitive = false
+}
+
 dependencies {
     compileOnlyApi(libs.leangen)
     compileOnlyApi(libs.jspecify)
@@ -10,5 +14,18 @@ dependencies {
     compileOnlyApi(libs.guava)
     compileOnlyApi(libs.gson)
     compileOnlyApi(libs.bundles.configurate)
-    api(libs.opus4j)
+
+    natives(libs.lame4j) // mp3 encoder/decoder
+    natives(libs.opus4j) // opus encoder/decoder
+    natives(libs.speex4j) // automatic gain control
+}
+
+tasks.withType<Jar> {
+    metaInf {
+        from(natives.resolve()) {
+            into("sonus-natives")
+            // rename to common name
+            rename { "${it.substringBefore('-')}.jar" }
+        }
+    }
 }

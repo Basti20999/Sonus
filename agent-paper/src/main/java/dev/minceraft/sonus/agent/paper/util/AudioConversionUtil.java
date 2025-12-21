@@ -1,9 +1,8 @@
 package dev.minceraft.sonus.agent.paper.util;
 // Created by booky10 in TjcSonus (19:40 17.11.2024)
 
-import de.maxhenkel.lame4j.Mp3Decoder;
-import de.maxhenkel.lame4j.ShortArrayBuffer;
-import de.maxhenkel.lame4j.UnknownPlatformException;
+import dev.minceraft.sonus.common.natives.LameNativesLoader;
+import dev.minceraft.sonus.common.natives.LameNativesLoader.Decoder;
 import org.joml.Math;
 import org.jspecify.annotations.NullMarked;
 
@@ -125,32 +124,32 @@ public final class AudioConversionUtil {
         return data;
     }
 
-    public static short[] decodeMp3ToSonus(Path path, float volume) throws IOException, UnknownPlatformException {
+    public static short[] decodeMp3ToSonus(LameNativesLoader natives, Path path, float volume) throws IOException {
         int size = (int) Files.size(path);
         try (InputStream input = Files.newInputStream(path)) {
-            return decodeMp3ToSonus(size, input, volume);
+            return decodeMp3ToSonus(natives, size, input, volume);
         }
     }
 
-    public static short[] decodeMp3ToSonus(InputStream input, float volume) throws IOException, UnknownPlatformException {
-        return decodeMp3ToSonus(input.available(), input, volume);
+    public static short[] decodeMp3ToSonus(LameNativesLoader natives, InputStream input, float volume) throws IOException {
+        return decodeMp3ToSonus(natives, input.available(), input, volume);
     }
 
-    public static short[] decodeMp3ToSonus(int fileSize, InputStream input, float volume) throws IOException, UnknownPlatformException {
+    public static short[] decodeMp3ToSonus(LameNativesLoader natives, int fileSize, InputStream input, float volume) throws IOException {
         try (BufferedInputStream bufferedInput = new BufferedInputStream(input);
-             Mp3Decoder decoder = new Mp3Decoder(bufferedInput)) {
+             Decoder decoder = natives.new Decoder(bufferedInput)) {
             return decodeMp3ToSonus(fileSize, decoder, volume);
         }
     }
 
-    public static short[] decodeMp3ToSonus(de.maxhenkel.lame4j.Mp3Decoder decoder, float volume) throws IOException {
+    public static short[] decodeMp3ToSonus(Decoder decoder, float volume) {
         return decodeMp3ToSonus(0, decoder, volume);
     }
 
     private static final int INITIAL_SAMPLE_COUNT = 2048;
 
     // inspired by https://github.com/henkelmax/simple-voice-chat/blob/20218b8d4169ec2af56c34a0aa07c2ee711a01e1/common/src/main/java/de/maxhenkel/voicechat/plugins/impl/mp3/Mp3DecoderImpl.java
-    public static short[] decodeMp3ToSonus(int fileSize, de.maxhenkel.lame4j.Mp3Decoder decoder, float volume) throws IOException {
+    public static short[] decodeMp3ToSonus(int fileSize, Decoder decoder, float volume) {
         short[] firstFrame = decoder.decodeNextFrame();
         if (firstFrame == null) {
             throw new IllegalArgumentException("Failed to decode first mp3 frame from " + decoder);
@@ -169,6 +168,6 @@ public final class AudioConversionUtil {
         AudioFormat audioFormat = decoder.createAudioFormat();
         assert audioFormat != null; // we have parsed the InputStream, this shouldn't be null
         // convert decoded mp3 pcm data to sonus format
-        return convertToSonus(buffer.toShortArray(), volume, audioFormat);
+        return convertToSonus(buffer.getBuf(), volume, audioFormat);
     }
 }

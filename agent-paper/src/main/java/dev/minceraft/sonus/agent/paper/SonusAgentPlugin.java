@@ -5,6 +5,8 @@ import dev.minceraft.sonus.agent.paper.api.SonusAgentApi;
 import dev.minceraft.sonus.agent.paper.api.SonusAgentApiImpl;
 import dev.minceraft.sonus.agent.paper.config.SonusAgentConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
+import dev.minceraft.sonus.common.natives.LameNativesLoader;
+import dev.minceraft.sonus.common.natives.OpusNativesLoader;
 import dev.minceraft.sonus.common.rooms.options.RoomDefinition;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
@@ -32,6 +34,14 @@ public class SonusAgentPlugin extends JavaPlugin {
     private @Nullable YamlConfigHolder<RoomDefinition> roomDefinition;
     private final List<IMetaMessage> definitions = new ArrayList<>();
 
+    protected @MonotonicNonNull OpusNativesLoader opusNatives;
+    protected @MonotonicNonNull LameNativesLoader lameNatives;
+
+    protected void loadNatives() {
+        this.opusNatives = new OpusNativesLoader();
+        this.lameNatives = new LameNativesLoader();
+    }
+
     protected SonusAgentApiImpl createApi() {
         return new SonusAgentApiImpl(this);
     }
@@ -51,6 +61,8 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     @Override
     public void onLoad() {
+        this.loadNatives();
+
         this.config = this.createConfig();
         this.config.reloadConfig();
 
@@ -66,6 +78,15 @@ public class SonusAgentPlugin extends JavaPlugin {
         Bukkit.getMessenger().registerIncomingPluginChannel(this, PLUGIN_MESSAGE_CHANNEL, this.createAgentMessageListener());
 
         this.loadRoomDefinition();
+    }
+
+    @Override
+    public void onDisable() {
+        try (OpusNativesLoader ignoredOpusNatives = this.opusNatives;
+             LameNativesLoader ignoredLameNatives = this.lameNatives) {
+            this.opusNatives = null;
+            this.lameNatives = null;
+        }
     }
 
     public boolean sendMetaPacket(IMetaMessage packet) {
@@ -118,5 +139,13 @@ public class SonusAgentPlugin extends JavaPlugin {
         for (IMetaMessage definition : this.definitions) {
             this.sendMetaPacket(definition);
         }
+    }
+
+    public OpusNativesLoader getOpusNatives() {
+        return this.opusNatives;
+    }
+
+    public LameNativesLoader getLameNatives() {
+        return this.lameNatives;
     }
 }

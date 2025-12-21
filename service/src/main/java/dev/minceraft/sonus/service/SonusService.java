@@ -5,6 +5,8 @@ import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
+import dev.minceraft.sonus.common.natives.OpusNativesLoader;
+import dev.minceraft.sonus.common.natives.SpeexNativesLoader;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
@@ -19,6 +21,7 @@ import dev.minceraft.sonus.service.player.PlayerManager;
 import dev.minceraft.sonus.service.rooms.SonusRoomManager;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +43,9 @@ public final class SonusService implements ISonusService {
     private final AgentManager agentManager = new AgentManager(this);
     private final YamlConfigHolder<SonusConfig> config;
     private @MonotonicNonNull UdpServer udpServer;
+
+    private @Nullable OpusNativesLoader opusNatives = new OpusNativesLoader();
+    private @Nullable SpeexNativesLoader speexNatives = new SpeexNativesLoader();
 
     public SonusService(IServicePlatform platform) {
         this.platform = platform;
@@ -81,6 +87,12 @@ public final class SonusService implements ISonusService {
             this.udpServer.shutdown();
         }
         this.scheduler.shutdown();
+
+        try (OpusNativesLoader ignoredOpusNatives = this.opusNatives;
+             SpeexNativesLoader ignoredSpeexNatives = this.speexNatives) {
+            this.opusNatives = null;
+            this.speexNatives = null;
+        }
     }
 
     public IServicePlatform getPlatform() {
@@ -142,6 +154,20 @@ public final class SonusService implements ISonusService {
 
     @Override
     public AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
-        return new AudioProcessor(() -> this.getConfig().getMtuSize(), mode);
+        return new AudioProcessor(this.getOpusNatives(), () -> this.getConfig().getMtuSize(), mode);
+    }
+
+    public OpusNativesLoader getOpusNatives() {
+        if (this.opusNatives == null) {
+            throw new IllegalStateException("Opus natives have already been closed");
+        }
+        return this.opusNatives;
+    }
+
+    public SpeexNativesLoader getSpeexNatives() {
+        if (this.speexNatives == null) {
+            throw new IllegalStateException("Speex natives have already been closed");
+        }
+        return this.speexNatives;
     }
 }

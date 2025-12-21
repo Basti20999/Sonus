@@ -60,7 +60,7 @@ public class SonusAgentApiImpl implements SonusAgentApi {
 
     @Override
     public AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
-        return new AudioProcessor(() -> this.plugin.getSonusConfig().mtu, mode);
+        return new AudioProcessor(this.plugin.getOpusNatives(), () -> this.plugin.getSonusConfig().mtu, mode);
     }
 
     public Set<UUID> getConnectedPlayers() {
