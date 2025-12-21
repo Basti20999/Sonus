@@ -23,7 +23,7 @@ public class LanguageRequestPacket extends TcpPlasmoPacket<LanguageRequestPacket
 
     @Override
     public void decode(ByteBuf buf) {
-        this.language = Utf8String.readUnsignedShort(buf);
+        this.language = Utf8String.readUnsignedShort(buf, 12);
     }
 
     @Override

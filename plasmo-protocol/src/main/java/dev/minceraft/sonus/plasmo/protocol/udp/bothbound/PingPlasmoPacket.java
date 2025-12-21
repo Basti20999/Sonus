@@ -37,7 +37,7 @@ public class PingPlasmoPacket extends UdpPlasmoPacket<PingPlasmoPacket> {
         this.time = buf.readLong();
 
         if (buf.isReadable()) {
-            this.serverAddress = Utf8String.readUnsignedShort(buf);
+            this.serverAddress = Utf8String.readUnsignedShort(buf, 255);
             this.serverPort = buf.readShort();
         } else {
             this.serverAddress = null;

@@ -14,7 +14,7 @@ public interface TcpClientBoundHandler {
     default void handleConfigPacket(ConfigPacket packet) {
     }
 
-    default void handleConfigPlayerInfoPacket(ConfigPlayerInfoPacket packet) {
+    default void handleConfigPlayerInfoPacket(ConfigPlayerInfoPacket<?> packet) {
     }
 
     default void handleConnectionPacket(ConnectionPacket packet) {

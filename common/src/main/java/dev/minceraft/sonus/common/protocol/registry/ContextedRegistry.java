@@ -170,6 +170,7 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
         ANY(true, true),
         DECODE(true, false),
         ENCODE(false, true),
+        NONE(false, false),
         ;
 
         private final boolean decode;

@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,7 +26,15 @@ public class PlayerActivationDistancesPacket extends TcpPlasmoPacket<PlayerActiv
 
     @Override
     public void decode(ByteBuf buf) {
-        this.distances = DataTypeUtil.INT.readMap(buf, DataTypeUtil::readUniqueId, ByteBuf::readInt);
+        this.distances = DataTypeUtil.INT.readMap(
+                buf, DataTypeUtil::readUniqueId, ByteBuf::readInt,
+                count -> {
+                    // the plasmo client only sends single-value maps for this packet
+                    if (count != 1) {
+                        throw new IllegalStateException("Expected single-entry map");
+                    }
+                    return new HashMap<>(1);
+                });
     }
 
     @Override

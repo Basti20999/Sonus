@@ -10,6 +10,11 @@ import dev.minceraft.sonus.plasmo.protocol.udp.serverbound.PlayerAudioPlasmoPack
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.ANY;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.DECODE;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.ENCODE;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.NONE;
+
 @NullMarked
 public class UdpPlasmoRegistry {
 
@@ -26,11 +31,11 @@ public class UdpPlasmoRegistry {
                         packet.encode(buf);
                     })
                     .idCodec(ByteBuf::readByte, ByteBuf::writeByte)
-                    .register(0x01, PingPlasmoPacket.class, PingPlasmoPacket::new)
-                    .register(0x02, PlayerAudioPlasmoPacket.class, PlayerAudioPlasmoPacket::new)
-                    .register(0x03, SourceAudioPlasmoPacket.class, SourceAudioPlasmoPacket::new)
-                    .register(0x04, SelfAudioInfoPlasmoPacket.class, SelfAudioInfoPlasmoPacket::new)
-                    .register(0x100, CustomPlasmoPacket.class, CustomPlasmoPacket::new)
+                    .register(0x01, PingPlasmoPacket.class, PingPlasmoPacket::new, ANY)
+                    .register(0x02, PlayerAudioPlasmoPacket.class, PlayerAudioPlasmoPacket::new, DECODE)
+                    .register(0x03, SourceAudioPlasmoPacket.class, SourceAudioPlasmoPacket::new, ENCODE)
+                    .register(0x04, SelfAudioInfoPlasmoPacket.class, SelfAudioInfoPlasmoPacket::new, ENCODE)
+                    .register(0x100, CustomPlasmoPacket.class, CustomPlasmoPacket::new, NONE)
                     .build();
 
 }

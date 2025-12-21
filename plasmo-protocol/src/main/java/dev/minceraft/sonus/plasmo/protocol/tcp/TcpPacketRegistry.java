@@ -31,6 +31,10 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.SourceInfoRequestPack
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.DECODE;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.ENCODE;
+import static dev.minceraft.sonus.common.protocol.registry.ContextedRegistry.MessageDirection.NONE;
+
 @NullMarked
 public final class TcpPacketRegistry {
 
@@ -39,36 +43,36 @@ public final class TcpPacketRegistry {
                     .codec((buf, packet) -> packet.decode(buf), (buf, packet) -> packet.encode(buf))
                     .idCodec(ByteBuf::readByte, ByteBuf::writeByte)
                     .idOffset(1) // Plasmo index starts at 1
-                    .register(ConnectionPacket.class, ConnectionPacket::new)
-                    .register(PlayerInfoRequestPacket.class, PlayerInfoRequestPacket::new)
-                    .register(ConfigPacket.class, ConfigPacket::new)
-                    .register(ConfigPlayerInfoPacket.class, (ConfigPlayerInfoPacket::new))
-                    .register(LanguageRequestPacket.class, LanguageRequestPacket::new)
+                    .register(ConnectionPacket.class, ConnectionPacket::new, ENCODE)
+                    .register(PlayerInfoRequestPacket.class, PlayerInfoRequestPacket::new, ENCODE)
+                    .register(ConfigPacket.class, ConfigPacket::new, ENCODE)
+                    .register(ConfigPlayerInfoPacket.class, ConfigPlayerInfoPacket::new, NONE)
+                    .register(LanguageRequestPacket.class, LanguageRequestPacket::new, DECODE)
 
-                    .register(LanguagePacket.class, LanguagePacket::new)
-                    .register(PlayerListPacket.class, PlayerListPacket::new)
-                    .register(PlayerInfoUpdatePacket.class, PlayerInfoUpdatePacket::new)
-                    .register(PlayerDisconnectPacket.class, PlayerDisconnectPacket::new)
-                    .register(PlayerInfoPacket.class, PlayerInfoPacket::new)
-                    .register(PlayerStatePacket.class, PlayerStatePacket::new)
-                    .register(PlayerAudioEndPacket.class, PlayerAudioEndPacket::new)
-                    .register(PlayerActivationDistancesPacket.class, PlayerActivationDistancesPacket::new)
+                    .register(LanguagePacket.class, LanguagePacket::new, ENCODE)
+                    .register(PlayerListPacket.class, PlayerListPacket::new, ENCODE)
+                    .register(PlayerInfoUpdatePacket.class, PlayerInfoUpdatePacket::new, ENCODE)
+                    .register(PlayerDisconnectPacket.class, PlayerDisconnectPacket::new, ENCODE)
+                    .register(PlayerInfoPacket.class, PlayerInfoPacket::new, DECODE)
+                    .register(PlayerStatePacket.class, PlayerStatePacket::new, DECODE)
+                    .register(PlayerAudioEndPacket.class, PlayerAudioEndPacket::new, DECODE)
+                    .register(PlayerActivationDistancesPacket.class, PlayerActivationDistancesPacket::new, DECODE)
 
-                    .register(DistanceVisualizePacket.class, DistanceVisualizePacket::new)
-                    .register(SourceInfoRequestPacket.class, SourceInfoRequestPacket::new)
-                    .register(SourceInfoPacket.class, SourceInfoPacket::new)
-                    .register(SelfSourceInfoPacket.class, SelfSourceInfoPacket::new)
-                    .register(SourceAudioEndPacket.class, SourceAudioEndPacket::new)
+                    .register(DistanceVisualizePacket.class, DistanceVisualizePacket::new, ENCODE)
+                    .register(SourceInfoRequestPacket.class, SourceInfoRequestPacket::new, DECODE)
+                    .register(SourceInfoPacket.class, SourceInfoPacket::new, ENCODE)
+                    .register(SelfSourceInfoPacket.class, SelfSourceInfoPacket::new, ENCODE)
+                    .register(SourceAudioEndPacket.class, SourceAudioEndPacket::new, ENCODE)
 
-                    .register(ActivationRegisterPacket.class, ActivationRegisterPacket::new)
-                    .register(ActivationUnregisterPacket.class, ActivationUnregisterPacket::new)
+                    .register(ActivationRegisterPacket.class, ActivationRegisterPacket::new, ENCODE)
+                    .register(ActivationUnregisterPacket.class, ActivationUnregisterPacket::new, ENCODE)
 
-                    .register(SourceLineRegisterPacket.class, SourceLineRegisterPacket::new)
-                    .register(SourceLineUnregisterPacket.class, SourceLineUnregisterPacket::new)
-                    .register(SourceLinePlayerAddPacket.class, SourceLinePlayerAddPacket::new)
-                    .register(SourceLinePlayerRemovePacket.class, SourceLinePlayerRemovePacket::new)
-                    .register(SourceLinePlayersListPacket.class, SourceLinePlayersListPacket::new)
+                    .register(SourceLineRegisterPacket.class, SourceLineRegisterPacket::new, ENCODE)
+                    .register(SourceLineUnregisterPacket.class, SourceLineUnregisterPacket::new, ENCODE)
+                    .register(SourceLinePlayerAddPacket.class, SourceLinePlayerAddPacket::new, ENCODE)
+                    .register(SourceLinePlayerRemovePacket.class, SourceLinePlayerRemovePacket::new, ENCODE)
+                    .register(SourceLinePlayersListPacket.class, SourceLinePlayersListPacket::new, ENCODE)
 
-                    .register(AnimatedActionBarPacket.class, AnimatedActionBarPacket::new)
+                    .register(AnimatedActionBarPacket.class, AnimatedActionBarPacket::new, ENCODE)
                     .build();
 }

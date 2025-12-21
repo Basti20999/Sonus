@@ -32,9 +32,9 @@ public class PlayerInfoPacket extends PlayerStatePacket<PlayerInfoPacket> {
     @Override
     public void decode(ByteBuf buf) {
         super.decode(buf);
-        this.minecraftVersion = Utf8String.readUnsignedShort(buf);
-        this.plasmoVersion = Utf8String.readUnsignedShort(buf);
-        this.publicKey = DataTypeUtil.INT.readByteArray(buf);
+        this.minecraftVersion = Utf8String.readUnsignedShort(buf, 32);
+        this.plasmoVersion = Utf8String.readUnsignedShort(buf, 32);
+        this.publicKey = DataTypeUtil.INT.readByteArray(buf, 4096);
     }
 
     @Override
