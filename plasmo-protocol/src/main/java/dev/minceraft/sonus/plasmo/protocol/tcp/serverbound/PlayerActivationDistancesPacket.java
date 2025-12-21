@@ -4,17 +4,16 @@ import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpHandler;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPlasmoPacket;
 import io.netty.buffer.ByteBuf;
-import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
+import java.util.Map;
 import java.util.UUID;
 
 @NullMarked
 public class PlayerActivationDistancesPacket extends TcpPlasmoPacket<PlayerActivationDistancesPacket> {
 
-    private @MonotonicNonNull Object2IntMap<UUID> distances;
+    private @MonotonicNonNull Map<UUID, Integer> distances;
 
     public PlayerActivationDistancesPacket() {
     }
@@ -26,7 +25,7 @@ public class PlayerActivationDistancesPacket extends TcpPlasmoPacket<PlayerActiv
 
     @Override
     public void decode(ByteBuf buf) {
-        this.distances = DataTypeUtil.INT.readMap(buf, DataTypeUtil::readUniqueId, ByteBuf::readInt, Object2IntArrayMap::new);
+        this.distances = DataTypeUtil.INT.readMap(buf, DataTypeUtil::readUniqueId, ByteBuf::readInt);
     }
 
     @Override
@@ -34,11 +33,11 @@ public class PlayerActivationDistancesPacket extends TcpPlasmoPacket<PlayerActiv
         handler.handlePlayerActivationDistancesPacket(this);
     }
 
-    public Object2IntMap<UUID> getDistances() {
+    public Map<UUID, Integer> getDistances() {
         return this.distances;
     }
 
-    public void setDistances(Object2IntMap<UUID> distances) {
+    public void setDistances(Map<UUID, Integer> distances) {
         this.distances = distances;
     }
 }
