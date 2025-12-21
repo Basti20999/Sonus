@@ -37,7 +37,7 @@ public class WebAdapter implements SonusAdapter {
     }
 
     private AdapterInfo buildAdapterInfo() {
-        return new AdapterInfo(this.service.getConfig().getSubConfig(WebConfig.class).enabled);
+        return new AdapterInfo("web", this.service.getConfig().getSubConfig(WebConfig.class).enabled);
     }
 
     @Override

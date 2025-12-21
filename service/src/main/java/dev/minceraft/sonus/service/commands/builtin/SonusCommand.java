@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.service.commands.builtin;
 
+import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.commands.Command;
 import dev.minceraft.sonus.service.commands.LiteralCommandNode;
@@ -30,16 +31,19 @@ public class SonusCommand extends Command {
     }
 
     private boolean execute(SonusService service, SonusPlayer player) {
-        if (player.getAdapter() != null || player.isConnected()) {
-            return false; // already connecting/connected
+        SonusAdapter adapter = player.getAdapter();
+        if (adapter != null && player.isConnected()) {
+            player.sendMessage(translatable("sonus.command.sonus.connected-info")
+                    .arguments(translatable("sonus.adapter." + adapter.getAdapterInfo().id() + ".name")));
+            return true; // already connecting/connected
         }
-        WebAdapter adapter = service.getAdapters().getAdapter(WebAdapter.class);
-        if (adapter == null) {
+        WebAdapter webAdapter = service.getAdapters().getAdapter(WebAdapter.class);
+        if (webAdapter == null || !webAdapter.getAdapterInfo().enabled()) {
             return false;
         }
 
         String linkPattern = service.getConfig().getSubConfig(WebConfig.class).linkPattern;
-        String token = adapter.getSessions().generateToken(player);
+        String token = webAdapter.getSessions().generateToken(player);
         String url = String.format(linkPattern, token);
 
         player.sendMessage(translatable("sonus.command.sonus.web.token")

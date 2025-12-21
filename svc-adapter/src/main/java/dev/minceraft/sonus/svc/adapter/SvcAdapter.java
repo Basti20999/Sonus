@@ -42,7 +42,7 @@ public class SvcAdapter implements SonusAdapter {
     }
 
     private AdapterInfo buildAdapterInfo() {
-        return new AdapterInfo(this.service.getConfig().getSubConfig(SvcConfig.class).enabled);
+        return new AdapterInfo("svc", this.service.getConfig().getSubConfig(SvcConfig.class).enabled);
     }
 
     @Override

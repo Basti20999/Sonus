@@ -44,7 +44,8 @@ public class PlasmoAdapter implements SonusAdapter {
     }
 
     private AdapterInfo buildAdapterInfo() {
-        return new AdapterInfo(this.service.getConfig().getSubConfig(PlasmoConfig.class).enabled);
+        return new AdapterInfo("plasmo",
+                this.service.getConfig().getSubConfig(PlasmoConfig.class).enabled);
     }
 
     @Override

@@ -59,7 +59,7 @@ public class PlasmoConnection implements AutoCloseable {
         int voiceChatRange = (int) this.adapter.getService().getConfig().getVoiceChatRange();
         VoiceActivation defaultActivation = new VoiceActivation(
                 "proximity",
-                this.adapter.getTranslationHolder().registerTranslationKey("pv.activation.proximity"),
+                this.adapter.getTranslationHolder().registerTranslationKey("sonus.pv.activation.proximity"),
                 "plasmovoice:textures/icons/microphone.png",
                 List.of(voiceChatRange),
                 voiceChatRange,
@@ -73,7 +73,7 @@ public class PlasmoConnection implements AutoCloseable {
 
         this.defaultSourceLine = new VoiceSourceLine(
                 "proximity",
-                this.adapter.getTranslationHolder().registerTranslationKey("pv.sourceline.proximity"),
+                this.adapter.getTranslationHolder().registerTranslationKey("sonus.pv.sourceline.proximity"),
                 "plasmovoice:textures/icons/speaker.png",
                 1.0,
                 0,
