@@ -140,6 +140,15 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         } else if (this == source) {
             return false; // never make players listen to themselves
         }
+        // check if player is hidden
+        SonusPlayerState state = this.perPlayerStates.get(source.getSenderId());
+        if (state != null) {
+            if (!spatial && state.staticHidden()) {
+                return false; // player is hidden for static audio
+            } else if (spatial && state.spatialHidden()) {
+                return false; // player is hidden for spatial audio
+            }
+        }
         IRoom primaryRoom = this.getPrimaryRoom();
         if (primaryRoom != null) {
             // if this player is in an isolated room, the player won't be
@@ -148,6 +157,11 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
                     && source instanceof ISonusPlayer other
                     && other.getPrimaryRoom() != primaryRoom) {
                 return false;
+            } else if (!spatial
+                    && source instanceof ISonusPlayer other
+                    && other.getPrimaryRoom() == primaryRoom) {
+                // players in the same room can always hear each other
+                return true;
             }
         }
         if (spatial) {
@@ -167,17 +181,9 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
                 }
             }
         }
-        // check if player is hidden
-        SonusPlayerState state = this.perPlayerStates.get(source.getSenderId());
-        if (state == null) {
-            if (source instanceof SonusPlayer sonusSource) {
-                // call platform-specific fallback when there is no state set
-                return this.platform.canSeeFallback(sonusSource.platform);
-            }
-        } else if (!spatial && state.staticHidden()) {
-            return false; // player is hidden for static audio
-        } else if (spatial && state.spatialHidden()) {
-            return false; // player is hidden for spatial audio
+        if (source instanceof SonusPlayer sonusSource) {
+            // call platform-specific fallback when there is no state set
+            return this.platform.canSeeFallback(sonusSource.platform);
         }
         return true;
     }
@@ -510,6 +516,11 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (this == target) {
             return true; // the player can always view themselves, regardless of what happens
         }
+        // check whether the player is hidden or not; if no state is set, ask platform for fallback
+        SonusPlayerState state = this.perPlayerStates.get(target.getUniqueId());
+        if (state != null && state.staticHidden() && state.spatialHidden()) {
+            return false;
+        }
         // if the target is in a primary room, this player should be able to
         // see them in the group selection; we therefore need to send status updates
         if (target.getPrimaryRoom() == null && ((SonusPlayer) target).prevPrimaryRoom != this.primaryRoom) {
@@ -517,11 +528,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             if (!Objects.equals(this.getServerId(), target.getServerId())) {
                 return false;
             }
-        }
-        // check whether the player is hidden or not; if no state is set, ask platform for fallback
-        SonusPlayerState state = this.perPlayerStates.get(target.getUniqueId());
-        if (state != null) {
-            return !state.staticHidden() || !state.spatialHidden();
+        } else if (target.getPrimaryRoom() == this.primaryRoom) {
+            return true;
         }
         return this.platform.canSeeFallback(((SonusPlayer) target).platform);
     }
