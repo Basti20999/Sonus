@@ -4,6 +4,8 @@ package dev.minceraft.sonus.agent.paper.api;
 import dev.minceraft.sonus.agent.paper.audio.AudioSupplier;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
+import dev.minceraft.sonus.common.natives.LameNativesLoader;
+import dev.minceraft.sonus.common.natives.OpusNativesLoader;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -23,4 +25,8 @@ public interface SonusAgentApi {
     );
 
     AudioProcessor createAudioProcessor(AudioProcessor.Mode mode);
+
+    OpusNativesLoader getOpusNatives();
+
+    LameNativesLoader getLameNatives();
 }

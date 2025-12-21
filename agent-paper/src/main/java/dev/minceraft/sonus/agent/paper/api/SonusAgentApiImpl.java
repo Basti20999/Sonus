@@ -6,6 +6,8 @@ import dev.minceraft.sonus.agent.paper.audio.AudioSupplier;
 import dev.minceraft.sonus.agent.paper.audio.AudioTicker;
 import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
+import dev.minceraft.sonus.common.natives.LameNativesLoader;
+import dev.minceraft.sonus.common.natives.OpusNativesLoader;
 import dev.minceraft.sonus.protocol.meta.servicebound.RegisterAudioCategoryMessage;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
@@ -61,6 +63,16 @@ public class SonusAgentApiImpl implements SonusAgentApi {
     @Override
     public AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
         return new AudioProcessor(this.plugin.getOpusNatives(), () -> this.plugin.getSonusConfig().mtu, mode);
+    }
+
+    @Override
+    public OpusNativesLoader getOpusNatives() {
+        return this.plugin.getOpusNatives();
+    }
+
+    @Override
+    public LameNativesLoader getLameNatives() {
+        return this.plugin.getLameNatives();
     }
 
     public Set<UUID> getConnectedPlayers() {
