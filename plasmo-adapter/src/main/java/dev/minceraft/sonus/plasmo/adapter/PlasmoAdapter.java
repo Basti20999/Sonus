@@ -8,6 +8,7 @@ import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.common.util.GameProfile;
 import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceAudioEndPacket;
@@ -63,18 +64,27 @@ public class PlasmoAdapter implements SonusAdapter {
             return; // no plasmo session found
         }
 
-        SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), () -> new PlayerSourceInfo(
-                ADDON_ID,
-                source.getSenderId(),
-                connection.getSourceLine(source.getCategoryId()).getId(),
-                null,
-                (byte) 0,
-                this.adapter.getCodecInfo(),
-                true,
-                true,
-                0,
-                this.sessionManager.buildPlayerInfo(player, player) // attach the sound to the player himself for static audio
-        ));
+        SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), () -> {
+            GameProfile profile = null;
+            if (source instanceof ISonusPlayer speaker) {
+                profile = speaker.getSimpleProfile(player);
+            }
+            return new DirectSourceInfo(
+                    ADDON_ID,
+                    source.getSenderId(),
+                    connection.getSourceLine(source.getCategoryId()).getId(),
+                    null,
+                    (byte) 0,
+                    this.adapter.getCodecInfo(),
+                    true,
+                    true,
+                    0,
+                    profile, // attach the sound to the player himself for static audio
+                    Vec3d.ZERO,
+                    Vec3d.ZERO,
+                    true
+            );
+        });
 
         this.sendAudio(connection, source, sourceInfo, audio);
 
