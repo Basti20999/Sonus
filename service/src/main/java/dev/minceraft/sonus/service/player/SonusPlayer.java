@@ -127,6 +127,9 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     private boolean canHear(IAudioSource source, boolean spatial) {
+        if (this.sonusAdapter == null || !this.isConnected()) {
+            return false;
+        }
         if (this.deafened || !this.platform.hasPermission(PERMISSION_VOICE_LISTEN, true)) {
             return false;
         } else if (this == source) {
@@ -192,28 +195,28 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @Override
     public void sendStaticAudio(IAudioSource source, SonusAudio audio) {
-        if (this.sonusAdapter != null && this.canHear(source, false)) {
+        if (this.canHear(source, false)) {
             this.sonusAdapter.sendStaticAudio(this, source, audio);
         }
     }
 
     @Override
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position) {
-        if (this.sonusAdapter != null && this.canHear(source, true)) {
+        if (this.canHear(source, true)) {
             this.sonusAdapter.sendSpatialAudio(this, source, audio, position);
         }
     }
 
     @Override
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio) {
-        if (this.sonusAdapter != null && this.canHear(source, true)) {
+        if (this.canHear(source, true)) {
             this.sonusAdapter.sendSpatialAudio(this, source, audio);
         }
     }
 
     @Override
     public void sendSpatialNormedAudio(IAudioSource source, SonusAudio audio) {
-        if (this.sonusAdapter == null || !this.canHear(source, true)) {
+        if (!this.canHear(source, true)) {
             return;
         }
         Vec3d pos = SpatialNormProcessor.normalizeAudio(this.service, this, source, audio);
@@ -224,7 +227,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @Override
     public void sendAudioEnd(IAudioSource source, long sequence) {
-        if (this.sonusAdapter == null || !this.canHear(source, true)) {
+        if (!this.canHear(source, true)) {
             return;
         }
         this.sonusAdapter.sendAudioEnd(this, source, sequence);
