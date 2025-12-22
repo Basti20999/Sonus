@@ -35,7 +35,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
@@ -50,7 +49,6 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private final IPlatformPlayer platform;
     // keep track of which rooms this player is in
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
-    private final AtomicLong sequenceNumber = new AtomicLong(-1L); // audio input sequence number
     private @Nullable SonusAdapter sonusAdapter;
     private @Nullable IRoom serverRoom;
     private @Nullable IRoom prevPrimaryRoom; // hack to fix state updates
@@ -85,12 +83,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             return;
         }
 
-        // Prevents sequence number regression, e.g. after a reconnect
-        long sequence = this.sequenceNumber.updateAndGet(
-                num -> Math.max(num, audio.sequenceNumber()) + 1L);
-        SonusAudio sequencedAudio = audio.withSequenceNumber(sequence);
-        this.processAudioInput(sequencedAudio);
-        this.handleRoomBroadcast(room -> room.sendAudio(this, sequencedAudio));
+        this.processAudioInput(audio);
+        this.handleRoomBroadcast(room -> room.sendAudio(this, audio));
     }
 
     @Override
@@ -98,9 +92,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (!this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
             return;
         }
-        long finalSequence = this.sequenceNumber.updateAndGet(
-                num -> Math.max(num, sequence));
-        this.handleRoomBroadcast(room -> room.sendAudioEnd(this, finalSequence));
+        this.handleRoomBroadcast(room -> room.sendAudioEnd(this, sequence));
     }
 
     private void processAudioInput(SonusAudio audio) {
