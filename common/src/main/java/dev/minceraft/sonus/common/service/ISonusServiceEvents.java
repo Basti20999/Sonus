@@ -20,7 +20,7 @@ public interface ISonusServiceEvents {
     default void onPlayerQuit(ISonusPlayer player) {
     }
 
-    default void onPlayerStateUpdate(ISonusPlayer player) {
+    default void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
     }
 
     default void onPlayerPositionUpdate(ISonusPlayer player) {

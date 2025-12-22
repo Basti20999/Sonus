@@ -44,7 +44,7 @@ public class SvcSonusListener implements ISonusServiceEvents {
     }
 
     @Override
-    public void onPlayerStateUpdate(ISonusPlayer player) {
+    public void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
         if (!player.isConnected()) {
             // if the player isn't connected and not in a primary room,
             // remove the state; if the player is in a primary room, still send state updates,
@@ -57,7 +57,7 @@ public class SvcSonusListener implements ISonusServiceEvents {
             }
         }
         // broadcast state update from the player
-        this.adapter.getSessions().broadcastFrom(player, connection -> {
+        this.adapter.getSessions().broadcastFrom(player, !globalUpdate, connection -> {
             PlayerStateSvcPacket packet = new PlayerStateSvcPacket();
             packet.setState(this.adapter.getSessions().buildPlayerState(connection.getPlayer(), player));
 

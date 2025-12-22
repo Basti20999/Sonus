@@ -100,7 +100,11 @@ public interface ISonusPlayer extends IAudioSource {
 
     void ensureTabListed(ISonusPlayer target);
 
-    void updateState();
+    default void updateState() {
+        this.updateState(false);
+    }
+
+    void updateState(boolean globalUpdate);
 
     boolean hasPermission(String permission, boolean defaultValue);
 

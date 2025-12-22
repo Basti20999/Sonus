@@ -39,6 +39,20 @@ public class PlasmoSessionManager {
         }
     }
 
+    public void broadcastFrom(ISonusPlayer source, AbstractPlasmoPacket<?> packet) {
+        this.broadcastFrom(source, true, __ -> packet);
+    }
+
+    public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<PlasmoConnection, AbstractPlasmoPacket<?>> packet) {
+        for (PlasmoConnection conn : this.usersByUniqueId.values()) {
+            if (!conn.isConnected() || (!conn.getPlayer().canSee(source) && requireVisibility)) {
+                continue; // target not connected or target can't see source
+            }
+            conn.getPlayer().ensureTabListed(source);
+            conn.sendPacket(packet.apply(conn));
+        }
+    }
+
     public boolean removeSession(UUID playerId) {
         try (PlasmoConnection conn = this.usersByUniqueId.remove(playerId)) {
             if (conn != null) {

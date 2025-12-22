@@ -66,14 +66,14 @@ public class WebSessionManager {
     }
 
     public void broadcastFrom(ISonusPlayer source, AbstractWebPacket<?> packet) {
-        this.broadcastFrom(source, __ -> packet);
+        this.broadcastFrom(source, false, __ -> packet);
     }
 
-    public void broadcastFrom(ISonusPlayer source, Function<WebSocketConnection, AbstractWebPacket<?>> packet) {
+    public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<WebSocketConnection, AbstractWebPacket<?>> packet) {
         for (WebSocketConnection conn : this.connections.values()) {
             ISonusPlayer target = conn.getPlayer();
             // ensure target is connected and target can see source
-            if (target.isConnected() && target.canSee(source)) {
+            if (target.isConnected() && (target.canSee(source) || !requireVisibility)) {
                 conn.sendPacket(packet.apply(conn));
             }
         }

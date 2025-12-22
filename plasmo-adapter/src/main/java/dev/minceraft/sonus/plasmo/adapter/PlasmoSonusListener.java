@@ -29,7 +29,7 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
     @Override
     public void onPlayerSwitchBackend(UUID playerId) {
         // remove backend-specific session
-        if (this.adapter.getSessionManager().removeSession(playerId)){
+        if (this.adapter.getSessionManager().removeSession(playerId)) {
             // disable sonus during backend switch
             this.adapter.getService().getPlayerManager().disableOnBackendSwitch(playerId);
         }
@@ -47,8 +47,8 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
     }
 
     @Override
-    public void onPlayerStateUpdate(ISonusPlayer player) {
-        this.adapter.getSessionManager().broadcast(connection -> {
+    public void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
+        this.adapter.getSessionManager().broadcastFrom(player, !globalUpdate, connection -> {
             PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket();
             packet.setPlayerInfo(this.adapter.getSessionManager().buildPlayerInfo(connection.getPlayer(), player));
 

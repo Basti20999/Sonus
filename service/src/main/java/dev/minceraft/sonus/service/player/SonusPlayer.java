@@ -322,7 +322,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             this.joinRoom(room);
         }
         // trigger state update
-        this.updateState();
+        this.updateState(true);
         this.prevPrimaryRoom = null;
 
         this.updateCommands();
@@ -486,8 +486,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     @Override
-    public void updateState() {
-        this.service.getEventManager().onPlayerStateUpdate(this);
+    public void updateState(boolean globalUpdate) {
+        this.service.getEventManager().onPlayerStateUpdate(this, globalUpdate);
         this.updateServer();
     }
 

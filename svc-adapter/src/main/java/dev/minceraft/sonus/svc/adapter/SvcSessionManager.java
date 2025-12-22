@@ -85,12 +85,12 @@ public class SvcSessionManager {
     }
 
     public void broadcastFrom(ISonusPlayer source, AbstractSvcPacket<?> packet) {
-        this.broadcastFrom(source, __ -> packet);
+        this.broadcastFrom(source, true, __ -> packet);
     }
 
-    public void broadcastFrom(ISonusPlayer source, Function<SvcConnection, AbstractSvcPacket<?>> packet) {
+    public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<SvcConnection, AbstractSvcPacket<?>> packet) {
         for (SvcConnection conn : this.connections.values()) {
-            if (!conn.isConnected() || !conn.getPlayer().canSee(source)) {
+            if (!conn.isConnected() || (!conn.getPlayer().canSee(source) && requireVisibility)) {
                 continue; // target not connected or target can't see source
             }
             conn.getPlayer().ensureTabListed(source);

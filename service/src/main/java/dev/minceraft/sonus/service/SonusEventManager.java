@@ -67,10 +67,10 @@ public class SonusEventManager implements ISonusEventManager {
     }
 
     @Override
-    public void onPlayerStateUpdate(ISonusPlayer player) {
+    public void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
         for (ISonusServiceEvents listener : this.listeners) {
             try {
-                listener.onPlayerStateUpdate(player);
+                listener.onPlayerStateUpdate(player, globalUpdate);
             } catch (Exception exception) {
                 LOGGER.error("Error in onPlayerStateUpdate for listener {}", listener.getClass().getSimpleName(), exception);
             }
