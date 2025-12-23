@@ -63,18 +63,22 @@ public class PlasmoAdapter implements SonusAdapter {
         if (connection == null) {
             return; // no plasmo session found
         }
+        UUID categoryId = this.extractCategoryId(source, connection);
 
-        SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), () -> {
+        SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), categoryId, () -> {
+            String name = null;
             GameProfile profile = null;
+
             if (source instanceof ISonusPlayer speaker) {
+                name = speaker.getName(player);
                 profile = speaker.getSimpleProfile(player);
             }
             return new DirectSourceInfo(
                     ADDON_ID,
-                    source.getSenderId(),
-                    connection.getSourceLine(source.getCategoryId()).getId(),
-                    null,
-                    (byte) 0,
+                    UUID.randomUUID(),
+                    connection.getSourceLine(categoryId).getId(),
+                    name,
+                    (byte) 1,
                     this.adapter.getCodecInfo(),
                     true,
                     true,
@@ -82,7 +86,7 @@ public class PlasmoAdapter implements SonusAdapter {
                     profile, // attach the sound to the player himself for static audio
                     Vec3d.ZERO,
                     Vec3d.ZERO,
-                    true
+                    false
             );
         });
 
@@ -97,7 +101,9 @@ public class PlasmoAdapter implements SonusAdapter {
         if (connection == null) {
             return; // no plasmo session found
         }
-        SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), () -> {
+        UUID categoryId = this.extractCategoryId(source, connection);
+
+        SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), categoryId, () -> {
             // TODO: Use direct SourceInfo for players, for better ux in the gui -> PlayerHeads
 //            if (source instanceof ISonusPlayer speaker) {
 //                return new DirectSourceInfo(
@@ -119,10 +125,10 @@ public class PlasmoAdapter implements SonusAdapter {
 
             return new StaticSourceInfo(
                     ADDON_ID,
-                    source.getSenderId(),
-                    connection.getSourceLine(source.getCategoryId()).getId(),
+                    UUID.randomUUID(),
+                    connection.getSourceLine(categoryId).getId(),
                     null,
-                    (byte) 0,
+                    (byte) 1,
                     this.adapter.getCodecInfo(),
                     false,
                     false,
@@ -151,14 +157,16 @@ public class PlasmoAdapter implements SonusAdapter {
             return; // no plasmo session found
         }
 
-        SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), () -> {
+        UUID categoryId = this.extractCategoryId(source, connection);
+
+        SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), categoryId, () -> {
             if (source instanceof ISonusPlayer speaker) {
                 return new PlayerSourceInfo(
                         ADDON_ID,
-                        source.getSenderId(),
-                        connection.getSourceLine(source.getCategoryId()).getId(),
+                        UUID.randomUUID(),
+                        connection.getSourceLine(categoryId).getId(),
                         speaker.getName(player),
-                        (byte) 0,
+                        (byte) 1,
                         this.adapter.getCodecInfo(),
                         false,
                         true,
@@ -167,10 +175,10 @@ public class PlasmoAdapter implements SonusAdapter {
             }
             return new DirectSourceInfo(
                     ADDON_ID,
-                    source.getSenderId(),
-                    connection.getSourceLine(source.getCategoryId()).getId(),
+                    UUID.randomUUID(),
+                    connection.getSourceLine(categoryId).getId(),
                     null,
-                    (byte) 0,
+                    (byte) 1,
                     this.adapter.getCodecInfo(),
                     true,
                     false,
@@ -187,12 +195,26 @@ public class PlasmoAdapter implements SonusAdapter {
         sourceInfo.resetState();
     }
 
+    private UUID extractCategoryId(IAudioSource source, PlasmoConnection connection) {
+        UUID categoryId = source.getCategoryId();
+        if (source instanceof ISonusPlayer speaker) {
+            // In same room override category with group category
+            if (speaker.getPrimaryRoom() != null && speaker.getPrimaryRoom().equals(connection.getPlayer().getPrimaryRoom())) {
+                categoryId = speaker.getPrimaryRoom().getId();
+            }
+        }
+        if (categoryId == null){
+            categoryId = connection.getDefaultSourceLine().getId();
+        }
+        return categoryId;
+    }
+
     private void sendAudio(PlasmoConnection connection, IAudioSource source, SourceInfo sourceInfo, SonusAudio audio) {
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
         packet.setDistance((short) this.getService().getConfig().getVoiceChatRange());
         packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
         packet.setSequenceNumber(audio.sequenceNumber());
-        packet.setSourceId(source.getSenderId());
+        packet.setSourceId(sourceInfo.getId());
         packet.setSourceState(sourceInfo.getState());
 
         connection.sendPacket(packet);
@@ -241,10 +263,16 @@ public class PlasmoAdapter implements SonusAdapter {
             return; // no plasmo session found
         }
 
-        connection.unregisterVoiceSourceLine(categoryId);
+        UUID sourceLineId = connection.getPlasmoSourceLineId(categoryId);
+        if (sourceLineId == null) {
+            throw new IllegalStateException("No Plasmo source line registered for category " + categoryId +
+                    " cannot unregister for player " + player.getUniqueId());
+        }
+
+        connection.unregisterVoiceSourceLine(sourceLineId);
 
         SourceLineUnregisterPacket packet = new SourceLineUnregisterPacket();
-        packet.setSourceLineId(categoryId);
+        packet.setSourceLineId(sourceLineId);
         connection.sendPacket(packet);
     }
 

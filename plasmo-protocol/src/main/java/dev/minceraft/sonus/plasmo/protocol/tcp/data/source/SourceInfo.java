@@ -14,7 +14,7 @@ public abstract class SourceInfo {
     protected final SourceType sourceType;
     protected final String addonId;
     protected final UUID id;
-    protected final UUID voiceLineId;
+    protected UUID voiceLineId;
     protected final @Nullable String name;
     protected final @Nullable CodecInfo codecInfo;
     protected final boolean stereo;
@@ -77,6 +77,10 @@ public abstract class SourceInfo {
         return this.voiceLineId;
     }
 
+    public void setVoiceLineId(UUID voiceLineId) {
+        this.voiceLineId = voiceLineId;
+    }
+
     public @Nullable String getName() {
         return this.name;
     }
@@ -97,7 +101,7 @@ public abstract class SourceInfo {
         this.state = 1;
     }
     
-    public void markVeryDirty(){
+    public void markRemoved(){
         this.state = 10;
     }
 

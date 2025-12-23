@@ -1,12 +1,15 @@
 package dev.minceraft.sonus.plasmo.adapter;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
 import dev.minceraft.sonus.plasmo.protocol.PlasmoPmChannels;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerDisconnectPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerInfoRequestPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerInfoUpdatePacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceLineRegisterPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceSourceLine;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
@@ -54,6 +57,56 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
 
             return packet;
         });
+    }
+
+    @Override
+    public void onPrimaryRoomJoined(ISonusPlayer player, IRoom room) {
+        PlasmoSessionManager sessionManager = this.adapter.getSessionManager();
+        PlasmoConnection connection = sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return;
+        }
+        for (ISonusPlayer member : room.getMembers()) {
+            PlasmoConnection plasmoConnection = sessionManager.getConnectionByUniqueId(member.getUniqueId());
+            connection.unregisterSourceInfo(member.getUniqueId()); // unregister source infos
+            if (plasmoConnection == null) {
+                continue; // member not connected via plasmo
+            }
+            plasmoConnection.unregisterSourceInfo(player.getUniqueId());
+        }
+
+        VoiceSourceLine sourceLine = new VoiceSourceLine(
+                room.getId().toString(),
+                room.getName(),
+                PlasmoConstants.DEFAULT_GROUP_ICON,
+                1.0,
+                200,
+                Set.of()
+        );
+        connection.registerVoiceSourceLine(room.getId(), sourceLine);
+
+        SourceLineRegisterPacket packet = new SourceLineRegisterPacket();
+        packet.setSourceLine(sourceLine);
+
+        connection.sendPacket(packet);
+    }
+
+    @Override
+    public void onPrimaryRoomLeaved(ISonusPlayer player, IRoom room) {
+        PlasmoSessionManager sessionManager = this.adapter.getSessionManager();
+        PlasmoConnection connection = sessionManager.getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return;
+        }
+        for (ISonusPlayer member : room.getMembers()) {
+            PlasmoConnection plasmoConnection = sessionManager.getConnectionByUniqueId(member.getUniqueId());
+            connection.unregisterSourceInfo(member.getUniqueId()); // unregister source infos
+            if (plasmoConnection == null) {
+                continue; // member not connected via plasmo
+            }
+            plasmoConnection.unregisterSourceInfo(player.getUniqueId());
+        }
+        this.adapter.unregisterCategory(player, room.getId());
     }
 
     @Override

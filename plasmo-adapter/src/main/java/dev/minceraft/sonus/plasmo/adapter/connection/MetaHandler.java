@@ -5,7 +5,6 @@ import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpHandler;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.ConnectionPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.LanguagePacket;
-import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceInfoPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.SourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.LanguageRequestPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerActivationDistancesPacket;
@@ -82,8 +81,6 @@ public class MetaHandler implements TcpHandler {
             return;
         }
 
-        SourceInfoPacket infoPacket = new SourceInfoPacket();
-        infoPacket.setSourceInfo(sourceInfo);
-        this.connection.sendPacket(infoPacket);
+        this.connection.sendSourceUpdate(sourceInfo);
     }
 }

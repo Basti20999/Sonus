@@ -29,7 +29,10 @@ public interface ISonusServiceEvents {
     default void onChannelRegistered(UUID playerId, Set<Key> channel) {
     }
 
-    default void onGroupLeave(IRoom room, UUID playerId) {
+    default void onPrimaryRoomJoined(ISonusPlayer player, IRoom room) {
+    }
+
+    default void onPrimaryRoomLeaved(ISonusPlayer player, IRoom room) {
     }
 
     default void onGroupCreate(IRoom room) {

@@ -1,5 +1,8 @@
 package dev.minceraft.sonus.plasmo.adapter.connection;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+import com.google.common.collect.Tables;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
@@ -11,6 +14,7 @@ import dev.minceraft.sonus.plasmo.protocol.cipher.CipherAes;
 import dev.minceraft.sonus.plasmo.protocol.cipher.ICipher;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPacketRegistry;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceInfoPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceActivation;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceSourceLine;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.SourceInfo;
@@ -39,6 +43,7 @@ public class PlasmoConnection implements AutoCloseable {
     private final MetaHandler metaHandler;
     private final VoiceHandler voiceHandler;
     private final Map<UUID, AudioProcessor> processors = new ConcurrentHashMap<>();
+    private final Table<UUID, UUID, SourceInfo> sourceCategorySourceInfoMap = Tables.synchronizedTable(HashBasedTable.create()); // sourceId, categoryId, SourceInfo
     private final Map<UUID, SourceInfo> sources = new ConcurrentHashMap<>();
     private final VoiceSourceLine defaultSourceLine;
 
@@ -199,12 +204,31 @@ public class PlasmoConnection implements AutoCloseable {
         return this.sourceLines.getOrDefault(plasmoSourceLineId, this.defaultSourceLine);
     }
 
-    public SourceInfo registerSourceInfo(UUID id, Supplier<SourceInfo> sourceInfo) {
-        return this.sources.computeIfAbsent(id, __ -> sourceInfo.get());
+    @Nullable
+    public SourceInfo getSourceInfo(UUID sourceId, @Nullable UUID categoryId) {
+        return this.sourceCategorySourceInfoMap.get(sourceId, categoryId);
     }
 
-    public void addSourceInfo(UUID id, SourceInfo sourceInfo) {
-        this.sources.put(id, sourceInfo);
+    public SourceInfo registerSourceInfo(UUID sourceId, @Nullable UUID categoryId, Supplier<SourceInfo> builder) {
+        SourceInfo sourceInfo = this.getSourceInfo(sourceId, categoryId);
+        if (sourceInfo != null) {
+            return sourceInfo;
+        }
+        sourceInfo = builder.get();
+        this.sourceCategorySourceInfoMap.put(sourceId, categoryId, sourceInfo);
+        this.sources.put(sourceInfo.getId(), sourceInfo);
+
+        return sourceInfo;
+    }
+
+    public void unregisterSourceInfo(UUID id) {
+        SourceInfo removed = this.sources.remove(id);
+        if (removed == null) {
+            return;
+        }
+        this.sourceCategorySourceInfoMap.values().removeIf(info -> info.getId().equals(removed.getId()));
+        removed.markRemoved();
+        sendSourceUpdate(removed);
     }
 
     @Nullable
@@ -213,8 +237,8 @@ public class PlasmoConnection implements AutoCloseable {
     }
 
     @Nullable
-    public SourceInfo getSourceInfo(UUID sourceId) {
-        return this.sources.get(sourceId);
+    public SourceInfo getSourceInfo(UUID sourceInfoId) {
+        return this.sources.get(sourceInfoId);
     }
 
     @Override
@@ -223,5 +247,11 @@ public class PlasmoConnection implements AutoCloseable {
             processor.close();
             return true;
         });
+    }
+
+    public void sendSourceUpdate(SourceInfo sourceInfo) {
+        SourceInfoPacket infoPacket = new SourceInfoPacket();
+        infoPacket.setSourceInfo(sourceInfo);
+        this.sendPacket(infoPacket);
     }
 }

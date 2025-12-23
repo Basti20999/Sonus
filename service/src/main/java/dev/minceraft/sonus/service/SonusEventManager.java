@@ -100,10 +100,21 @@ public class SonusEventManager implements ISonusEventManager {
     }
 
     @Override
-    public void onGroupLeave(IRoom room, UUID playerId) {
+    public void onPrimaryRoomJoined(ISonusPlayer player, IRoom room) {
         for (ISonusServiceEvents listener : this.listeners) {
             try {
-                listener.onGroupLeave(room, playerId);
+                listener.onPrimaryRoomJoined(player, room);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onGroupJoin for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+    }
+
+    @Override
+    public void onPrimaryRoomLeaved(ISonusPlayer player, IRoom room) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onPrimaryRoomLeaved(player, room);
             } catch (Exception exception) {
                 LOGGER.error("Error in onGroupLeave for listener {}", listener.getClass().getSimpleName(), exception);
             }

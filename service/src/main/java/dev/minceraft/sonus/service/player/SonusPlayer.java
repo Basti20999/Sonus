@@ -330,12 +330,14 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (prevRoom != null) {
             this.primaryRoom = null;
             this.leaveRoom(prevRoom);
+            this.service.getEventManager().onPrimaryRoomLeaved(this, prevRoom);
         }
         // enter new room
         this.prevPrimaryRoom = prevRoom;
         this.primaryRoom = room;
         if (room != null) {
             this.joinRoom(room);
+            this.service.getEventManager().onPrimaryRoomJoined(this, room);
         }
         // trigger state update
         this.updateState(true);
