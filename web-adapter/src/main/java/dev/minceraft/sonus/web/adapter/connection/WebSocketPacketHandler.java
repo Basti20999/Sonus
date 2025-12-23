@@ -49,18 +49,15 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         if (this.state != State.CONNECTED) {
             return;
         }
-        if (packet.getAudio().isZeroLength()) {
-            this.connection.getPlayer().handleAudioInputEnd(this.sequence++);
-        } else {
-            SonusAudio.Pcm pcm = packet.getAudio().asPcm(() -> this.connection.getProcessor(MIC_CHANNEL_ID));
-            this.connection.getPlayer().handleAudioInput(pcm.withSequenceNumber(this.sequence++));
-        }
+        SonusAudio.Pcm pcm = packet.getAudio().asPcm(() -> this.connection.getProcessor(MIC_CHANNEL_ID));
+        this.connection.getPlayer().handleAudioInput(pcm.withSequenceNumber(this.sequence++));
     }
 
     @Override
     public void handleInputEnd(InputEndPacket packet) {
         if (this.state == State.CONNECTED) {
             this.connection.getPlayer().handleAudioInputEnd(this.sequence++);
+            this.sequence = 0L;
         }
     }
 
