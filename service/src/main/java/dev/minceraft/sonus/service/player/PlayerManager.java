@@ -106,6 +106,7 @@ public final class PlayerManager implements IPlayerManager {
             player.setConnected(false, false); // prevent packet sending
             player.setMuted(true);
             player.setDeafened(true);
+            player.setAdapter(null);
         }
     }
 
