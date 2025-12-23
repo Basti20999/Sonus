@@ -1,21 +1,26 @@
 package dev.minceraft.sonus.service.velocity;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.velocitypowered.api.command.BrigadierCommand;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.commands.ArgumentCommandNode;
 import dev.minceraft.sonus.service.commands.CommandContext;
+import dev.minceraft.sonus.service.commands.CommandException;
 import dev.minceraft.sonus.service.commands.CommandNode;
 import dev.minceraft.sonus.service.commands.CommandSender;
 import dev.minceraft.sonus.service.commands.LiteralCommandNode;
@@ -119,13 +124,25 @@ public final class VelocityCommandConverter {
             Map<ArgumentCommandNode<?>, String> enumValueMap = Map.ofEntries(enumValues.toArray(new Map.Entry[0]));
 
             builder.executes(ctx -> {
-                CommandContext sctx = this.createContext(ctx.getSource());
-                // iterate through ancestor nodes and extract all arguments
-                for (CommandNode ancestor : nodesCopy) {
-                    this.parseAncestor(ancestor, sctx, enumValueMap, ctx);
+                try {
+                    CommandContext sctx = this.createContext(ctx.getSource());
+                    // iterate through ancestor nodes and extract all arguments
+                    for (CommandNode ancestor : nodesCopy) {
+                        this.parseAncestor(ancestor, sctx, enumValueMap, ctx);
+                    }
+
+                    // execute node with all the provided context
+                    return node.execute(sctx) ? Command.SINGLE_SUCCESS : 0;
+                } catch (CommandException exception) {
+                    if (exception.getComponent() == null) {
+                        throw exception; // rethrow as is
+                    }
+                    Message message = VelocityBrigadierMessage.tooltip(exception.getComponent());
+                    throw new CommandSyntaxException(
+                            new SimpleCommandExceptionType(message),
+                            message
+                    );
                 }
-                // execute node with all the provided context
-                return node.execute(sctx) ? Command.SINGLE_SUCCESS : 0;
             });
         }
         // recursively convert all children

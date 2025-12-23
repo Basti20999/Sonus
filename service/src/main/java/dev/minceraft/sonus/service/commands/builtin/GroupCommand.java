@@ -5,6 +5,7 @@ import dev.minceraft.sonus.common.rooms.RoomAudioType;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.commands.Command;
 import dev.minceraft.sonus.service.commands.LiteralCommandNode;
+import dev.minceraft.sonus.service.commands.arguments.PlayerArgument;
 import dev.minceraft.sonus.service.commands.arguments.RoomTypeArgument;
 import dev.minceraft.sonus.service.commands.arguments.StringArgument;
 import dev.minceraft.sonus.service.player.SonusPlayer;
@@ -83,10 +84,16 @@ public class GroupCommand extends Command {
 
                                     return this.joinGroup(ctx.service(), player, name, null);
                                 })))
+                .with(literal("invite")
+                        .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups.invite") &&
+                                ((SonusPlayer) ctx.sender()).getPrimaryRoom() != null)
+                        .with(argument("player", PlayerArgument.INSTANCE)
+                                .executes(ctx -> invite(ctx.service(), (SonusPlayer) ctx.sender(),
+                                        ctx.get("player", PlayerArgument.INSTANCE)))))
                 .with(literal("leave")
                         .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups.leave") &&
                                 ((SonusPlayer) ctx.sender()).getPrimaryRoom() != null)
-                        .executes(ctx -> this.leaveGroup(ctx.service(), (SonusPlayer) ctx.sender())));
+                        .executes(ctx -> this.leaveGroup((SonusPlayer) ctx.sender())));
     }
 
     private boolean listGroups(SonusService service, SonusPlayer player) {
@@ -121,9 +128,27 @@ public class GroupCommand extends Command {
         return true;
     }
 
-    private boolean leaveGroup(SonusService service, SonusPlayer player) {
+    private boolean leaveGroup(SonusPlayer player) {
         player.setPrimaryRoom(null);
         player.sendMessage(translatable("sonus.command.groups.leave.success"));
+        return true;
+    }
+
+    private boolean invite(SonusService service, SonusPlayer player, SonusPlayer target) {
+        IRoom room = player.getPrimaryRoom();
+        if (room == null) {
+            throw new IllegalStateException("Player is not in a room"); // should not happen due to command requirement
+        }
+        if (room.isMember(target)) {
+            player.sendMessage(translatable("sonus.command.groups.invite.already_member")
+                    .arguments(text(target.getName(player))));
+            return true;
+        }
+        player.sendMessage(translatable("sonus.command.groups.invite.success")
+                .arguments(text(target.getName(player))));
+        target.sendMessage(translatable("sonus.command.groups.invite.invitation")
+                .arguments(text(player.getName(target)), text(room.getName()))
+                .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, target, room.getId(), room.getPassword()))));
         return true;
     }
 
