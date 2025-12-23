@@ -92,8 +92,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @Override
     public void handleAudioInputEnd(long sequence) {
-        if (this.muted || this.deafened
-                || !this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
+        if (!this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
             return;
         }
         this.maxSequenceNumber.set(0L);
@@ -463,8 +462,6 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (connected) {
             // initialize position
             this.service.getEventManager().onPlayerPositionUpdate(this);
-            // broadcast audio end packet to reset sequence numbers
-            this.handleAudioInputEnd(this.maxSequenceNumber.get() + 1L);
         }
 
         if (sendToAgent) {
@@ -497,6 +494,9 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         UUID serverId = this.getServerId();
         IRoom room = serverId != null ? this.service.getRoomManager().getRoom(serverId) : null;
         this.setServerRoom(room);
+
+        // broadcast audio end packet to reset sequence numbers
+        this.handleAudioInputEnd(this.maxSequenceNumber.get() + 1L);
     }
 
     @Override
