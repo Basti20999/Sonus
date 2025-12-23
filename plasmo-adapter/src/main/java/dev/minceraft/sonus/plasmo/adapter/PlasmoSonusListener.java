@@ -114,8 +114,15 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
         if (!channel.contains(PlasmoPmChannels.CHANNEL)) {
             return;
         }
+        ISonusPlayer player = this.adapter.getService().getPlayerManager().getPlayer(playerId);
+        if (player == null) {
+            return;
+        }
+        if (!player.setAdapter(this.adapter)) {
+            return; // player is not allowed to use this adapter
+        }
 
-        PlasmoConnection connection = this.adapter.getSessionManager().createConnection(playerId);
+        PlasmoConnection connection = this.adapter.getSessionManager().createConnection(player);
         if (connection == null) {
             LOGGER.warn("Player '{}' registered plasmo channels, but this player is not known!", playerId);
             return;

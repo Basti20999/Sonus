@@ -46,7 +46,6 @@ public class SvcConnection implements AutoCloseable {
         this.player = player;
         this.voiceHandler = new VoiceHandler(this.protocolAdapter, this);
         this.metaHandler = new MetaHandler(this.protocolAdapter, this);
-        this.player.setAdapter(protocolAdapter.getAdapter());
     }
 
     public ISonusPlayer getPlayer() {

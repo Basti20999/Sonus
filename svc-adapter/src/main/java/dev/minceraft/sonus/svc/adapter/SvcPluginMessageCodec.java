@@ -7,8 +7,8 @@ import dev.minceraft.sonus.common.protocol.tcp.IPluginMessageSource;
 import dev.minceraft.sonus.common.protocol.tcp.holder.PmDataHolderBuf;
 import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.SvcPacketContext;
-import dev.minceraft.sonus.svc.protocol.meta.servicebound.RequestSecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.SvcMetaPacket;
+import dev.minceraft.sonus.svc.protocol.meta.servicebound.RequestSecretSvcPacket;
 import dev.minceraft.sonus.svc.protocol.registries.SvcMetaPacketRegistry;
 import dev.minceraft.sonus.svc.protocol.util.SvcPluginChannels;
 import dev.minceraft.sonus.svc.protocol.version.VersionManager;
@@ -82,6 +82,9 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
             return null; // incompatible version
         } else if (player == null || !player.hasPermission(PERMISSION_CONNECT_SVC, true)) {
             return null; // no player instance present or no permission to connect via SVC
+        }
+        if (!player.setAdapter(this.protocolAdapter.getAdapter())) {
+            return null; // player is not allowed to use this adapter
         }
         return new SvcConnection(this.protocolAdapter, player);
     }

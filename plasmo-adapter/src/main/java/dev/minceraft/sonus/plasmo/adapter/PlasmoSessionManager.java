@@ -93,17 +93,13 @@ public class PlasmoSessionManager {
     }
 
     @Nullable
-    public PlasmoConnection createConnection(UUID playerId) {
-        ISonusPlayer player = this.adapter.getService().getPlayerManager().getPlayer(playerId);
-        if (player == null) {
+    public PlasmoConnection createConnection(ISonusPlayer sonusPlayer) {
+        if (!sonusPlayer.hasPermission(PERMISSION_CONNECT_PLASMO, true)) {
             return null;
         }
-        if (!player.hasPermission(PERMISSION_CONNECT_PLASMO, true)) {
-            return null;
-        }
-        PlasmoConnection plasmoConnection = new PlasmoConnection(this.adapter, player);
+        PlasmoConnection plasmoConnection = new PlasmoConnection(this.adapter, sonusPlayer);
         this.usersBySecret.put(plasmoConnection.getSecret(), plasmoConnection);
-        this.usersByUniqueId.put(playerId, plasmoConnection);
+        this.usersByUniqueId.put(sonusPlayer.getUniqueId(), plasmoConnection);
         return plasmoConnection;
     }
 

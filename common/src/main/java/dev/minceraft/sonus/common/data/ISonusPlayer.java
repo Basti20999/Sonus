@@ -48,7 +48,7 @@ public interface ISonusPlayer extends IAudioSource {
     @Nullable
     SonusAdapter getAdapter();
 
-    void setAdapter(@Nullable SonusAdapter adapter);
+    boolean setAdapter(@Nullable SonusAdapter adapter);
 
     void sendStaticAudio(IAudioSource source, SonusAudio audio);
 

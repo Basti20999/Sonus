@@ -85,8 +85,6 @@ public class PlasmoConnection implements AutoCloseable {
                 Set.of()
         );
         this.sourceLines.put(this.defaultSourceLine.getId(), this.defaultSourceLine);
-
-        this.player.setAdapter(this.adapter);
     }
 
     public ICipher getCipher() {

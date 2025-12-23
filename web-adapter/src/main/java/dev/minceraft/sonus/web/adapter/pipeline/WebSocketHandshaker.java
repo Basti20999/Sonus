@@ -64,6 +64,10 @@ public class WebSocketHandshaker extends ChannelInboundHandlerAdapter {
         if (player == null) {
             throw new HttpErrorException(HttpResponseStatus.FORBIDDEN);
         }
+        if (!player.setAdapter(this.adapter)) {
+            throw new HttpErrorException(HttpResponseStatus.CONFLICT);
+        }
+
         // valid token, upgrade to websocket connection
         this.upgradeWebsocket(ctx, request, player, version);
     }

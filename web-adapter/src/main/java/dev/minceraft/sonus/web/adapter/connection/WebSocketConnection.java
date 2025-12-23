@@ -30,7 +30,6 @@ public class WebSocketConnection implements AutoCloseable {
         this.adapter = adapter;
         this.player = player;
         this.channel = channel;
-        this.player.setAdapter(this.adapter);
     }
 
     public void sendConnected() {

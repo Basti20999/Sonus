@@ -28,6 +28,8 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
 import java.util.Map;
@@ -45,6 +47,8 @@ import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL_K
 
 @NullMarked
 public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoCloseable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private final SonusService service;
     private final IPlatformPlayer platform;
@@ -377,8 +381,16 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     @Override
-    public void setAdapter(@Nullable SonusAdapter adapter) {
-        this.sonusAdapter = adapter;
+    public boolean setAdapter(@Nullable SonusAdapter adapter) {
+        synchronized (this) {
+            if (adapter != null && this.sonusAdapter != null) {
+                LOGGER.warn("Player {}({}) tried to connect via {}, but is already connected via another adapter: {}",
+                        this.getName(), this.getUniqueId(), adapter.getAdapterInfo().id(), this.sonusAdapter.getAdapterInfo().id());
+                return false; // Already connected via an adapter
+            }
+            this.sonusAdapter = adapter;
+            return true;
+        }
     }
 
     @Override
