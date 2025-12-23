@@ -12,7 +12,7 @@ import org.jspecify.annotations.Nullable;
 @NullMarked
 public final class SpatialNormProcessor {
 
-    private static final double LN_MIN_DISTANCE = Math.log(2d); // arbitrary value, seems fine when looking at f(x)=((ln(25)-ln(x))/(ln(25)-ln(2)))
+    private static final double LN_MIN_DISTANCE = Math.log(10d); // arbitrary value, seems fine when looking at f(x)=((ln(25)-ln(x))/(ln(25)-ln(10)))
 
     private SpatialNormProcessor() {
     }
