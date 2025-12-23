@@ -52,13 +52,15 @@ public interface ISonusPlayer extends IAudioSource {
 
     void sendStaticAudio(IAudioSource source, SonusAudio audio);
 
+    void sendStaticAudioEnd(IAudioSource source, long sequence);
+
     void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position);
 
     void sendSpatialAudio(IAudioSource source, SonusAudio audio);
 
     void sendSpatialNormedAudio(IAudioSource source, SonusAudio audio);
 
-    void sendAudioEnd(IAudioSource source, long sequence);
+    void sendSpatialAudioEnd(IAudioSource source, long sequence);
 
     boolean canAccessRoom(IRoom room, @Nullable String password);
 

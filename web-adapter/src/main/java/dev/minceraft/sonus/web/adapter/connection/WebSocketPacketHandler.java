@@ -23,6 +23,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
 
     private final WebSocketConnection connection;
     private State state = State.WAITING_ACK;
+    private long sequence = 0L;
 
     public WebSocketPacketHandler(WebSocketConnection connection) {
         this.connection = connection;
@@ -47,8 +48,12 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         if (this.state != State.CONNECTED) {
             return;
         }
-        SonusAudio.Pcm pcm = packet.getAudio().asPcm(() -> this.connection.getProcessor(MIC_CHANNEL_ID));
-        this.connection.getPlayer().handleAudioInput(pcm);
+        if (packet.getAudio().isZeroLength()) {
+            this.connection.getPlayer().handleAudioInputEnd(this.sequence++);
+        } else {
+            SonusAudio.Pcm pcm = packet.getAudio().asPcm(() -> this.connection.getProcessor(MIC_CHANNEL_ID));
+            this.connection.getPlayer().handleAudioInput(pcm.withSequenceNumber(this.sequence++));
+        }
     }
 
     private void tryJoinRoom(UUID roomId, String password) {

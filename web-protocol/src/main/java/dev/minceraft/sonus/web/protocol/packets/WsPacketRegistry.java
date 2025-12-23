@@ -3,6 +3,7 @@ package dev.minceraft.sonus.web.protocol.packets;
 import dev.minceraft.sonus.common.protocol.registry.ContextedRegistry;
 import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioEndPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryRemovePacket;
@@ -61,5 +62,7 @@ public final class WsPacketRegistry {
                     .register(RoomJoinRequestPacket.class, RoomJoinRequestPacket::new, DECODE)
                     .register(RoomLeavePacket.class, RoomLeavePacket::new, DECODE)
                     .register(StateInfoPacket.class, StateInfoPacket::new, DECODE)
+                    // "newer" packets added at the bottom to increase backwards compat
+                    .register(AudioEndPacket.class, AudioEndPacket::new, ENCODE)
                     .build();
 }

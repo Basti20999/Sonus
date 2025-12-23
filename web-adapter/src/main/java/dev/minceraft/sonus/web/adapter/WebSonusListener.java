@@ -46,7 +46,7 @@ public class WebSonusListener implements ISonusServiceEvents {
 
     @Override
     public void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
-        this.adapter.getSessions().broadcastFrom(player,!globalUpdate, connection ->
+        this.adapter.getSessions().broadcastFrom(player, !globalUpdate, connection ->
                 new StateUpdatePacket(SonusWebPlayerState.fromState(player, connection.getPlayer())));
     }
 

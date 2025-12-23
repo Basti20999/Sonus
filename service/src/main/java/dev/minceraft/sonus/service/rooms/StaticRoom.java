@@ -32,7 +32,7 @@ public class StaticRoom extends AbstractRoom {
             if (member.getSenderId().equals(source.getSenderId())) {
                 continue;
             }
-            member.sendAudioEnd(source, sequence);
+            member.sendStaticAudioEnd(source, sequence);
         }
     }
 

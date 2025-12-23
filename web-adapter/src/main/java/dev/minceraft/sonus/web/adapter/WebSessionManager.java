@@ -66,7 +66,7 @@ public class WebSessionManager {
     }
 
     public void broadcastFrom(ISonusPlayer source, AbstractWebPacket<?> packet) {
-        this.broadcastFrom(source, false, __ -> packet);
+        this.broadcastFrom(source, true, __ -> packet);
     }
 
     public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<WebSocketConnection, AbstractWebPacket<?>> packet) {

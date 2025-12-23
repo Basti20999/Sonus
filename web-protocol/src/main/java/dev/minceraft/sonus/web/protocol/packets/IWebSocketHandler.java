@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.web.protocol.packets;
 
+import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioEndPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryRemovePacket;
@@ -73,5 +74,8 @@ public interface IWebSocketHandler {
     }
 
     default void handleStateInfo(StateInfoPacket packet) {
+    }
+
+    default void handleAudioEnd(AudioEndPacket packet) {
     }
 }

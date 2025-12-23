@@ -58,9 +58,10 @@ public abstract class AbstractRoom implements IRoom {
         boolean success = this.members.putIfAbsent(player.getUniqueId(), player) == null;
         if (success) {
             for (ISonusPlayer value : this.members.values()) {
-                if (value == player) continue;
-                value.ensureTabListed(player);
-                player.ensureTabListed(value);
+                if (value != player) {
+                    value.ensureTabListed(player);
+                    player.ensureTabListed(value);
+                }
             }
         }
         return success;

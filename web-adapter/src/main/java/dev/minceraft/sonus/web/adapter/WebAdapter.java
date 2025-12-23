@@ -12,6 +12,7 @@ import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioEndPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryRemovePacket;
@@ -87,7 +88,10 @@ public class WebAdapter implements SonusAdapter {
 
     @Override
     public void sendAudioEnd(ISonusPlayer player, IAudioSource source, long sequence) {
-        // No-op
+        WebSocketConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection != null) {
+            connection.sendPacket(new AudioEndPacket(source.getSenderId(), source.getSenderId()));
+        }
     }
 
     @Override

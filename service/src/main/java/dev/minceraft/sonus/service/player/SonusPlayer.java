@@ -89,7 +89,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @Override
     public void handleAudioInputEnd(long sequence) {
-        if (!this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
+        if (this.muted || this.deafened
+                || !this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
             return;
         }
         this.handleRoomBroadcast(room -> room.sendAudioEnd(this, sequence));
@@ -196,13 +197,23 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     @Override
     public void sendStaticAudio(IAudioSource source, SonusAudio audio) {
         if (this.canHear(source, false)) {
+            assert this.sonusAdapter != null;
             this.sonusAdapter.sendStaticAudio(this, source, audio);
+        }
+    }
+
+    @Override
+    public void sendStaticAudioEnd(IAudioSource source, long sequence) {
+        if (this.canHear(source, false)) {
+            assert this.sonusAdapter != null;
+            this.sonusAdapter.sendAudioEnd(this, source, sequence);
         }
     }
 
     @Override
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio, Vec3d position) {
         if (this.canHear(source, true)) {
+            assert this.sonusAdapter != null;
             this.sonusAdapter.sendSpatialAudio(this, source, audio, position);
         }
     }
@@ -210,6 +221,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     @Override
     public void sendSpatialAudio(IAudioSource source, SonusAudio audio) {
         if (this.canHear(source, true)) {
+            assert this.sonusAdapter != null;
             this.sonusAdapter.sendSpatialAudio(this, source, audio);
         }
     }
@@ -221,16 +233,17 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
         Vec3d pos = SpatialNormProcessor.normalizeAudio(this.service, this, source, audio);
         if (pos != null) { // if the position is null, the processor decided to cancel the audio packet
+            assert this.sonusAdapter != null;
             this.sonusAdapter.sendSpatialAudio(this, source, audio, pos);
         }
     }
 
     @Override
-    public void sendAudioEnd(IAudioSource source, long sequence) {
-        if (!this.canHear(source, true)) {
-            return;
+    public void sendSpatialAudioEnd(IAudioSource source, long sequence) {
+        if (this.canHear(source, true)) {
+            assert this.sonusAdapter != null;
+            this.sonusAdapter.sendAudioEnd(this, source, sequence);
         }
-        this.sonusAdapter.sendAudioEnd(this, source, sequence);
     }
 
     @Override
