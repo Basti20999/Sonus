@@ -116,6 +116,7 @@ public final class PlayerManager implements IPlayerManager {
             return;
         }
         player.setStates(Map.of()); // reset player states on server switch
+        player.setTeam(null);
         player.updateState(); // broadcast update
 
         for (SonusPlayer target : this.players.values()) {
