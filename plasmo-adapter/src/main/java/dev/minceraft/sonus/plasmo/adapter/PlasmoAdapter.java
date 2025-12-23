@@ -8,6 +8,7 @@ import dev.minceraft.sonus.common.audio.AudioCategory;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.Vec3d;
+import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.common.util.GameProfile;
 import dev.minceraft.sonus.plasmo.adapter.config.PlasmoConfig;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
@@ -23,7 +24,9 @@ import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.clientbound.SourceAudioPlasmoPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -86,13 +89,11 @@ public class PlasmoAdapter implements SonusAdapter {
                     profile, // attach the sound to the player himself for static audio
                     Vec3d.ZERO,
                     Vec3d.ZERO,
-                    false
+                    true
             );
         });
 
         this.sendAudio(connection, source, sourceInfo, audio);
-
-        sourceInfo.resetState();
     }
 
     @Override
@@ -104,24 +105,25 @@ public class PlasmoAdapter implements SonusAdapter {
         UUID categoryId = this.extractCategoryId(source, connection);
 
         SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), categoryId, () -> {
-            // TODO: Use direct SourceInfo for players, for better ux in the gui -> PlayerHeads
-//            if (source instanceof ISonusPlayer speaker) {
-//                return new DirectSourceInfo(
-//                        ADDON_ID,
-//                        source.getSenderId(),
-//                        connection.getSourceLine(source.getCategoryId()).getId(),
-//                        speaker.getName(player),
-//                        (byte) 0,
-//                        this.adapter.getCodecInfo(),
-//                        true,
-//                        false,
-//                        0,
-//                        speaker.getSimpleProfile(player),
-//                        player POS,
-//                        Vec3d.ZERO,
-//                        false
-//                );
-//            }
+            WorldRotatedVec3d position = player.getPosition();
+            if (source instanceof ISonusPlayer speaker && position != null) {
+                Vec3d relativePos = pos.sub(position);
+                return new DirectSourceInfo(
+                        ADDON_ID,
+                        source.getSenderId(),
+                        connection.getSourceLine(source.getCategoryId()).getId(),
+                        speaker.getName(player),
+                        (byte) 1,
+                        this.adapter.getCodecInfo(),
+                        false,
+                        false,
+                        0,
+                        speaker.getSimpleProfile(player),
+                        relativePos,
+                        null,
+                        false
+                );
+            }
 
             return new StaticSourceInfo(
                     ADDON_ID,
@@ -134,20 +136,27 @@ public class PlasmoAdapter implements SonusAdapter {
                     false,
                     0,
                     pos,
-                    Vec3d.ZERO
+                    null
             );
         });
 
         if (sourceInfo instanceof StaticSourceInfo staticInfo) {
-            if (staticInfo.getPosition().equals(pos)) {
+            if (!staticInfo.getPosition().equals(pos)) {
                 staticInfo.setPosition(pos);
                 staticInfo.markDirty();
+            }
+        } else if (sourceInfo instanceof DirectSourceInfo directInfo) {
+            WorldRotatedVec3d position = player.getPosition();
+            if (position != null) {
+                Vec3d relativePos = pos.sub(position);
+                if (!Objects.equals(relativePos, directInfo.getRelativePosition())) {
+                    directInfo.setRelativePosition(relativePos);
+                    directInfo.markDirty();
+                }
             }
         }
 
         this.sendAudio(connection, source, sourceInfo, audio);
-
-        sourceInfo.resetState();
     }
 
     @Override
@@ -158,6 +167,8 @@ public class PlasmoAdapter implements SonusAdapter {
         }
 
         UUID categoryId = this.extractCategoryId(source, connection);
+
+        WorldRotatedVec3d position = source.getPosition();
 
         SourceInfo sourceInfo = connection.registerSourceInfo(source.getSenderId(), categoryId, () -> {
             if (source instanceof ISonusPlayer speaker) {
@@ -173,26 +184,32 @@ public class PlasmoAdapter implements SonusAdapter {
                         0,
                         this.sessionManager.buildPlayerInfo(player, speaker));
             }
-            return new DirectSourceInfo(
+            if (position == null) {
+                return null;
+            }
+            return new StaticSourceInfo(
                     ADDON_ID,
                     UUID.randomUUID(),
                     connection.getSourceLine(categoryId).getId(),
                     null,
                     (byte) 1,
                     this.adapter.getCodecInfo(),
-                    true,
+                    false,
                     false,
                     0,
-                    null,
-                    Vec3d.ZERO,
-                    Vec3d.ZERO,
-                    true
+                    position,
+                    null
             );
         });
 
-        this.sendAudio(connection, source, sourceInfo, audio);
+        if (sourceInfo instanceof StaticSourceInfo staticInfo) {
+            if (!staticInfo.getPosition().equals(position)) {
+                staticInfo.setPosition(position);
+                staticInfo.markDirty();
+            }
+        }
 
-        sourceInfo.resetState();
+        this.sendAudio(connection, source, sourceInfo, audio);
     }
 
     private UUID extractCategoryId(IAudioSource source, PlasmoConnection connection) {
@@ -203,13 +220,16 @@ public class PlasmoAdapter implements SonusAdapter {
                 categoryId = speaker.getPrimaryRoom().getId();
             }
         }
-        if (categoryId == null){
+        if (categoryId == null) {
             categoryId = connection.getDefaultSourceLine().getId();
         }
         return categoryId;
     }
 
-    private void sendAudio(PlasmoConnection connection, IAudioSource source, SourceInfo sourceInfo, SonusAudio audio) {
+    private void sendAudio(PlasmoConnection connection, IAudioSource source, @Nullable SourceInfo sourceInfo, SonusAudio audio) {
+        if (sourceInfo == null) {
+            return;
+        }
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
         packet.setDistance((short) this.getService().getConfig().getVoiceChatRange());
         packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId())));
@@ -218,6 +238,8 @@ public class PlasmoAdapter implements SonusAdapter {
         packet.setSourceState(sourceInfo.getState());
 
         connection.sendPacket(packet);
+
+        sourceInfo.resetState();
     }
 
     @Override
