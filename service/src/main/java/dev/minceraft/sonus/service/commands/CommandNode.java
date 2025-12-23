@@ -32,6 +32,11 @@ public sealed abstract class CommandNode permits ArgumentCommandNode, LiteralCom
         return this.executor != null;
     }
 
+    @Nullable
+    public CommandExecutor getExecutor() {
+        return this.executor;
+    }
+
     public boolean execute(CommandContext ctx) throws CommandException {
         if (this.executor != null) {
             return this.executor.execute(ctx);

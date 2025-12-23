@@ -73,7 +73,7 @@ public final class SonusService implements ISonusService {
     }
 
     private void initCommands() {
-        new SonusCommand().register(this.commands);
+        new SonusCommand(this).register(this.commands);
 
         // register all commands in platform command registrar
         this.platform.registerCommands(this.commands.getNodes());
