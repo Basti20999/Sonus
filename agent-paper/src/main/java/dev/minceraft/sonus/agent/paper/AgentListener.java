@@ -210,7 +210,7 @@ public class AgentListener implements Listener {
     public void onTickEnd(ServerTickEndEvent event) {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (this.isPlayerIgnored(player)) {
-                return;
+                continue;
             }
             this.tickPosition(player);
             this.tickTeam(player);
