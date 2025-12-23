@@ -17,6 +17,7 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
+import dev.minceraft.sonus.web.protocol.packets.servicebound.InputEndPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.InputSoundPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomCreatePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPacket;
@@ -64,5 +65,6 @@ public final class WsPacketRegistry {
                     .register(StateInfoPacket.class, StateInfoPacket::new, DECODE)
                     // "newer" packets added at the bottom to increase backwards compat
                     .register(AudioEndPacket.class, AudioEndPacket::new, ENCODE)
+                    .register(InputEndPacket.class, () -> InputEndPacket.INSTANCE, DECODE)
                     .build();
 }

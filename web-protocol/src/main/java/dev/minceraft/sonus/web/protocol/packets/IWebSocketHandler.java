@@ -14,6 +14,7 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
+import dev.minceraft.sonus.web.protocol.packets.servicebound.InputEndPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.InputSoundPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomCreatePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPacket;
@@ -77,5 +78,8 @@ public interface IWebSocketHandler {
     }
 
     default void handleAudioEnd(AudioEndPacket packet) {
+    }
+
+    default void handleInputEnd(InputEndPacket packet) {
     }
 }

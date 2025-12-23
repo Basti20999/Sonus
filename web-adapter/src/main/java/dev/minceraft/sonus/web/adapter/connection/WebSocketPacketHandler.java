@@ -9,6 +9,7 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePack
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomLeaveResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
+import dev.minceraft.sonus.web.protocol.packets.servicebound.InputEndPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.InputSoundPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomCreatePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPacket;
@@ -53,6 +54,13 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         } else {
             SonusAudio.Pcm pcm = packet.getAudio().asPcm(() -> this.connection.getProcessor(MIC_CHANNEL_ID));
             this.connection.getPlayer().handleAudioInput(pcm.withSequenceNumber(this.sequence++));
+        }
+    }
+
+    @Override
+    public void handleInputEnd(InputEndPacket packet) {
+        if (this.state == State.CONNECTED) {
+            this.connection.getPlayer().handleAudioInputEnd(this.sequence++);
         }
     }
 
