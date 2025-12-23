@@ -103,11 +103,6 @@ public class ServicePlatformVelocity implements IServicePlatform {
     }
 
     @Override
-    public boolean serverExists(UUID uniqueId) {
-        return this.serverCache.getIfPresent(uniqueId) != null;
-    }
-
-    @Override
     public void registerCommands(List<LiteralCommandNode> nodes) {
         VelocitySonusService plugin = this.plugin.get();
         VelocityCommandConverter converter = new VelocityCommandConverter(plugin.getService(), plugin, this.commands);
