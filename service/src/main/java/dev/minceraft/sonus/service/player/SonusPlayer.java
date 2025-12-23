@@ -35,6 +35,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
@@ -66,6 +67,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private boolean muted;
     private boolean deafened;
 
+    private final AtomicLong maxSequenceNumber = new AtomicLong();
     private long lastKeepAlive = System.currentTimeMillis();
 
     // track server reference
@@ -83,6 +85,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             return;
         }
 
+        this.maxSequenceNumber.updateAndGet(l -> Math.max(l, audio.sequenceNumber()));
         this.processAudioInput(audio);
         this.handleRoomBroadcast(room -> room.sendAudio(this, audio));
     }
@@ -93,6 +96,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
                 || !this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true)) {
             return;
         }
+        this.maxSequenceNumber.set(0L);
         this.handleRoomBroadcast(room -> room.sendAudioEnd(this, sequence));
     }
 
@@ -459,6 +463,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (connected) {
             // initialize position
             this.service.getEventManager().onPlayerPositionUpdate(this);
+            // broadcast audio end packet to reset sequence numbers
+            this.handleAudioInputEnd(this.maxSequenceNumber.get() + 1L);
         }
 
         if (sendToAgent) {
