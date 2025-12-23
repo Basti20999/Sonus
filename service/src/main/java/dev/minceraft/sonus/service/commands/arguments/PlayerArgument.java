@@ -14,11 +14,13 @@ public class PlayerArgument implements ArgumentType<SonusPlayer> {
 
     public static final PlayerArgument INSTANCE = new PlayerArgument();
 
+    private PlayerArgument() {
+    }
+
     @Override
     public SonusPlayer parse(CommandContext ctx, String input) {
-        SonusPlayer sender = (SonusPlayer) ctx.sender();
         for (SonusPlayer player : ctx.service().getPlayerManager().getPlayers()) {
-            if (player.isConnected() && player.getName(sender).equalsIgnoreCase(input)) {
+            if (player.isConnected() && ctx.sender().getNameFor(player).equalsIgnoreCase(input)) {
                 return player;
             }
         }

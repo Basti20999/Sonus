@@ -8,6 +8,7 @@ import dev.minceraft.sonus.common.util.GameProfile;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -109,6 +110,8 @@ public interface ISonusPlayer extends IAudioSource {
     void updateState(boolean globalUpdate);
 
     boolean hasPermission(String permission, boolean defaultValue);
+
+    void setPermission(String permission, TriState state);
 
     boolean canSee(ISonusPlayer target);
 

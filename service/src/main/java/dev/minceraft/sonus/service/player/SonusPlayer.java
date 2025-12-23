@@ -25,6 +25,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.util.TriState;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -41,6 +42,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_CONNECT;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
 import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL_KEY;
@@ -388,6 +390,9 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
                         this.getName(), this.getUniqueId(), adapter.getAdapterInfo().id(), this.sonusAdapter.getAdapterInfo().id());
                 return false; // Already connected via an adapter
             }
+            if (this.sonusAdapter == null && adapter != null && !this.hasPermission(PERMISSION_CONNECT, true)) {
+                return false; // No permission to connect
+            }
             this.sonusAdapter = adapter;
             return true;
         }
@@ -527,8 +532,23 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     @Override
+    public void setPermission(String permission, TriState state) {
+        this.platform.setPermission(permission, state);
+    }
+
+    @Override
     public void sendMessage(Component component) {
         this.platform.sendMessage(component);
+    }
+
+    @Override
+    public String getNameFor(ISonusPlayer target) {
+        return target.getName(this);
+    }
+
+    @Override
+    public UUID getUniqueIdFor(ISonusPlayer target) {
+        return target.getUniqueId(this);
     }
 
     @Override

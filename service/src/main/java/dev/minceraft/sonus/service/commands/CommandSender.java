@@ -1,6 +1,9 @@
 package dev.minceraft.sonus.service.commands;
 
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import net.kyori.adventure.text.Component;
+
+import java.util.UUID;
 
 public interface CommandSender {
 
@@ -11,4 +14,8 @@ public interface CommandSender {
     }
 
     void sendMessage(Component component);
+
+    String getNameFor(ISonusPlayer target);
+
+    UUID getUniqueIdFor(ISonusPlayer target);
 }

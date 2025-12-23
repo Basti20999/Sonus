@@ -1,23 +1,30 @@
 package dev.minceraft.sonus.service.commands.builtin;
 
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.rooms.RoomAudioType;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.commands.Command;
+import dev.minceraft.sonus.service.commands.CommandSender;
 import dev.minceraft.sonus.service.commands.LiteralCommandNode;
 import dev.minceraft.sonus.service.commands.arguments.PlayerArgument;
 import dev.minceraft.sonus.service.commands.arguments.RoomTypeArgument;
 import dev.minceraft.sonus.service.commands.arguments.StringArgument;
 import dev.minceraft.sonus.service.player.SonusPlayer;
 import dev.minceraft.sonus.service.rooms.TransientStaticRoom;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentBuilder;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,6 +38,16 @@ public class GroupCommand extends Command {
 
     public GroupCommand() {
         super("groups");
+    }
+
+    public static Component getGroupSizeHoverComponent(CommandSender sender, IRoom room) {
+        List<Component> lines = new ArrayList<>(room.getMembers().size());
+        for (ISonusPlayer member : room.getMembers()) {
+            lines.add(translatable("sonus.command.hover.group-members.entry", text(sender.getNameFor(member))));
+        }
+
+        return translatable("sonus.command.hover.group-members.header", text(room.getMembers().size()))
+                .append(Component.join(JoinConfiguration.commas(true), lines));
     }
 
     @Override
@@ -110,12 +127,14 @@ public class GroupCommand extends Command {
                 IRoom room = iterator.next();
                 if (room.getPassword() == null) {
                     message.append(translatable("sonus.command.groups.list.entry.no-password",
-                            text(room.getName()), text(room.getMembers().size()))
+                            text(room.getName()), text(room.getMembers().size())
+                                    .hoverEvent(HoverEvent.showText(getGroupSizeHoverComponent(player, room))))
                             .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, room.getName(), null)))
                     );
                 } else {
                     message.append(translatable("sonus.command.groups.list.entry.password",
-                            text(room.getName()), text(room.getMembers().size())));
+                            text(room.getName()), text(room.getMembers().size())
+                                    .hoverEvent(HoverEvent.showText(getGroupSizeHoverComponent(player, room)))));
                 }
                 if (iterator.hasNext()) {
                     message.appendNewline();

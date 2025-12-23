@@ -11,6 +11,7 @@ import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.translation.GlobalTranslator;
+import net.kyori.adventure.util.TriState;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -99,6 +100,11 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
             return permissionValue.asBoolean();
         }
         return defaultValue;
+    }
+
+    @Override
+    public void setPermission(String permission, TriState value) {
+
     }
 
     @Override

@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_CONNECT_WEB;
 import static dev.minceraft.sonus.web.adapter.WebServer.HTTP_AGGREGATOR;
 import static dev.minceraft.sonus.web.adapter.WebServer.HTTP_SOCKET_CODEC;
 import static dev.minceraft.sonus.web.adapter.WebServer.HTTP_SOCKET_FRAMER;
@@ -62,6 +63,9 @@ public class WebSocketHandshaker extends ChannelInboundHandlerAdapter {
         }
         ISonusPlayer player = this.adapter.getSessions().consumeToken(token);
         if (player == null) {
+            throw new HttpErrorException(HttpResponseStatus.FORBIDDEN);
+        }
+        if (!player.hasPermission(PERMISSION_CONNECT_WEB, true)) {
             throw new HttpErrorException(HttpResponseStatus.FORBIDDEN);
         }
         if (!player.setAdapter(this.adapter)) {

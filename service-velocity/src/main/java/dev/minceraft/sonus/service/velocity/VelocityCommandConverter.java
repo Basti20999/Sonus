@@ -17,6 +17,7 @@ import com.velocitypowered.api.command.VelocityBrigadierMessage;
 import com.velocitypowered.api.permission.Tristate;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.commands.ArgumentCommandNode;
 import dev.minceraft.sonus.service.commands.CommandContext;
@@ -33,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.velocitypowered.api.command.BrigadierCommand.literalArgumentBuilder;
 import static com.velocitypowered.api.command.BrigadierCommand.requiredArgumentBuilder;
@@ -186,6 +188,16 @@ public final class VelocityCommandConverter {
         @Override
         public void sendMessage(Component component) {
             this.source.sendMessage(component);
+        }
+
+        @Override
+        public String getNameFor(ISonusPlayer target) {
+            return target.getName();
+        }
+
+        @Override
+        public UUID getUniqueIdFor(ISonusPlayer target) {
+            return target.getUniqueId();
         }
     }
 }
