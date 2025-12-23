@@ -27,7 +27,7 @@ public interface IPlatformPlayer {
 
     boolean hasPermission(String permission, boolean defaultValue);
 
-    boolean canSeeFallback(IPlatformPlayer target);
+    boolean canSee(IPlatformPlayer target);
 
     Locale getLocale();
 

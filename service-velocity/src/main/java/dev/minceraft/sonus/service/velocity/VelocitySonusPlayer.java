@@ -15,7 +15,6 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -103,10 +102,8 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     }
 
     @Override
-    public boolean canSeeFallback(IPlatformPlayer target) {
-        // if the source and target are on the same server, this fallback method
-        // should only be called if there is no state present yet during login, so hide the target there
-        return Objects.equals(this.getServerId(), target.getServerId());
+    public boolean canSee(IPlatformPlayer target) {
+        return true; // Velocity does not have a built-in vanish system
     }
 
     @Override

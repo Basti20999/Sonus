@@ -42,7 +42,7 @@ public class WebSessionManager {
         // initialize all player states
         for (ISonusPlayer target : this.adapter.getService().getPlayerManager().getPlayers()) {
             // build state update of target if player can see target
-            if (target.isConnected() && player.canSee(target)) {
+            if (target.isConnected() && player.canReceive(target)) {
                 StateUpdatePacket packet = new StateUpdatePacket();
                 packet.setState(SonusWebPlayerState.fromState(target, player));
                 connection.sendPacket(packet);
@@ -71,11 +71,20 @@ public class WebSessionManager {
 
     public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<WebSocketConnection, AbstractWebPacket<?>> packet) {
         for (WebSocketConnection conn : this.connections.values()) {
-            ISonusPlayer target = conn.getPlayer();
-            // ensure target is connected and target can see source
-            if (target.isConnected() && (target.canSee(source) || !requireVisibility)) {
-                conn.sendPacket(packet.apply(conn));
+            if (!conn.getPlayer().isConnected()) {
+                continue; // target not connected or target can't see source
             }
+            ISonusPlayer targetPlayer = conn.getPlayer();
+            if (!targetPlayer.canSee(source)){
+                continue;
+            }
+            if (requireVisibility && !source.canReceive(source)){
+                continue;
+            }
+
+            targetPlayer.ensureTabListed(source);
+
+            conn.sendPacket(packet.apply(conn));
         }
     }
 

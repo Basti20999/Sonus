@@ -112,6 +112,8 @@ public interface ISonusPlayer extends IAudioSource {
 
     boolean canSee(ISonusPlayer target);
 
+    boolean canReceive(ISonusPlayer target);
+
     Locale getLocale();
 
     Component renderComponent(Component component, Locale locale);

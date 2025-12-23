@@ -90,10 +90,18 @@ public class SvcSessionManager {
 
     public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<SvcConnection, AbstractSvcPacket<?>> packet) {
         for (SvcConnection conn : this.connections.values()) {
-            if (!conn.isConnected() || (!conn.getPlayer().canSee(source) && requireVisibility)) {
+            if (!conn.isConnected()) {
                 continue; // target not connected or target can't see source
             }
-            conn.getPlayer().ensureTabListed(source);
+            ISonusPlayer targetPlayer = conn.getPlayer();
+            if (!targetPlayer.canSee(source)){
+                continue;
+            }
+            if (requireVisibility && !source.canReceive(source)){
+                continue;
+            }
+
+            targetPlayer.ensureTabListed(source);
             conn.sendPacket(packet.apply(conn));
         }
     }
@@ -111,7 +119,7 @@ public class SvcSessionManager {
         ImmutableMap.Builder<UUID, SvcPlayerState> states = ImmutableMap.builderWithExpectedSize(this.connections.size());
         for (ISonusPlayer target : this.adapter.getService().getPlayerManager().getPlayers()) {
             // build state update of target if player can see target
-            if (target.isConnected() && player.canSee(target)) {
+            if (target.isConnected() && player.canReceive(target)) {
                 states.put(target.getUniqueId(player), this.buildPlayerState(player, target));
             }
         }

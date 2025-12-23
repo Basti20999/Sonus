@@ -45,10 +45,18 @@ public class PlasmoSessionManager {
 
     public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<PlasmoConnection, AbstractPlasmoPacket<?>> packet) {
         for (PlasmoConnection conn : this.usersByUniqueId.values()) {
-            if (!conn.isConnected() || (!conn.getPlayer().canSee(source) && requireVisibility)) {
+            if (!conn.isConnected()) {
                 continue; // target not connected or target can't see source
             }
-            conn.getPlayer().ensureTabListed(source);
+            ISonusPlayer targetPlayer = conn.getPlayer();
+            if (!targetPlayer.canSee(source)){
+                continue;
+            }
+            if (requireVisibility && !source.canReceive(source)){
+                continue;
+            }
+
+            targetPlayer.ensureTabListed(source);
             conn.sendPacket(packet.apply(conn));
         }
     }
@@ -66,7 +74,7 @@ public class PlasmoSessionManager {
         Collection<? extends ISonusPlayer> players = this.adapter.getService().getPlayerManager().getPlayers();
         Map<UUID, VoicePlayerInfo> states = new HashMap<>(players.size());
         for (ISonusPlayer player : players) {
-            if (!player.isConnected() || !player.canSee(listener.getPlayer())) {
+            if (!player.isConnected() || !player.canReceive(listener.getPlayer())) {
                 continue;
             }
             states.put(player.getUniqueId(), this.buildPlayerInfo(listener.getPlayer(), player));

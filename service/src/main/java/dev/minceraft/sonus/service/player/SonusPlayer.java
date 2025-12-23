@@ -50,6 +50,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private final IPlatformPlayer platform;
     // keep track of which rooms this player is in
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
+    private final AtomicLong maxSequenceNumber = new AtomicLong();
     private @Nullable SonusAdapter sonusAdapter;
     private @Nullable IRoom serverRoom;
     private @Nullable IRoom prevPrimaryRoom; // hack to fix state updates
@@ -57,17 +58,13 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     // visibility states of other players
     private Map<UUID, SonusPlayerState> perPlayerStates = Map.of();
     private @Nullable AgcNode agcNode; // automatic gain control
-
     // metadata sent by the backend server agent
     private @Nullable WorldRotatedVec3d position;
     private @Nullable String team;
-
     // player state
     private boolean connected;
     private boolean muted;
     private boolean deafened;
-
-    private final AtomicLong maxSequenceNumber = new AtomicLong();
     private long lastKeepAlive = System.currentTimeMillis();
 
     // track server reference
@@ -182,7 +179,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
         if (source instanceof SonusPlayer sonusSource) {
             // call platform-specific fallback when there is no state set
-            return this.platform.canSeeFallback(sonusSource.platform);
+            return this.platform.canSee(sonusSource.platform);
         }
         return true;
     }
@@ -537,17 +534,22 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (state != null && state.staticHidden() && state.spatialHidden()) {
             return false;
         }
-        // if the target is in a primary room, this player should be able to
-        // see them in the group selection; we therefore need to send status updates
-        if (target.getPrimaryRoom() == null && ((SonusPlayer) target).prevPrimaryRoom != this.primaryRoom) {
-            // if the target isn't in a primary room and the server doesn't match, don't send updates
-            if (!Objects.equals(this.getServerId(), target.getServerId())) {
-                return false;
-            }
-        } else if (target.getPrimaryRoom() == this.primaryRoom) {
+        return this.platform.canSee(((SonusPlayer) target).platform);
+    }
+
+    @Override
+    public boolean canReceive(ISonusPlayer target) {
+        if (this == target) {
+            return true; // the player can always view themselves, regardless of what happens
+        }
+        // check for vanish
+        if (!this.canSee(target)) {
+            return false;
+        }
+        if (target.getPrimaryRoom() != null && target.getPrimaryRoom() == this.primaryRoom) {
             return true;
         }
-        return this.platform.canSeeFallback(((SonusPlayer) target).platform);
+        return this.getServerId() != null && this.getServerId().equals(target.getServerId());
     }
 
     @Override

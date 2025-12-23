@@ -122,11 +122,11 @@ public final class PlayerManager implements IPlayerManager {
                 continue; // no primary room set, ignore
             }
             // show skin of target for this player
-            if (player.canSee(target)) {
+            if (player.canReceive(target)) {
                 player.ensureTabListed(target);
             }
             // show skin of this player to target (if this player is in primary room)
-            if (player.getPrimaryRoom() != null && target.canSee(player)) {
+            if (player.getPrimaryRoom() != null && target.canReceive(player)) {
                 target.ensureTabListed(player);
             }
         }
