@@ -9,6 +9,8 @@ import dev.minceraft.sonus.service.commands.LiteralCommandNode;
 import dev.minceraft.sonus.service.commands.arguments.PlayerArgument;
 import dev.minceraft.sonus.service.commands.arguments.StringArgument;
 import dev.minceraft.sonus.service.player.SonusPlayer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.util.TriState;
@@ -159,12 +161,15 @@ public class ModerateCommand extends Command {
         } else {
             TranslatableComponent.Builder builder = translatable("sonus.command.moderate.groups.remove.multiple-found")
                     .arguments(text(group)).toBuilder();
+            List<Component> entries = new ArrayList<>();
             for (IRoom room : matched) {
-                builder.append(translatable("sonus.command.moderate.groups.remove.multiple-found.entry")
+                entries.add(translatable("sonus.command.moderate.groups.remove.multiple-found.entry")
                         .arguments(text(room.getName()), text(room.getMembers().size())
                                 .hoverEvent(GroupCommand.getGroupSizeHoverComponent(sender, room)))
                         .clickEvent(ClickEvent.callback(__ -> this.groupsRemove0(service, sender, room))));
             }
+            builder.append(Component.join(JoinConfiguration.newlines(), entries));
+            sender.sendMessage(builder.build());
         }
         return true;
     }

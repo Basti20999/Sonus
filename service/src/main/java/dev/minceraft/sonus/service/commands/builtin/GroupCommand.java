@@ -23,11 +23,11 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_GROUPS_BYPASS_PASSWORD;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_GROUPS_USE;
 import static dev.minceraft.sonus.service.commands.CommandNode.argument;
 import static dev.minceraft.sonus.service.commands.CommandNode.literal;
@@ -46,8 +46,7 @@ public class GroupCommand extends Command {
         for (ISonusPlayer member : room.getMembers()) {
             lines.add(translatable("sonus.command.hover.group-members.entry", text(sender.getNameFor(member))));
         }
-
-        return translatable("sonus.command.hover.group-members.header", text(room.getMembers().size()))
+        return translatable("sonus.command.hover.group-members.header").arguments(text(room.getName()), text(room.getMembers().size()))
                 .append(Component.join(JoinConfiguration.commas(true), lines));
     }
 
@@ -124,26 +123,22 @@ public class GroupCommand extends Command {
                     .key("sonus.command.groups.list.header")
                     .arguments(text(rooms.size()));
 
-            Iterator<IRoom> iterator = rooms.iterator();
-            while (iterator.hasNext()) {
-                IRoom room = iterator.next();
-                if (room.getPassword() == null) {
-                    message.append(translatable("sonus.command.groups.list.entry.no-password",
+            List<Component> lines = new ArrayList<>(rooms.size());
+            for (IRoom room : rooms) {
+                if (room.getPassword() == null || player.hasPermission(PERMISSION_GROUPS_BYPASS_PASSWORD)) {
+                    lines.add(translatable("sonus.command.groups.list.entry.no-password",
                             text(room.getName()), text(room.getMembers().size())
                                     .hoverEvent(HoverEvent.showText(getGroupSizeHoverComponent(player, room))))
-                            .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, room.getName(), null)))
+                            .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, room.getId(), null)))
                     );
                 } else {
-                    message.append(translatable("sonus.command.groups.list.entry.password",
+                    lines.add(translatable("sonus.command.groups.list.entry.password",
                             text(room.getName()), text(room.getMembers().size())
                                     .hoverEvent(HoverEvent.showText(getGroupSizeHoverComponent(player, room)))));
                 }
-                if (iterator.hasNext()) {
-                    message.appendNewline();
-                }
             }
 
-            player.sendMessage(message.build());
+            player.sendMessage(message.append(Component.join(JoinConfiguration.newlines(), lines)).build());
         }
 
         return true;
@@ -197,13 +192,16 @@ public class GroupCommand extends Command {
             ComponentBuilder<?, ?> message = translatable()
                     .key("sonus.command.groups.join.multiple")
                     .arguments(text(matched.size()));
+
+            List<Component> lines = new ArrayList<>(matched.size());
             for (IRoom iRoom : matched) {
-                message.append(translatable("sonus.command.groups.join.multiple.entry")
-                        .arguments(text(iRoom.getName()), text(iRoom.getMembers().size()))
+                lines.add(translatable("sonus.command.groups.join.multiple.entry")
+                        .arguments(text(iRoom.getName()), text(iRoom.getMembers().size())
+                                .hoverEvent(HoverEvent.showText(getGroupSizeHoverComponent(player, iRoom))))
                         .clickEvent(ClickEvent.callback(__ -> this.joinGroup(service, player, name, password)))
                 );
             }
-            player.sendMessage(message.build());
+            player.sendMessage(message.append(Component.join(JoinConfiguration.newlines(), lines)).build());
         }
 
         return true;
