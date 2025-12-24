@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.plasmo.adapter.connection;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.version.SemanticVersion;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
 import dev.minceraft.sonus.plasmo.protocol.tcp.TcpHandler;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.ConnectionPacket;
@@ -12,11 +13,15 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerAudioEndPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerInfoPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.PlayerStatePacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.serverbound.SourceInfoRequestPacket;
+import dev.minceraft.sonus.plasmo.protocol.version.VersionManager;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.Component.translatable;
 
 @NullMarked
 public class MetaHandler implements TcpHandler {
@@ -53,6 +58,16 @@ public class MetaHandler implements TcpHandler {
 
     @Override
     public void handlePlayerInfoPacket(PlayerInfoPacket packet) {
+        SemanticVersion plasmoVersion = SemanticVersion.of(packet.getPlasmoVersion());
+        if (!VersionManager.isSupported(plasmoVersion)) {
+            this.connection.getPlayer().sendMessage(translatable("sonus.plasmo.version_unsupported")
+                    .arguments(text(plasmoVersion.asShortPrettyString()),
+                            text(VersionManager.MIN_VERSION.asShortPrettyString())));
+            return;
+        }
+
+        this.connection.setPlasmoVersion(plasmoVersion);
+        this.connection.setMinecraftVersion(SemanticVersion.of(packet.getMinecraftVersion()));
         this.connection.initCipher(packet.getPublicKey());
         ISonusPlayer player = this.connection.getPlayer();
         player.setDeafened(packet.isVoiceDisabled());

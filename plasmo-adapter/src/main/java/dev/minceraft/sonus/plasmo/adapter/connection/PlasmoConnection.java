@@ -6,6 +6,7 @@ import com.google.common.collect.Tables;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.udp.WrappedUdpPipelineData;
+import dev.minceraft.sonus.common.version.SemanticVersion;
 import dev.minceraft.sonus.plasmo.adapter.PlasmoAdapter;
 import dev.minceraft.sonus.plasmo.adapter.pipeline.PlasmoUdpContext;
 import dev.minceraft.sonus.plasmo.protocol.AbstractPlasmoPacket;
@@ -53,6 +54,8 @@ public class PlasmoConnection implements AutoCloseable {
 
     private @MonotonicNonNull ICipher cipher;
     private @MonotonicNonNull InetSocketAddress remoteAddress;
+    private @MonotonicNonNull SemanticVersion plasmoVersion;
+    private @MonotonicNonNull SemanticVersion minecraftVersion;
 
     public PlasmoConnection(PlasmoAdapter adapter, ISonusPlayer player) {
         this.adapter = adapter;
@@ -167,6 +170,22 @@ public class PlasmoConnection implements AutoCloseable {
 
     public void setRemoteAddress(InetSocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
+    }
+
+    public SemanticVersion getPlasmoVersion() {
+        return this.plasmoVersion;
+    }
+
+    public void setPlasmoVersion(SemanticVersion plasmoVersion) {
+        this.plasmoVersion = plasmoVersion;
+    }
+
+    public SemanticVersion getMinecraftVersion() {
+        return this.minecraftVersion;
+    }
+
+    public void setMinecraftVersion(SemanticVersion minecraftVersion) {
+        this.minecraftVersion = minecraftVersion;
     }
 
     public AudioProcessor getProcessor(UUID channelId) {

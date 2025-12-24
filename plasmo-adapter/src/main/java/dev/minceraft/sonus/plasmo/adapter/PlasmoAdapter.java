@@ -22,6 +22,7 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.SourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.source.StaticSourceInfo;
 import dev.minceraft.sonus.plasmo.protocol.udp.bothbound.PingPlasmoPacket;
 import dev.minceraft.sonus.plasmo.protocol.udp.clientbound.SourceAudioPlasmoPacket;
+import dev.minceraft.sonus.plasmo.protocol.version.VersionManager;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -58,6 +59,8 @@ public class PlasmoAdapter implements SonusAdapter {
         this.sessionManager = new PlasmoSessionManager(this);
 
         this.service.getEventManager().registerListener(new PlasmoSonusListener(this));
+
+        VersionManager.logSupportedVersions();
     }
 
     @Override
