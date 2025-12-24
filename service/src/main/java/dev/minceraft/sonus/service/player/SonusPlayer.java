@@ -582,7 +582,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (!this.canSee(target)) {
             return false;
         }
-        if (target.getPrimaryRoom() != null && target.getPrimaryRoom() == this.primaryRoom) {
+        // TODO: Maybe different levels of this check here - check d979a353 for reference, but this doesn't work with group updates correctly, this works, but always send mic state packets
+        if (target.getPrimaryRoom() != null) {
             return true;
         }
         return this.getServerId() != null && this.getServerId().equals(target.getServerId());
