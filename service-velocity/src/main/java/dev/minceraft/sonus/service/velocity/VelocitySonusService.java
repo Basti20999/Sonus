@@ -3,6 +3,7 @@ package dev.minceraft.sonus.service.velocity;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
 import dev.minceraft.sonus.service.SonusService;
@@ -15,7 +16,10 @@ import jakarta.inject.Singleton;
         name = "Sonus",
         version = "1.0.0",
         authors = {"booky10", "pianoman911"},
-        url = "https://minceraft.dev/"
+        url = "https://minceraft.dev/",
+        dependencies = {
+                @Dependency(id = "luckperms", optional = true)
+        }
 )
 @Singleton
 public class VelocitySonusService {
@@ -23,6 +27,7 @@ public class VelocitySonusService {
     private final SonusService service;
     private final ProxyServer server;
     private final Provider<SonusTranslationLoader> i18n;
+    private LuckPermsProvider luckPermsProvider;
 
     @Inject
     public VelocitySonusService(
@@ -38,6 +43,7 @@ public class VelocitySonusService {
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         this.i18n.get().loadAndRegister();
+        this.luckPermsProvider = new LuckPermsProvider();
 
         this.service.getScheduler().execute(() -> {
             this.service.init();
@@ -52,5 +58,9 @@ public class VelocitySonusService {
 
     public SonusService getService() {
         return this.service;
+    }
+
+    public LuckPermsProvider getLuckPermsProvider() {
+        return this.luckPermsProvider;
     }
 }

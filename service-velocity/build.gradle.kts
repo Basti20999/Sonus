@@ -9,6 +9,8 @@ dependencies {
     compileOnly(libs.velocity)
     annotationProcessor(libs.velocity)
 
+    compileOnly(libs.luckperms)
+
     compileOnly(projects.service)
     runtimeOnly(projects.service) {
         targetConfiguration = "shadow"

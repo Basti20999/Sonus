@@ -18,7 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_GROUPS_BYPASS_PASSWORD;
 
 @NullMarked
 public class SvcSessionManager {
@@ -47,7 +47,7 @@ public class SvcSessionManager {
 
     public void onConnectionEstablished(SvcConnection connection) {
         // send group initialization packets for everything
-        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
+        boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_GROUPS_BYPASS_PASSWORD, false);
         for (IRoom room : this.adapter.getService().getRoomManager().getRooms()) {
             AddGroupSvcPacket packet = new AddGroupSvcPacket();
             packet.setGroup(new SonusClientGroup(room, bypassPassword));

@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.svc.adapter.connection;
 
 import dev.minceraft.sonus.common.ISonusService;
+import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
 import dev.minceraft.sonus.svc.adapter.SvcProtocolAdapter;
@@ -15,6 +16,8 @@ import dev.minceraft.sonus.svc.protocol.meta.servicebound.UpdateStateSvcPacket;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
+
+import static net.kyori.adventure.text.Component.translatable;
 
 public class MetaHandler implements IMetaSvcHandler {
 
@@ -43,6 +46,11 @@ public class MetaHandler implements IMetaSvcHandler {
 
     @Override
     public void handleCreateGroupPacket(CreateGroupSvcPacket packet) {
+        if (!this.connection.getPlayer().hasPermission(SonusConstants.PERMISSION_GROUPS_USE, true)) {
+            this.connection.getPlayer().sendMessage(translatable("sonus.command.moderate.groups.ban.notified"));
+            return;
+        }
+
         ISonusRoomManager rooms = this.protocolAdapter.getAdapter().getService().getRoomManager();
         IRoom room = rooms.createStaticRoom(packet.getName(), packet.getPassword(),
                 packet.getType().toSonus(), false);

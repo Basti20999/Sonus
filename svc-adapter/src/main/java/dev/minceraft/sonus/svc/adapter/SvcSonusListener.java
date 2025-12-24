@@ -13,7 +13,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.UUID;
 
-import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_GROUPS_BYPASS_PASSWORD;
 
 @NullMarked
 public class SvcSonusListener implements ISonusServiceEvents {
@@ -86,7 +86,7 @@ public class SvcSonusListener implements ISonusServiceEvents {
     @Override
     public void onGroupCreate(IRoom room) {
         this.adapter.getSessions().broadcast(connection -> {
-            boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
+            boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_GROUPS_BYPASS_PASSWORD, false);
             AddGroupSvcPacket packet = new AddGroupSvcPacket();
             SonusClientGroup group = new SonusClientGroup(room, bypassPassword);
             packet.setGroup(group);

@@ -81,7 +81,11 @@ public interface ISonusPlayer extends IAudioSource {
 
     boolean isMuted();
 
-    void setMuted(boolean muted);
+    default void setMuted(boolean muted) {
+        this.setMuted(muted, false);
+    }
+
+    void setMuted(boolean mute, boolean ignorePermission);
 
     boolean isDeafened();
 

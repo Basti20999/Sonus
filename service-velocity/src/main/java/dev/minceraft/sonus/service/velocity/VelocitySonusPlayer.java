@@ -24,10 +24,12 @@ import static net.kyori.adventure.text.serializer.plain.PlainTextComponentSerial
 @NullMarked
 public class VelocitySonusPlayer implements IPlatformPlayer {
 
+    private final LuckPermsProvider luckPermsProvider;
     private final ProxyServer server;
     private final Player player;
 
-    public VelocitySonusPlayer(ProxyServer server, Player player) {
+    public VelocitySonusPlayer(LuckPermsProvider luckPermsProvider, ProxyServer server, Player player) {
+        this.luckPermsProvider = luckPermsProvider;
         this.server = server;
         this.player = player;
     }
@@ -104,7 +106,7 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
 
     @Override
     public void setPermission(String permission, TriState value) {
-
+        this.luckPermsProvider.setPermission(this.getUniqueId(null), permission, value);
     }
 
     @Override

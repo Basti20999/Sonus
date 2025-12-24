@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_GROUPS_USE;
 import static dev.minceraft.sonus.service.commands.CommandNode.argument;
 import static dev.minceraft.sonus.service.commands.CommandNode.literal;
 import static net.kyori.adventure.text.Component.text;
@@ -54,6 +55,7 @@ public class GroupCommand extends Command {
     public LiteralCommandNode construct() {
         return literal(this.label)
                 .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups")
+                        && ctx.sender().hasPermission(PERMISSION_GROUPS_USE, true) // Check if player can use groups
                         && ctx.sender() instanceof SonusPlayer player && player.isConnected())
                 .with(literal("list")
                         .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups.list")

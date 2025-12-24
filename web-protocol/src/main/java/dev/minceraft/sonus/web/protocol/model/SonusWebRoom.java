@@ -11,7 +11,7 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.UUID;
 
-import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_GROUPS_BYPASS_PASSWORD;
 import static net.kyori.adventure.text.Component.text;
 
 @NullMarked
@@ -42,7 +42,7 @@ public class SonusWebRoom {
     }
 
     public static SonusWebRoom fromRoom(IRoom room, ISonusPlayer viewer) {
-        boolean bypassPassword = viewer.hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false);
+        boolean bypassPassword = viewer.hasPermission(PERMISSION_GROUPS_BYPASS_PASSWORD, false);
         UUID uniqueId = room.getId();
         Component name = viewer.renderComponent(text(room.getName()));
         boolean password = room.getPassword() != null && !bypassPassword;

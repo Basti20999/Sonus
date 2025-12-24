@@ -41,8 +41,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_BYPASS_GROUP_PASSWORD;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_CONNECT;
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_GROUPS_BYPASS_PASSWORD;
+import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_GROUPS_USE;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_LISTEN;
 import static dev.minceraft.sonus.common.SonusConstants.PERMISSION_VOICE_SPEAK;
 import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL_KEY;
@@ -254,8 +255,11 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @Override
     public boolean canAccessRoom(IRoom room, @Nullable String password) {
+        if (!this.hasPermission(PERMISSION_GROUPS_USE, true)) {
+            return false; // no permission to use groups
+        }
         // check password
-        if (!this.hasPermission(PERMISSION_BYPASS_GROUP_PASSWORD, false)) {
+        if (!this.hasPermission(PERMISSION_GROUPS_BYPASS_PASSWORD, false)) {
             if (!Objects.equals(room.getPassword(), password)) {
                 return false; // wrong password (and no bypass permission)
             }
@@ -427,8 +431,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     @Override
-    public void setMuted(boolean muted) {
-        this.muted = muted;
+    public void setMuted(boolean muted, boolean ignorePermission) {
+        this.muted = muted && (ignorePermission || this.platform.hasPermission(PERMISSION_VOICE_SPEAK, true));
     }
 
     @Override

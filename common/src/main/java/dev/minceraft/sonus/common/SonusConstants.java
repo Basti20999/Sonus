@@ -22,7 +22,7 @@ public final class SonusConstants {
     public static final String PERMISSION_CONNECT_SVC = "sonus.connect.svc";
     public static final String PERMISSION_CONNECT_PLASMO = "sonus.connect.plasmo";
     public static final String PERMISSION_CONNECT_WEB = "sonus.connect.web";
-    public static final String PERMISSION_BYPASS_GROUP_PASSWORD = "sonus.bypass.group-password";
+    public static final String PERMISSION_GROUPS_BYPASS_PASSWORD = "sonus.groups.bypass.password";
     public static final String PERMISSION_GROUPS_USE = "sonus.groups.use";
 
     private SonusConstants() {

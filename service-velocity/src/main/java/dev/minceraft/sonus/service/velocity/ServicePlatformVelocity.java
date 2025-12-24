@@ -68,7 +68,7 @@ public class ServicePlatformVelocity implements IServicePlatform {
     }
 
     public IPlatformPlayer getPlayer(Player player) {
-        return new VelocitySonusPlayer(this.server, player);
+        return new VelocitySonusPlayer(this.plugin.get().getLuckPermsProvider(), this.server, player);
     }
 
     @Override
@@ -116,5 +116,11 @@ public class ServicePlatformVelocity implements IServicePlatform {
         // velocity just injects the proxy commands and forwards the packet to the player
         // without saving the command graph, so velocity doesn't support command updating
         return false;
+    }
+
+    @Override
+    public boolean isPermissionSettingSupported() {
+        // velocity has no built-in support for setting permissions, but we can use LuckPerms if it's installed
+        return this.plugin.get().getLuckPermsProvider().isEnabled();
     }
 }

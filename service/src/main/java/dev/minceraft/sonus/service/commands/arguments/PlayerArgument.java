@@ -20,7 +20,7 @@ public class PlayerArgument implements ArgumentType<SonusPlayer> {
     @Override
     public SonusPlayer parse(CommandContext ctx, String input) {
         for (SonusPlayer player : ctx.service().getPlayerManager().getPlayers()) {
-            if (player.isConnected() && ctx.sender().getNameFor(player).equalsIgnoreCase(input)) {
+            if (ctx.sender().getNameFor(player).equalsIgnoreCase(input)) {
                 return player;
             }
         }

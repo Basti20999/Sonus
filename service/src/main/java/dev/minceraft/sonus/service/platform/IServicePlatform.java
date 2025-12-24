@@ -27,4 +27,6 @@ public interface IServicePlatform {
     void registerCommands(List<LiteralCommandNode> nodes);
 
     boolean isCommandUpdateSupported();
+
+    boolean isPermissionSettingSupported();
 }

@@ -34,6 +34,12 @@ public class ModerateCommand extends Command {
         super("moderate");
     }
 
+    static void tryToRegister(SonusService service, LiteralCommandNode node) {
+        if (service.getPlatform().isPermissionSettingSupported()) {
+            node.with(new ModerateCommand().construct());
+        }
+    }
+
     @Override
     public LiteralCommandNode construct() {
         return literal(this.label)
@@ -41,19 +47,19 @@ public class ModerateCommand extends Command {
                 .with(literal("mute")
                         .requires(ctx -> ctx.sender().hasPermission("sonus.command.moderate.mute"))
                         .with(argument("target", PlayerArgument.INSTANCE)
-                                .executes(ctx -> this.mute(ctx.sender(), ctx.get("player", PlayerArgument.INSTANCE)))))
+                                .executes(ctx -> this.mute(ctx.sender(), ctx.get("target", PlayerArgument.INSTANCE)))))
                 .with(literal("unmute")
                         .requires(ctx -> ctx.sender().hasPermission("sonus.command.moderate.unmute"))
-                        .with(argument("target", PlayerArgument.INSTANCE)))
-                .executes(ctx -> this.unmute(ctx.sender(), ctx.get("player", PlayerArgument.INSTANCE)))
+                        .with(argument("target", PlayerArgument.INSTANCE)
+                                .executes(ctx -> this.unmute(ctx.sender(), ctx.get("target", PlayerArgument.INSTANCE)))))
                 .with(literal("ban")
                         .requires(ctx -> ctx.sender().hasPermission("sonus.command.moderate.ban"))
                         .with(argument("target", PlayerArgument.INSTANCE)
-                                .executes(ctx -> this.ban(ctx.sender(), ctx.get("player", PlayerArgument.INSTANCE)))))
+                                .executes(ctx -> this.ban(ctx.service(), ctx.sender(), ctx.get("target", PlayerArgument.INSTANCE)))))
                 .with(literal("unban")
                         .requires(ctx -> ctx.sender().hasPermission("sonus.command.moderate.unban"))
                         .with(argument("target", PlayerArgument.INSTANCE)
-                                .executes(ctx -> this.unban(ctx.sender(), ctx.get("player", PlayerArgument.INSTANCE)))))
+                                .executes(ctx -> this.unban(ctx.sender(), ctx.get("target", PlayerArgument.INSTANCE)))))
                 .with(literal("groups")
                         .requires(ctx -> ctx.sender().hasPermission("sonus.command.moderate.groups"))
                         .with(literal("remove")
@@ -63,27 +69,28 @@ public class ModerateCommand extends Command {
                         .with(literal("kick")
                                 .requires(ctx -> ctx.sender().hasPermission("sonus.command.moderate.groups.kick"))
                                 .with(argument("target", PlayerArgument.INSTANCE)
-                                        .executes(ctx -> this.groupsKick(ctx.sender(), ctx.get("player", PlayerArgument.INSTANCE)))))
+                                        .executes(ctx -> this.groupsKick(ctx.sender(), ctx.get("target", PlayerArgument.INSTANCE)))))
                         .with(literal("ban")
                                 .requires(ctx -> ctx.sender().hasPermission("sonus.command.moderate.groups.ban"))
                                 .with(argument("target", PlayerArgument.INSTANCE)
-                                        .executes(ctx -> this.groupsBan(ctx.sender(), ctx.get("player", PlayerArgument.INSTANCE)))))
+                                        .executes(ctx -> this.groupsBan(ctx.sender(), ctx.get("target", PlayerArgument.INSTANCE)))))
                         .with(literal("unban")
                                 .requires(ctx -> ctx.sender().hasPermission("sonus.command.moderate.groups.unban"))
                                 .with(argument("target", PlayerArgument.INSTANCE)
-                                        .executes(ctx -> this.groupsUnban(ctx.sender(), ctx.get("player", PlayerArgument.INSTANCE))))));
+                                        .executes(ctx -> this.groupsUnban(ctx.sender(), ctx.get("target", PlayerArgument.INSTANCE))))));
 
     }
 
     private boolean mute(CommandSender sender, ISonusPlayer target) {
-        boolean muted = target.hasPermission(PERMISSION_VOICE_SPEAK, true);
+        boolean muted = !target.hasPermission(PERMISSION_VOICE_SPEAK, true);
         if (muted) {
             sender.sendMessage(translatable("sonus.command.moderate.mute.already-muted")
                     .arguments(text(sender.getNameFor(target))));
             return true;
         }
-        // TODO: force player to muted state
         target.setPermission(PERMISSION_VOICE_SPEAK, TriState.FALSE);
+        target.setMuted(true, true);
+        target.updateState();
         sender.sendMessage(translatable("sonus.command.moderate.mute.success")
                 .arguments(text(sender.getNameFor(target))));
         target.sendMessage(translatable("sonus.command.moderate.mute.notified"));
@@ -91,28 +98,30 @@ public class ModerateCommand extends Command {
     }
 
     private boolean unmute(CommandSender sender, ISonusPlayer target) {
-        boolean muted = target.hasPermission(PERMISSION_VOICE_SPEAK, true);
+        boolean muted = !target.hasPermission(PERMISSION_VOICE_SPEAK, true);
         if (!muted) {
             sender.sendMessage(translatable("sonus.command.moderate.unmute.not-muted")
                     .arguments(text(sender.getNameFor(target))));
             return true;
         }
         target.setPermission(PERMISSION_VOICE_SPEAK, TriState.NOT_SET);
+        target.updateState();
         sender.sendMessage(translatable("sonus.command.moderate.unmute.success")
                 .arguments(text(sender.getNameFor(target))));
         target.sendMessage(translatable("sonus.command.moderate.unmute.notified"));
         return true;
     }
 
-    private boolean ban(CommandSender sender, ISonusPlayer target) {
+    private boolean ban(SonusService service, CommandSender sender, ISonusPlayer target) {
         boolean banned = !target.hasPermission(PERMISSION_CONNECT, true);
         if (banned) {
             sender.sendMessage(translatable("sonus.command.moderate.ban.already-banned")
                     .arguments(text(sender.getNameFor(target))));
             return true;
         }
-        target.setAdapter(null); // TODO: Is this enough to disconnect immediately?
         target.setPermission(PERMISSION_CONNECT, TriState.FALSE);
+        target.setPermission(PERMISSION_VOICE_SPEAK, TriState.FALSE);
+        service.getEventManager().onPlayerSwitchBackend(target.getUniqueId()); // Simulate server switch to disconnect
         sender.sendMessage(translatable("sonus.command.moderate.ban.success")
                 .arguments(text(sender.getNameFor(target))));
         target.sendMessage(translatable("sonus.command.moderate.ban.notified"));
@@ -127,6 +136,7 @@ public class ModerateCommand extends Command {
             return true;
         }
         target.setPermission(PERMISSION_CONNECT, TriState.NOT_SET);
+        target.setPermission(PERMISSION_VOICE_SPEAK, TriState.NOT_SET);
         sender.sendMessage(translatable("sonus.command.moderate.unban.success")
                 .arguments(text(sender.getNameFor(target))));
         target.sendMessage(translatable("sonus.command.moderate.unban.notified"));

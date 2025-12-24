@@ -27,8 +27,8 @@ public class SonusCommand extends Command {
                         && ctx.sender() instanceof SonusPlayer)
                 .executes(ctx -> this.execute0((SonusPlayer) ctx.sender()));
         command.with(new GroupCommand().construct());
-        command.with(new ModerateCommand().construct());
         WebCommand.tryToRegister(this.service, this, command);
+        ModerateCommand.tryToRegister(this.service, command);
 
         return command;
     }

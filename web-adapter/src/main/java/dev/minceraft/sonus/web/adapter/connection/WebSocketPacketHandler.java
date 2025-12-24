@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.web.adapter.connection;
 
+import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
@@ -74,6 +75,10 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
     @Override
     public void handleRoomCreate(RoomCreatePacket packet) {
         if (this.state != State.CONNECTED) {
+            return;
+        }
+        if (!this.connection.getPlayer().hasPermission(SonusConstants.PERMISSION_GROUPS_USE, true)) {
+            this.connection.sendPacket(new RoomJoinResponsePacket(UUID.randomUUID(), false));
             return;
         }
         ISonusRoomManager rooms = this.connection.getAdapter().getService().getRoomManager();
