@@ -94,10 +94,10 @@ public class SvcSessionManager {
                 continue; // target not connected or target can't see source
             }
             ISonusPlayer targetPlayer = conn.getPlayer();
-            if (!targetPlayer.canSee(source)){
+            if (!targetPlayer.canSee(source)) {
                 continue;
             }
-            if (requireVisibility && !source.canReceive(source)){
+            if (requireVisibility && !source.canReceive(source)) {
                 continue;
             }
 
@@ -119,8 +119,10 @@ public class SvcSessionManager {
         ImmutableMap.Builder<UUID, SvcPlayerState> states = ImmutableMap.builderWithExpectedSize(this.connections.size());
         for (ISonusPlayer target : this.adapter.getService().getPlayerManager().getPlayers()) {
             // build state update of target if player can see target
-            if (target.isConnected() && player.canReceive(target)) {
+            if (target.isConnected() && player.canSee(target) &&
+                    (player.getServerId() != null && player.getServerId().equals(target.getServerId()) || target.getPrimaryRoom() != null)) {
                 states.put(target.getUniqueId(player), this.buildPlayerState(player, target));
+                player.ensureTabListed(target);
             }
         }
         return states.build();
