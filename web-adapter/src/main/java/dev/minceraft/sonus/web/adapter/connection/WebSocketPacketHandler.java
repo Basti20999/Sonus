@@ -120,6 +120,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         }
         player.setMuted(packet.isMuted());
         player.setDeafened(packet.isDeafened());
+        player.updateState();
     }
 
     public void handleDisconnect() {
