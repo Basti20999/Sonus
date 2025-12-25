@@ -37,10 +37,10 @@ public class PlasmoSessionManager {
                 continue;
             }
             ISonusPlayer targetPlayer = conn.getPlayer();
-            if (!targetPlayer.canSee(source)){
+            if (!targetPlayer.canSee(source)) {
                 continue;
             }
-            if (requireVisibility && !source.canReceive(source)){
+            if (requireVisibility && !source.canReceive(source)) {
                 continue;
             }
 

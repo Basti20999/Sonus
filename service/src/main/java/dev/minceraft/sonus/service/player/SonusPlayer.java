@@ -632,8 +632,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             this.leaveRoom(room);
         }
 
-        this.service.getPlayerManager().disablePlayer(this); // disable voice stuff
         this.setVoiceActive(false);
+        this.service.getPlayerManager().disablePlayer(this); // disable voice stuff
         this.updateState(true);
         // mark as disconnected
         this.setConnected(false);
@@ -678,7 +678,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
         long keepAliveTimeoutMs = this.service.getConfig().getKeepAliveTimeoutMs();
         if (this.lastKeepAlive + keepAliveTimeoutMs < currentTime) {
-            LOGGER.warn("Player {}({}) has timed out.", this.getName(), this.getUniqueId());
+            LOGGER.warn("Disconnecting {}, timed out", this.getUniqueId());
             this.disconnect();
         }
     }

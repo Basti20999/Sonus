@@ -116,24 +116,28 @@ public final class PlayerManager implements IPlayerManager {
 
     public void onPlayerSwitchBackend(UUID playerId) {
         SonusPlayer player = this.getPlayer(playerId);
-        if (player == null || !player.isConnected()) {
+        if (player == null) {
             return;
         }
         player.setStates(Map.of()); // reset player states on server switch
         player.setTeam(null);
-        player.updateState(); // broadcast update
 
-        for (SonusPlayer target : this.players.values()) {
-            if (target.getPrimaryRoom() == null || target == player) {
-                continue; // no primary room set, ignore
-            }
-            // show skin of target for this player
-            if (player.canReceive(target)) {
-                player.ensureTabListed(target);
-            }
-            // show skin of this player to target (if this player is in primary room)
-            if (player.getPrimaryRoom() != null && target.canReceive(player)) {
-                target.ensureTabListed(player);
+        // skip broadcasting packets if player isn't conected
+        if (player.isConnected()) {
+            player.updateState(); // broadcast update
+
+            for (SonusPlayer target : this.players.values()) {
+                if (target.getPrimaryRoom() == null || target == player) {
+                    continue; // no primary room set, ignore
+                }
+                // show skin of target for this player
+                if (player.canReceive(target)) {
+                    player.ensureTabListed(target);
+                }
+                // show skin of this player to target (if this player is in primary room)
+                if (player.getPrimaryRoom() != null && target.canReceive(player)) {
+                    target.ensureTabListed(player);
+                }
             }
         }
     }

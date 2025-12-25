@@ -48,7 +48,7 @@ public class WebCommand extends Command {
     public LiteralCommandNode construct() {
         return literal(this.label)
                 .requires(ctx -> ctx.sender().hasPermission("sonus.command.web")
-                        && ctx.sender() instanceof SonusPlayer player && !player.isVoiceActive())
+                        && ctx.sender() instanceof SonusPlayer player && !player.isConnected())
                 .executes(ctx -> this.run(ctx.service(), (SonusPlayer) ctx.sender()));
     }
 
