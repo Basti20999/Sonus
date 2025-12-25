@@ -496,12 +496,15 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
 
         if (sendToAgent) {
-            PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();
-            packet.setPlayerId(this.getUniqueId());
-            packet.setVoiceActive(voiceActive);
-
-            this.sendMetaPacket(packet);
+            this.sendConnectionToAgent();
         }
+    }
+
+    public void sendConnectionToAgent() {
+        PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();
+        packet.setPlayerId(this.getUniqueId());
+        packet.setVoiceActive(voiceActive);
+        this.sendMetaPacket(packet);
     }
 
     public void sendMetaPacket(IMetaMessage packet) {

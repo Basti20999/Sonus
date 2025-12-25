@@ -139,6 +139,8 @@ public final class PlayerManager implements IPlayerManager {
                     target.ensureTabListed(player);
                 }
             }
+
+            player.sendConnectionToAgent();
         }
     }
 }
