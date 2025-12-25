@@ -638,9 +638,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         this.setVoiceActive(false);
         this.service.getPlayerManager().disablePlayer(this); // disable voice stuff
         this.updateState(true);
-        // mark as disconnected
-        this.setConnected(false);
         this.service.getEventManager().onPlayerDisconnect(this);
+        this.setConnected(false);
     }
 
     public void updateServer() {
