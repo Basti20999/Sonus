@@ -80,6 +80,7 @@ public class WebSocketHandshaker extends ChannelInboundHandlerAdapter {
         WebSocketConnection connection = new WebSocketConnection(this.adapter, player, ctx.channel());
         connection.setVersion(version);
         this.adapter.getSessions().addConnection(connection);
+        player.setConnected(true);
 
         // setup websocket handling pipeline
         ctx.pipeline()
@@ -96,7 +97,7 @@ public class WebSocketHandshaker extends ChannelInboundHandlerAdapter {
         ctx.pipeline().context(HTTP_AGGREGATOR).fireChannelRead(request);
 
         // initialize player connection
-        connection.getPlayer().setConnected(true);
+        connection.getPlayer().setVoiceActive(true);
         connection.getAdapter().getSessions().onConnectionEstablished(connection);
     }
 }

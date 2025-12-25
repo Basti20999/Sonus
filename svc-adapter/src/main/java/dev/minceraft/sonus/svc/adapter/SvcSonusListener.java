@@ -40,19 +40,19 @@ public class SvcSonusListener implements ISonusServiceEvents {
         // completely remove player
         RemovePlayerStatePacket packet = new RemovePlayerStatePacket();
         packet.setPlayerId(player.getUniqueId());
-        this.adapter.getSessions().broadcast(packet);
+        this.adapter.getSessions().broadcastFrom(player, packet);
     }
 
     @Override
     public void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
-        if (!player.isConnected()) {
+        if (!player.isVoiceActive() || !player.isConnected()) {
             // if the player isn't connected and not in a primary room,
             // remove the state; if the player is in a primary room, still send state updates,
             // as the player would appear to be removed from the current primary room otherwise
-            if (player.getPrimaryRoom() == null) {
+            if (player.getPrimaryRoom() == null || !player.isConnected()) {
                 RemovePlayerStatePacket packet = new RemovePlayerStatePacket();
                 packet.setPlayerId(player.getUniqueId());
-                this.adapter.getSessions().broadcast(packet);
+                this.adapter.getSessions().broadcastFrom(player, packet);
                 return;
             }
         }

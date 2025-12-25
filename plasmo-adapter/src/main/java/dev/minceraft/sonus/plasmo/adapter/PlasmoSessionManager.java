@@ -27,26 +27,14 @@ public class PlasmoSessionManager {
         this.adapter = adapter;
     }
 
-    public void broadcast(AbstractPlasmoPacket<?> packet) {
-        this.broadcast(__ -> packet);
-    }
-
-    public void broadcast(Function<PlasmoConnection, AbstractPlasmoPacket<?>> packet) {
-        for (PlasmoConnection conn : this.usersByUniqueId.values()) {
-            if (conn.isConnected()) {
-                conn.sendPacket(packet.apply(conn));
-            }
-        }
-    }
-
     public void broadcastFrom(ISonusPlayer source, AbstractPlasmoPacket<?> packet) {
         this.broadcastFrom(source, true, __ -> packet);
     }
 
     public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<PlasmoConnection, AbstractPlasmoPacket<?>> packet) {
         for (PlasmoConnection conn : this.usersByUniqueId.values()) {
-            if (!conn.isConnected()) {
-                continue; // target not connected or target can't see source
+            if (!conn.isVoiceActive()) {
+                continue;
             }
             ISonusPlayer targetPlayer = conn.getPlayer();
             if (!targetPlayer.canSee(source)){
@@ -74,7 +62,7 @@ public class PlasmoSessionManager {
         Collection<? extends ISonusPlayer> players = this.adapter.getService().getPlayerManager().getPlayers();
         Map<UUID, VoicePlayerInfo> states = new HashMap<>(players.size());
         for (ISonusPlayer player : players) {
-            if (!player.isConnected() || !player.canReceive(listener.getPlayer())) {
+            if (!player.isVoiceActive() || !player.canReceive(listener.getPlayer())) {
                 continue;
             }
             states.put(player.getUniqueId(), this.buildPlayerInfo(listener.getPlayer(), player));
@@ -107,7 +95,7 @@ public class PlasmoSessionManager {
         return new VoicePlayerInfo(
                 player.getUniqueId(viewer),
                 player.getName(viewer),
-                !player.isConnected(),
+                !player.isVoiceActive(),
                 player.isDeafened(),
                 player.isMuted()
         );

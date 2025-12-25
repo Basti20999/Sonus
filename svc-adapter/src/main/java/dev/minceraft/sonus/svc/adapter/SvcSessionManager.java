@@ -78,7 +78,7 @@ public class SvcSessionManager {
 
     public void broadcast(Function<SvcConnection, AbstractSvcPacket<?>> packet) {
         for (SvcConnection conn : this.connections.values()) {
-            if (conn.isConnected()) {
+            if (conn.isVoiceActive()) {
                 conn.sendPacket(packet.apply(conn));
             }
         }
@@ -90,7 +90,7 @@ public class SvcSessionManager {
 
     public void broadcastFrom(ISonusPlayer source, boolean requireVisibility, Function<SvcConnection, AbstractSvcPacket<?>> packet) {
         for (SvcConnection conn : this.connections.values()) {
-            if (!conn.isConnected()) {
+            if (!conn.isVoiceActive()) {
                 continue; // target not connected or target can't see source
             }
             ISonusPlayer targetPlayer = conn.getPlayer();
@@ -110,7 +110,7 @@ public class SvcSessionManager {
         IRoom primaryRoom = player.getPrimaryRoom();
         return new SvcPlayerState(
                 player.getUniqueId(viewer), player.getName(viewer),
-                player.isDeafened(), !player.isConnected(),
+                player.isDeafened(), !player.isVoiceActive(),
                 primaryRoom == null ? null : primaryRoom.getId()
         );
     }
@@ -119,7 +119,7 @@ public class SvcSessionManager {
         ImmutableMap.Builder<UUID, SvcPlayerState> states = ImmutableMap.builderWithExpectedSize(this.connections.size());
         for (ISonusPlayer target : this.adapter.getService().getPlayerManager().getPlayers()) {
             // build state update of target if player can see target
-            if (target.isConnected() && player.canSee(target) &&
+            if (target.isVoiceActive() && player.canSee(target) &&
                     (player.getServerId() != null && player.getServerId().equals(target.getServerId()) || target.getPrimaryRoom() != null)) {
                 states.put(target.getUniqueId(player), this.buildPlayerState(player, target));
                 player.ensureTabListed(target);

@@ -95,6 +95,10 @@ public interface ISonusPlayer extends IAudioSource {
 
     void setConnected(boolean connected);
 
+    boolean isVoiceActive();
+
+    void setVoiceActive(boolean voiceActive);
+
     void handleAudioInput(SonusAudio audio);
 
     void handleAudioInputEnd(long sequence);

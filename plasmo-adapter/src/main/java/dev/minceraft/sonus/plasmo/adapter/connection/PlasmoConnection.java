@@ -156,12 +156,12 @@ public class PlasmoConnection implements AutoCloseable {
         this.cipher = CipherAes.createFromRsaHandshake(publicKey);
     }
 
-    public boolean isConnected() {
-        return this.player.isConnected();
+    public boolean isVoiceActive() {
+        return this.player.isVoiceActive();
     }
 
-    public void setConnected(boolean connected) {
-        this.player.setConnected(connected);
+    public void setVoiceActive(boolean active) {
+        this.player.setVoiceActive(active);
     }
 
     public InetSocketAddress getRemoteAddress() {

@@ -37,7 +37,7 @@ public class WebSonusListener implements ISonusServiceEvents {
     @Override
     public void onPlayerDisconnect(ISonusPlayer player) {
         boolean existed = this.adapter.getSessions().removeSession(player.getUniqueId());
-        this.adapter.getSessions().broadcast(new StateRemovePacket(player.getUniqueId()));
+        this.adapter.getSessions().broadcastFrom(player, new StateRemovePacket(player.getUniqueId()));
 
         if (existed && player.isOnline()) {
             this.sendConnectionStateMessage(player, false);
@@ -46,13 +46,18 @@ public class WebSonusListener implements ISonusServiceEvents {
 
     @Override
     public void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
-        this.adapter.getSessions().broadcastFrom(player, !globalUpdate, connection ->
-                new StateUpdatePacket(SonusWebPlayerState.fromState(player, connection.getPlayer())));
+        this.adapter.getSessions().broadcastFrom(player, !globalUpdate, connection -> {
+            if (player.isConnected()) {
+                return new StateUpdatePacket(SonusWebPlayerState.fromState(player, connection.getPlayer()));
+            } else {
+                return new StateRemovePacket(player.getUniqueId(connection.getPlayer()));
+            }
+        });
     }
 
     @Override
     public void onPlayerPositionUpdate(ISonusPlayer player) {
-        if (!player.isConnected()) {
+        if (!player.isVoiceActive()) {
             return;
         }
         WebSocketConnection connection = this.adapter.getSessions().getConnection(player.getUniqueId());
@@ -79,7 +84,7 @@ public class WebSonusListener implements ISonusServiceEvents {
     @Override
     public void onConnectionState(ISonusPlayer player) {
         if (this.adapter.getSessions().getConnection(player.getUniqueId()) != null) {
-            this.sendConnectionStateMessage(player, player.isConnected());
+            this.sendConnectionStateMessage(player, player.isVoiceActive());
         }
     }
 

@@ -54,7 +54,7 @@ public class AgentMessageListener implements PluginMessageListener, IMetaHandler
     public void handlePlayerConnectionState(PlayerConnectionStateMessage message) {
         Player player = Bukkit.getPlayer(message.getPlayerId());
         Set<UUID> players = this.plugin.getApi().getConnectedPlayers();
-        if (message.isConnected()) {
+        if (message.isVoiceActive()) {
             // add to set
             if (players.add(message.getPlayerId()) && player != null) {
                 new VoiceConnectionStateChangeEvent(player, true).callEvent();

@@ -46,16 +46,23 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
         // completely remove player
         PlayerDisconnectPacket packet = new PlayerDisconnectPacket();
         packet.setUniqueId(player.getUniqueId());
-        this.adapter.getSessionManager().broadcast(packet);
+        this.adapter.getSessionManager().broadcastFrom(player, packet);
     }
 
     @Override
     public void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
         this.adapter.getSessionManager().broadcastFrom(player, !globalUpdate, connection -> {
-            PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket();
-            packet.setPlayerInfo(this.adapter.getSessionManager().buildPlayerInfo(connection.getPlayer(), player));
+            if (player.isConnected()) {
+                PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket();
+                packet.setPlayerInfo(this.adapter.getSessionManager().buildPlayerInfo(connection.getPlayer(), player));
 
-            return packet;
+                return packet;
+            } else {
+                PlayerDisconnectPacket packet = new PlayerDisconnectPacket();
+                packet.setUniqueId(player.getUniqueId());
+
+                return packet;
+            }
         });
     }
 
@@ -127,6 +134,7 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
             LOGGER.warn("Player '{}' registered plasmo channels, but this player is not known!", playerId);
             return;
         }
+        player.setConnected(true);
 
         PlayerInfoRequestPacket packet = new PlayerInfoRequestPacket();
         connection.sendPacket(packet);

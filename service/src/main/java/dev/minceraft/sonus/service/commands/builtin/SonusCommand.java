@@ -42,7 +42,7 @@ public class SonusCommand extends Command {
 
     boolean execute(SonusPlayer player) {
         SonusAdapter adapter = player.getAdapter();
-        if (adapter != null && player.isConnected()) {
+        if (adapter != null && player.isVoiceActive()) {
             player.sendMessage(translatable("sonus.command.sonus.connected-info")
                     .arguments(translatable("sonus.adapter." + adapter.getAdapterInfo().id() + ".name")));
             return true; // already connecting/connected

@@ -38,7 +38,7 @@ public class VoiceHandler implements UdpHandler {
     public void handlePingPacket(PingPlasmoPacket packet) {
         if (this.state == State.WAITING_ACK) {
             this.sendConfig();
-            this.connection.setConnected(true);
+            this.connection.setVoiceActive(true);
 
             this.connection.getPlayer().handleConnect();
 

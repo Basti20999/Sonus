@@ -55,7 +55,7 @@ public class VoiceHandler implements IVoiceSvcHandler {
                 this.connection.getPlayer().getName(), this.connection.getPlayer().getUniqueId(), this.connection.getVersion());
 
         this.connection.getPlayer().setKeepAlive(System.currentTimeMillis());
-        this.connection.setConnected(true);
+        this.connection.setVoiceActive(true);
         this.connection.getPlayer().setMuted(false);
         this.connection.getPlayer().setDeafened(false);
         this.protocolAdapter.getAdapter().getSessions().onConnectionEstablished(this.connection);

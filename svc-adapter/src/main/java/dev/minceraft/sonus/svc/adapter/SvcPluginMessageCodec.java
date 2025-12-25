@@ -58,11 +58,13 @@ public class SvcPluginMessageCodec extends AbstractPluginMessageCodec {
             if (metaPacket instanceof RequestSecretSvcPacket secret) {
                 // initialize connection when client requests secret
                 IPlayerManager players = this.protocolAdapter.getAdapter().getService().getPlayerManager();
-                connection = this.initConnection(secret, players.getPlayer(source.getPlayerId()));
+                ISonusPlayer player = players.getPlayer(source.getPlayerId());
+                connection = this.initConnection(secret, player);
 
                 if (connection != null) {
                     // add connection to session if initialized
                     sessionManager.addConnection(connection);
+                    player.setConnected(true);
                 } else {
                     return; // initialization wasn't successful
                 }

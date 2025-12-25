@@ -307,7 +307,7 @@ public class PlasmoAdapter implements SonusAdapter {
         if (connection == null) {
             return; // no plasmo session found
         }
-        if (!connection.isConnected()) {
+        if (!connection.isVoiceActive()) {
             return;
         }
 

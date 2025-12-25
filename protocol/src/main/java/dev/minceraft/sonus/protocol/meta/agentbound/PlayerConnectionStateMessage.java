@@ -14,18 +14,18 @@ import java.util.UUID;
 public class PlayerConnectionStateMessage implements IMetaMessage {
 
     private @MonotonicNonNull UUID playerId;
-    private boolean connected;
+    private boolean voiceActive;
 
     @Override
     public void encode(ByteBuf buf) {
         DataTypeUtil.writeUniqueId(buf, this.playerId);
-        buf.writeBoolean(this.connected);
+        buf.writeBoolean(this.voiceActive);
     }
 
     @Override
     public void decode(ByteBuf buf) {
         this.playerId = DataTypeUtil.readUniqueId(buf);
-        this.connected = buf.readBoolean();
+        this.voiceActive = buf.readBoolean();
     }
 
     @Override
@@ -41,11 +41,11 @@ public class PlayerConnectionStateMessage implements IMetaMessage {
         this.playerId = playerId;
     }
 
-    public boolean isConnected() {
-        return this.connected;
+    public boolean isVoiceActive() {
+        return this.voiceActive;
     }
 
-    public void setConnected(boolean connected) {
-        this.connected = connected;
+    public void setVoiceActive(boolean voiceActive) {
+        this.voiceActive = voiceActive;
     }
 }

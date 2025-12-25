@@ -69,7 +69,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private @Nullable WorldRotatedVec3d position;
     private @Nullable String team;
     // player state
-    private boolean connected;
+    private boolean connected; // player has initialized connection, but may not be active yet
+    private boolean voiceActive; // active adapter connection
     private boolean muted;
     private boolean deafened;
     private long lastKeepAlive = System.currentTimeMillis();
@@ -135,7 +136,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     private boolean canHear(IAudioSource source, boolean spatial) {
-        if (this.sonusAdapter == null || !this.isConnected()) {
+        if (this.sonusAdapter == null || !this.isVoiceActive()) {
             return false;
         }
         if (this.deafened || !this.platform.hasPermission(PERMISSION_VOICE_LISTEN, true)) {
@@ -455,7 +456,17 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @Override
     public void setConnected(boolean connected) {
-        this.setConnected(connected, true);
+        this.connected = connected;
+    }
+
+    @Override
+    public boolean isVoiceActive() {
+        return this.voiceActive;
+    }
+
+    @Override
+    public void setVoiceActive(boolean voiceActive) {
+        this.setVoiceActive(voiceActive, true);
     }
 
     public void updateCommands() {
@@ -471,15 +482,15 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         }
     }
 
-    public void setConnected(boolean connected, boolean sendToAgent) {
-        if (this.connected == connected) {
+    public void setVoiceActive(boolean voiceActive, boolean sendToAgent) {
+        if (this.voiceActive == voiceActive) {
             return; // no change
         }
-        this.connected = connected;
+        this.voiceActive = voiceActive;
         this.lastKeepAlive = System.currentTimeMillis();
 
         this.service.getEventManager().onConnectionState(this);
-        if (connected) {
+        if (voiceActive) {
             // initialize position
             this.service.getEventManager().onPlayerPositionUpdate(this);
         }
@@ -487,7 +498,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         if (sendToAgent) {
             PlayerConnectionStateMessage packet = new PlayerConnectionStateMessage();
             packet.setPlayerId(this.getUniqueId());
-            packet.setConnected(connected);
+            packet.setVoiceActive(voiceActive);
 
             this.sendMetaPacket(packet);
         }
@@ -612,23 +623,26 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
 
     @Override
     public void disconnect() {
-        this.service.getEventManager().onPlayerDisconnect(this);
+        if (!this.isConnected()) {
+            return; // Prevent state updates for non-connected players
+        }
 
         // leave all rooms (includes primary + server rooms)
         for (IRoom room : Set.copyOf(this.voiceRooms.values())) {
             this.leaveRoom(room);
         }
 
+        this.service.getPlayerManager().disablePlayer(this); // disable voice stuff
+        this.setVoiceActive(false);
+        this.updateState(true);
         // mark as disconnected
         this.setConnected(false);
-        this.sonusAdapter = null;
-
-        this.updateState();
+        this.service.getEventManager().onPlayerDisconnect(this);
     }
 
     public void updateServer() {
         UUID serverId;
-        if (this.isConnected() && (serverId = this.platform.getServerId()) != null) {
+        if (this.isVoiceActive() && (serverId = this.platform.getServerId()) != null) {
             this.updateServer(this.service.getPlayerManager().getServer(serverId));
         } else {
             this.updateServer(null);
@@ -656,11 +670,15 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     public void tickKeepAlive(long currentTime) {
-        if (this.sonusAdapter != null && this.isConnected()) {
+        if (!this.isConnected()) {
+            return;
+        }
+        if (this.sonusAdapter != null && this.isVoiceActive()) {
             this.sonusAdapter.sendKeepAlive(this, currentTime);
         }
         long keepAliveTimeoutMs = this.service.getConfig().getKeepAliveTimeoutMs();
         if (this.lastKeepAlive + keepAliveTimeoutMs < currentTime) {
+            LOGGER.warn("Player {}({}) has timed out.", this.getName(), this.getUniqueId());
             this.disconnect();
         }
     }

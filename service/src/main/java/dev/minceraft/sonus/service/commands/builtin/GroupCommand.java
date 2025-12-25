@@ -55,7 +55,7 @@ public class GroupCommand extends Command {
         return literal(this.label)
                 .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups")
                         && ctx.sender().hasPermission(PERMISSION_GROUPS_USE, true) // Check if player can use groups
-                        && ctx.sender() instanceof SonusPlayer player && player.isConnected())
+                        && ctx.sender() instanceof SonusPlayer player && player.isVoiceActive())
                 .with(literal("list")
                         .requires(ctx -> ctx.sender().hasPermission("sonus.command.groups.list")
                                 && ctx.sender() instanceof SonusPlayer player && player.getPrimaryRoom() == null)

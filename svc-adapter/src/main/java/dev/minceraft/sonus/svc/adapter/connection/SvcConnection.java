@@ -115,12 +115,12 @@ public class SvcConnection implements AutoCloseable {
         this.remoteAddress = remoteAddress;
     }
 
-    public boolean isConnected() {
-        return this.player.isConnected();
+    public boolean isVoiceActive() {
+        return this.player.isVoiceActive();
     }
 
-    public void setConnected(boolean connected) {
-        this.player.setConnected(connected);
+    public void setVoiceActive(boolean active) {
+        this.player.setVoiceActive(active);
     }
 
     public boolean isDisabled() {
