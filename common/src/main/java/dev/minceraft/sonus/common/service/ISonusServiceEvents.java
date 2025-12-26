@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.common.service;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -42,5 +43,8 @@ public interface ISonusServiceEvents {
     }
 
     default void onConnectionState(ISonusPlayer player) {
+    }
+
+    default void onPlayerVisibilityStateUpdate(ISonusPlayer player, ISonusPlayer target, SonusPlayerState state) {
     }
 }

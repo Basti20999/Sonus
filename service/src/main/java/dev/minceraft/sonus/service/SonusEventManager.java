@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.service;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
@@ -153,5 +154,16 @@ public class SonusEventManager implements ISonusEventManager {
             }
         }
         ((SonusPlayer) player).updateCommands();
+    }
+
+    @Override
+    public void onPlayerVisibilityStateUpdate(ISonusPlayer player, ISonusPlayer target, SonusPlayerState state) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onPlayerVisibilityStateUpdate(player, target, state);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onPlayerVisibilityStateUpdate for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
     }
 }

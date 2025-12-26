@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.web.adapter;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
@@ -85,6 +86,23 @@ public class WebSonusListener implements ISonusServiceEvents {
     public void onConnectionState(ISonusPlayer player) {
         if (this.adapter.getSessions().getConnection(player.getUniqueId()) != null) {
             this.sendConnectionStateMessage(player, player.isVoiceActive());
+        }
+    }
+
+    @Override
+    public void onPlayerVisibilityStateUpdate(ISonusPlayer player, ISonusPlayer target, SonusPlayerState state) {
+        WebSocketConnection connection = this.adapter.getSessions().getConnection(player.getUniqueId());
+        if (connection == null) {
+            return;
+        }
+        if (state.isFullyHidden()) {
+            StateRemovePacket packet = new StateRemovePacket();
+            packet.setPlayerId(target.getUniqueId());
+            connection.sendPacket(packet);
+        } else if (player.canReceive(target)) {
+            StateUpdatePacket packet = new StateUpdatePacket();
+            packet.setState(SonusWebPlayerState.fromState(target, player));
+            connection.sendPacket(packet);
         }
     }
 

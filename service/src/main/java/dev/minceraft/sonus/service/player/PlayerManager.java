@@ -119,7 +119,7 @@ public final class PlayerManager implements IPlayerManager {
         if (player == null) {
             return;
         }
-        player.setStates(Map.of()); // reset player states on server switch
+        player.clearStates(); // reset player states on server switch
         player.setTeam(null);
 
         // skip broadcasting packets if player isn't conected

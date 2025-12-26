@@ -23,4 +23,8 @@ public record SonusPlayerState(UUID playerId, boolean staticHidden, boolean spat
         boolean spatialHidden = buf.readBoolean();
         return new SonusPlayerState(playerId, staticHidden, spatialHidden);
     }
+
+    public boolean isFullyHidden() {
+        return this.staticHidden && this.spatialHidden;
+    }
 }

@@ -226,6 +226,10 @@ public class PlasmoConnection implements AutoCloseable {
         return this.sourceCategorySourceInfoMap.get(sourceId, categoryId);
     }
 
+    public List<SourceInfo> getSourceInfos(UUID sourceId) {
+        return List.copyOf(this.sourceCategorySourceInfoMap.row(sourceId).values());
+    }
+
     @Nullable
     public SourceInfo registerSourceInfo(UUID sourceId, @Nullable UUID categoryId, Supplier<@Nullable SourceInfo> builder) {
         SourceInfo sourceInfo = this.getSourceInfo(sourceId, categoryId);

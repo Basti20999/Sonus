@@ -26,7 +26,6 @@ import io.netty.buffer.PooledByteBufAllocator;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.util.TriState;
-import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -58,12 +57,12 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     // keep track of which rooms this player is in
     private final Map<UUID, IRoom> voiceRooms = new ConcurrentHashMap<>();
     private final AtomicLong maxSequenceNumber = new AtomicLong();
+    // visibility states of other players
+    private final Map<UUID, SonusPlayerState> perPlayerStates = new ConcurrentHashMap<>();
     private @Nullable SonusAdapter sonusAdapter;
     private @Nullable IRoom serverRoom;
     private @Nullable IRoom prevPrimaryRoom; // hack to fix state updates
     private @Nullable IRoom primaryRoom;
-    // visibility states of other players
-    private Map<UUID, SonusPlayerState> perPlayerStates = Map.of();
     private @Nullable AgcNode agcNode; // automatic gain control
     // metadata sent by the backend server agent
     private @Nullable WorldRotatedVec3d position;
@@ -617,10 +616,26 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         return this.platform.renderPlainComponent(component, locale);
     }
 
-    @ApiStatus.Internal
-    public void setStates(Map<UUID, SonusPlayerState> states) {
-        if (!states.equals(this.perPlayerStates)) {
-            this.perPlayerStates = Map.copyOf(states);
+    public void clearStates() {
+        this.perPlayerStates.clear();
+    }
+
+    public void updateStates(Map<UUID, SonusPlayerState> states) {
+        for (Map.Entry<UUID, SonusPlayerState> newState : states.entrySet()) {
+            this.updateState(newState.getValue());
+        }
+    }
+
+    public void updateState(SonusPlayerState newState) {
+        SonusPlayerState oldState = this.perPlayerStates.get(newState.playerId());
+        if (oldState == null || !oldState.equals(newState)) {
+            SonusPlayer target = this.service.getPlayerManager().getPlayer(newState.playerId());
+            if (target == null) {
+                LOGGER.warn("Received state update for unknown player: {}", newState.playerId());
+                return;
+            }
+            this.perPlayerStates.put(newState.playerId(), newState);
+            this.service.getEventManager().onPlayerVisibilityStateUpdate(this, target, newState);
         }
     }
 

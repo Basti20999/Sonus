@@ -1,9 +1,12 @@
 package dev.minceraft.sonus.svc.adapter;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
+import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.data.SonusClientGroup;
+import dev.minceraft.sonus.svc.protocol.data.SvcPlayerState;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.AddGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.JoinedGroupSvcPacket;
 import dev.minceraft.sonus.svc.protocol.meta.clientbound.PlayerStateSvcPacket;
@@ -99,5 +102,24 @@ public class SvcSonusListener implements ISonusServiceEvents {
         RemoveGroupSvcPacket packet = new RemoveGroupSvcPacket();
         packet.setGroupId(room.getId());
         this.adapter.getSessions().broadcast(packet);
+    }
+
+    @Override
+    public void onPlayerVisibilityStateUpdate(ISonusPlayer player, ISonusPlayer target, SonusPlayerState state) {
+        SvcConnection connection = this.adapter.getSessions().getConnection(player.getUniqueId());
+        if (connection == null) {
+            return;
+        }
+        if (state.isFullyHidden()) {
+            RemovePlayerStatePacket packet = new RemovePlayerStatePacket();
+            packet.setPlayerId(target.getUniqueId());
+            connection.sendPacket(packet);
+        } else if (player.canReceive(target)) {
+            SvcPlayerState svcState = this.adapter.getSessions().buildPlayerState(connection.getPlayer(), target);
+
+            PlayerStateSvcPacket packet = new PlayerStateSvcPacket();
+            packet.setState(svcState);
+            connection.sendPacket(packet);
+        }
     }
 }

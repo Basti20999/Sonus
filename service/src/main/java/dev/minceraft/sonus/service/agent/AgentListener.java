@@ -52,7 +52,7 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
             for (Map.Entry<UUID, Map<UUID, SonusPlayerState>> row : perPlayerStates.rowMap().entrySet()) {
                 SonusPlayer player = playerManager.getPlayer(row.getKey());
                 if (player != null) {
-                    player.setStates(row.getValue());
+                    player.updateStates(row.getValue());
                 }
             }
         }

@@ -8,11 +8,11 @@ import java.util.UUID;
 
 public class VoicePlayerInfo {
 
-    private final UUID uniqueId;
-    private final String name;
-    private final boolean muted;
-    private final boolean voiceDisabled;
-    private final boolean microphoneDisabled;
+    private UUID uniqueId;
+    private String name;
+    private boolean muted;
+    private boolean voiceDisabled;
+    private boolean microphoneDisabled;
 
     public VoicePlayerInfo(ByteBuf buf) {
         this.uniqueId = DataTypeUtil.readUniqueId(buf);
@@ -42,19 +42,39 @@ public class VoicePlayerInfo {
         return this.uniqueId;
     }
 
+    public void setUniqueId(UUID uniqueId) {
+        this.uniqueId = uniqueId;
+    }
+
     public String getName() {
         return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public boolean isMuted() {
         return this.muted;
     }
 
+    public void setMuted(boolean muted) {
+        this.muted = muted;
+    }
+
     public boolean isVoiceDisabled() {
         return this.voiceDisabled;
     }
 
+    public void setVoiceDisabled(boolean voiceDisabled) {
+        this.voiceDisabled = voiceDisabled;
+    }
+
     public boolean isMicrophoneDisabled() {
         return this.microphoneDisabled;
+    }
+
+    public void setMicrophoneDisabled(boolean microphoneDisabled) {
+        this.microphoneDisabled = microphoneDisabled;
     }
 }

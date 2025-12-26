@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.plasmo.adapter;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import dev.minceraft.sonus.plasmo.adapter.connection.PlasmoConnection;
@@ -9,6 +10,7 @@ import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerDisconnectPacke
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerInfoRequestPacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.PlayerInfoUpdatePacket;
 import dev.minceraft.sonus.plasmo.protocol.tcp.clientbound.SourceLineRegisterPacket;
+import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoicePlayerInfo;
 import dev.minceraft.sonus.plasmo.protocol.tcp.data.VoiceSourceLine;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
@@ -138,5 +140,24 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
 
         PlayerInfoRequestPacket packet = new PlayerInfoRequestPacket();
         connection.sendPacket(packet);
+    }
+
+    @Override
+    public void onPlayerVisibilityStateUpdate(ISonusPlayer player, ISonusPlayer target, SonusPlayerState state) {
+        PlasmoConnection connection = this.adapter.getSessionManager().getConnectionByUniqueId(player.getUniqueId());
+        if (connection == null) {
+            return;
+        }
+        if (state.isFullyHidden()) {
+            PlayerDisconnectPacket packet = new PlayerDisconnectPacket();
+            packet.setUniqueId(target.getUniqueId());
+            connection.sendPacket(packet);
+        } else if (player.canReceive(target)) {
+            PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket();
+            VoicePlayerInfo plasmoState = this.adapter.getSessionManager().buildPlayerInfo(player, connection.getPlayer());
+            packet.setPlayerInfo(plasmoState);
+
+            connection.sendPacket(packet);
+        }
     }
 }
