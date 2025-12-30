@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.service;
 // Created by booky10 in Sonus (01:33 17.07.2025)
 
+import com.google.gson.Gson;
 import dev.minceraft.sonus.common.ISonusService;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.config.ISonusConfig;
@@ -31,6 +32,7 @@ import java.nio.file.Path;
 public final class SonusService implements ISonusService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
+    public static final Gson GSON = new Gson();
 
     private final IServicePlatform platform;
     private final PlayerManager players;

@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
+import com.velocitypowered.api.util.GameProfile;
 import dev.minceraft.sonus.service.platform.IPlatformPlayer;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.key.Key;
@@ -49,6 +50,17 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     @Override
     public String getName(@Nullable IPlatformPlayer viewer) {
         return this.player.getUsername();
+    }
+
+    @Override
+    @Nullable
+    public String getTextures(@Nullable IPlatformPlayer viewer) {
+        for (GameProfile.Property property : this.player.getGameProfileProperties()) {
+            if (property.getName().equals("textures")) {
+                return property.getValue();
+            }
+        }
+        return null;
     }
 
     @Override

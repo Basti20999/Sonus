@@ -2,6 +2,7 @@ package dev.minceraft.sonus.service.player;
 // Created by booky10 in Sonus (02:18 17.07.2025)
 
 import com.google.common.base.Preconditions;
+import com.google.gson.JsonObject;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.adapter.SonusAdapter;
 import dev.minceraft.sonus.common.audio.SonusAudio;
@@ -31,6 +32,8 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -535,6 +538,31 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     @Override
     public void ensureTabListed(ISonusPlayer target) {
         this.platform.ensureTabListed(((SonusPlayer) target).platform);
+    }
+
+    @Override
+    @Nullable
+    public String getTextureHash(@Nullable ISonusPlayer viewer) {
+        String encodedTextures = this.platform.getTextures(viewer != null ? ((SonusPlayer) viewer).platform : null);
+        if (encodedTextures == null) {
+            return null;
+        }
+        try {
+            // Extract texture hash from base64 encoded textures JSON
+            byte[] decoded = Base64.getDecoder().decode(encodedTextures);
+            JsonObject obj = SonusService.GSON.fromJson(new String(decoded, StandardCharsets.UTF_8), JsonObject.class);
+            JsonObject textures = obj.getAsJsonObject("textures");
+            if (textures == null || !textures.has("SKIN")) {
+                return null;
+            }
+
+            String skinUrl = textures.getAsJsonObject("SKIN").get("url").getAsString();
+            // extract texture hash from URL
+            return skinUrl.substring(skinUrl.lastIndexOf('/') + 1);
+        } catch (Throwable throwable) {
+            LOGGER.error("Failed to decode texture for player {}", this.getUniqueId(), throwable);
+            return null;
+        }
     }
 
     @Override

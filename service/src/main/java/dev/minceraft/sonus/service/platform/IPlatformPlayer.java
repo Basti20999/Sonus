@@ -20,6 +20,9 @@ public interface IPlatformPlayer {
 
     String getName(@Nullable IPlatformPlayer viewer);
 
+    @Nullable
+    String getTextures(@Nullable IPlatformPlayer viewer);
+
     void sendPluginMessage(Key key, ByteBuf data);
 
     void sendBackendPluginMessage(Key key, ByteBuf data);

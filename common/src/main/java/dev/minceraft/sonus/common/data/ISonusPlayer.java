@@ -31,6 +31,14 @@ public interface ISonusPlayer extends IAudioSource {
         return this.getName(null);
     }
 
+    @Nullable
+    String getTextureHash(@Nullable ISonusPlayer viewer);
+
+    @Nullable
+    default String getTextureHash() {
+        return this.getTextureHash(null);
+    }
+
     default GameProfile getSimpleProfile(@Nullable ISonusPlayer viewer, GameProfile.Property... properties) {
         return new GameProfile(this.getUniqueId(viewer), this.getName(viewer), List.of(properties));
     }

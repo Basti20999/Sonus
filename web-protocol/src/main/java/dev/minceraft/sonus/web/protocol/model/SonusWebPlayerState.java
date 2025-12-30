@@ -3,10 +3,10 @@ package dev.minceraft.sonus.web.protocol.model;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import io.netty.buffer.ByteBuf;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -24,6 +24,7 @@ public class SonusWebPlayerState {
 
     private final UUID uniqueId;
     private final Component name;
+    private final @Nullable String textureHash;
     private final boolean muted;
     private final boolean deafened;
     private final @Nullable UUID primaryRoomId;
@@ -31,12 +32,14 @@ public class SonusWebPlayerState {
 
     public SonusWebPlayerState(
             UUID uniqueId, Component name,
+            @Nullable String textureHash,
             boolean muted, boolean deafened,
             @Nullable UUID primaryRoomId,
             @Nullable UUID serverId
     ) {
         this.uniqueId = uniqueId;
         this.name = name;
+        this.textureHash = textureHash;
         this.muted = muted;
         this.deafened = deafened;
         this.primaryRoomId = primaryRoomId;
@@ -46,12 +49,13 @@ public class SonusWebPlayerState {
     public static SonusWebPlayerState fromState(ISonusPlayer player, ISonusPlayer viewer) {
         UUID uniqueId = player.getUniqueId(viewer);
         Component name = viewer.renderComponent(text(player.getName(viewer)));
+        String textureHash = player.getTextureHash(viewer);
         boolean muted = player.isMuted();
         boolean deafened = player.isDeafened();
         IRoom primaryRoom = player.getPrimaryRoom();
         UUID primaryRoomId = primaryRoom != null ? primaryRoom.getId() : null;
         UUID serverId = player.getServerId();
-        return new SonusWebPlayerState(uniqueId, name, muted, deafened, primaryRoomId, serverId);
+        return new SonusWebPlayerState(uniqueId, name, textureHash, muted, deafened, primaryRoomId, serverId);
     }
 
     public static void encode(ByteBuf buf, SonusWebPlayerState state) {
@@ -64,6 +68,7 @@ public class SonusWebPlayerState {
         if (state.serverId != null) {
             DataTypeUtil.writeUniqueId(buf, state.serverId);
         }
+        DataTypeUtil.writeNullable(buf, state.textureHash, Utf8String::write);
     }
 
     public static SonusWebPlayerState decode(ByteBuf buf) {
@@ -76,7 +81,8 @@ public class SonusWebPlayerState {
         UUID groupId = hasGroup ? DataTypeUtil.readUniqueId(buf) : null;
         boolean hasServer = (flags & FLAG_HAS_SERVER) != 0;
         UUID serverId = hasServer ? DataTypeUtil.readUniqueId(buf) : null;
-        return new SonusWebPlayerState(uniqueId, name, muted, deafened, groupId, serverId);
+        String textureHash = DataTypeUtil.readNullable(buf, Utf8String::read);
+        return new SonusWebPlayerState(uniqueId, name, textureHash, muted, deafened, groupId, serverId);
     }
 
     public byte packFlags() {
@@ -93,6 +99,10 @@ public class SonusWebPlayerState {
 
     public Component getName() {
         return this.name;
+    }
+
+    public @Nullable String getTextureHash() {
+        return this.textureHash;
     }
 
     public boolean isMuted() {
