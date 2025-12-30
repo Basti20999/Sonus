@@ -21,6 +21,7 @@ public class SonusWebPlayerState {
     private static final int FLAG_DEAFENED = 1 << 1;
     private static final int FLAG_HAS_GROUP = 1 << 2;
     private static final int FLAG_HAS_SERVER = 1 << 3;
+    private static final int FLAG_HAS_TEXTURE = 1 << 4;
 
     private final UUID uniqueId;
     private final Component name;
@@ -68,7 +69,9 @@ public class SonusWebPlayerState {
         if (state.serverId != null) {
             DataTypeUtil.writeUniqueId(buf, state.serverId);
         }
-        DataTypeUtil.writeNullable(buf, state.textureHash, Utf8String::write);
+        if (state.textureHash != null) {
+            Utf8String.write(buf, state.textureHash);
+        }
     }
 
     public static SonusWebPlayerState decode(ByteBuf buf) {
@@ -81,7 +84,8 @@ public class SonusWebPlayerState {
         UUID groupId = hasGroup ? DataTypeUtil.readUniqueId(buf) : null;
         boolean hasServer = (flags & FLAG_HAS_SERVER) != 0;
         UUID serverId = hasServer ? DataTypeUtil.readUniqueId(buf) : null;
-        String textureHash = DataTypeUtil.readNullable(buf, Utf8String::read);
+        boolean hasTexture = (flags & FLAG_HAS_TEXTURE) != 0;
+        String textureHash = hasTexture ? Utf8String.read(buf) : null;
         return new SonusWebPlayerState(uniqueId, name, textureHash, muted, deafened, groupId, serverId);
     }
 
@@ -90,7 +94,8 @@ public class SonusWebPlayerState {
                 | (this.muted ? FLAG_MUTED : 0)
                 | (this.deafened ? FLAG_DEAFENED : 0)
                 | (this.primaryRoomId != null ? FLAG_HAS_GROUP : 0)
-                | (this.serverId != null ? FLAG_HAS_SERVER : 0));
+                | (this.serverId != null ? FLAG_HAS_SERVER : 0)
+                | (this.textureHash != null ? FLAG_HAS_TEXTURE : 0));
     }
 
     public UUID getUniqueId() {
