@@ -68,11 +68,11 @@ public final class RoomDefinition {
     }
 
     public RelationState getState(IAudioSource sender, ISonusPlayer receiver) {
-        if (sender.getSenderId().equals(receiver.getUniqueId())) {
+        if (sender.getSenderId(receiver).equals(receiver.getUniqueId())) {
             return RelationState.HIDE;
         }
         // check for static relation
-        RelationState staticState = this.staticOverrides.get(sender.getSenderId(), receiver.getUniqueId());
+        RelationState staticState = this.staticOverrides.get(sender.getSenderId(receiver), receiver.getUniqueId());
         if (staticState != null) {
             return staticState;
         }

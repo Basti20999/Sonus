@@ -48,7 +48,7 @@ public interface IRoom extends IAudioSource {
     }
 
     @Override
-    default UUID getSenderId() {
+    default UUID getSenderId(ISonusPlayer viewer) {
         return this.getId();
     }
 }

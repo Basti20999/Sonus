@@ -22,7 +22,7 @@ public class DefinedRoom extends AbstractRoom {
     @Override
     protected void sendAudio0(IAudioSource source, SonusAudio audio) {
         for (ISonusPlayer receiver : this.members.values()) {
-            if (receiver.getSenderId().equals(source.getSenderId())) {
+            if (receiver.getSenderId(receiver).equals(source.getSenderId(receiver))) {
                 continue;
             }
             RoomDefinition.RelationState state = this.definition.getState(source, receiver);
@@ -37,7 +37,7 @@ public class DefinedRoom extends AbstractRoom {
     @Override
     protected void sendAudioEnd0(IAudioSource source, long sequence) {
         for (ISonusPlayer receiver : this.members.values()) {
-            if (receiver.getSenderId().equals(source.getSenderId())) {
+            if (receiver.getSenderId(receiver).equals(source.getSenderId(receiver))) {
                 continue;
             }
             RoomDefinition.RelationState state = this.definition.getState(source, receiver);

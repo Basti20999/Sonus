@@ -68,6 +68,17 @@ public class SonusEventManager implements ISonusEventManager {
     }
 
     @Override
+    public void onPlayerNickUpdate(ISonusPlayer player, UUID previousNick) {
+        for (ISonusServiceEvents listener : this.listeners) {
+            try {
+                listener.onPlayerNickUpdate(player, previousNick);
+            } catch (Exception exception) {
+                LOGGER.error("Error in onPlayerNickUpdate for listener {}", listener.getClass().getSimpleName(), exception);
+            }
+        }
+    }
+
+    @Override
     public void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
         for (ISonusServiceEvents listener : this.listeners) {
             try {

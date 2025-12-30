@@ -87,6 +87,15 @@ public class SvcSonusListener implements ISonusServiceEvents {
     }
 
     @Override
+    public void onPlayerNickUpdate(ISonusPlayer player, UUID previousNick) {
+        RemovePlayerStatePacket packet = new RemovePlayerStatePacket();
+        packet.setPlayerId(previousNick);
+        this.adapter.getSessions().broadcastFrom(player, false, __ -> packet);
+
+        this.onPlayerStateUpdate(player, true);
+    }
+
+    @Override
     public void onGroupCreate(IRoom room) {
         this.adapter.getSessions().broadcast(connection -> {
             boolean bypassPassword = connection.getPlayer().hasPermission(PERMISSION_GROUPS_BYPASS_PASSWORD, false);

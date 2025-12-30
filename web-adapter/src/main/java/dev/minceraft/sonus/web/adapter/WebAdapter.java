@@ -59,10 +59,10 @@ public class WebAdapter implements SonusAdapter {
             return;
         }
         AudioPacket packet = new AudioPacket();
-        packet.setChannelId(source.getSenderId());
-        packet.setSenderId(source.getSenderId());
+        packet.setChannelId(source.getSenderId(player));
+        packet.setSenderId(source.getSenderId(player));
         packet.setCategoryId(source.getCategoryId());
-        packet.setAudio(audio.asOpus(() -> connection.getProcessor(source.getSenderId())));
+        packet.setAudio(audio.asOpus(() -> connection.getProcessor(source.getSenderId(player))));
         packet.setPosition(pos);
         connection.sendPacket(packet);
     }
@@ -90,7 +90,7 @@ public class WebAdapter implements SonusAdapter {
     public void sendAudioEnd(ISonusPlayer player, IAudioSource source, long sequence) {
         WebSocketConnection connection = this.sessions.getConnection(player.getUniqueId());
         if (connection != null) {
-            connection.sendPacket(new AudioEndPacket(source.getSenderId(), source.getSenderId()));
+            connection.sendPacket(new AudioEndPacket(source.getSenderId(player), source.getSenderId(player)));
         }
     }
 

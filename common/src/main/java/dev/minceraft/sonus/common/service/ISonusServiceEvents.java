@@ -21,6 +21,9 @@ public interface ISonusServiceEvents {
     default void onPlayerQuit(ISonusPlayer player) {
     }
 
+    default void onPlayerNickUpdate(ISonusPlayer player, UUID previousNick) {
+    }
+
     default void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
     }
 

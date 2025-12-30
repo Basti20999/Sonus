@@ -144,7 +144,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             return false; // never make players listen to themselves
         }
         // check if player is hidden
-        SonusPlayerState state = this.perPlayerStates.get(source.getSenderId());
+        SonusPlayerState state = this.perPlayerStates.get(source.getSenderId(this));
         if (state != null) {
             if (!spatial && state.staticHidden()) {
                 return false; // player is hidden for static audio
@@ -273,7 +273,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     @Override
     public void joinRoom(IRoom room) {
         Preconditions.checkNotNull(room, "Room cannot be null");
-        if (this.voiceRooms.putIfAbsent(room.getSenderId(), room) == null) {
+        if (this.voiceRooms.putIfAbsent(room.getId(), room) == null) {
             room.addMember(this);
         }
     }
@@ -281,7 +281,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     @Override
     public void leaveRoom(IRoom room) {
         Preconditions.checkNotNull(room, "Room cannot be null");
-        if (this.voiceRooms.remove(room.getSenderId()) == null) {
+        if (this.voiceRooms.remove(room.getId()) == null) {
             return; // wasn't in room
         }
         room.removeMember(this);
@@ -517,8 +517,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     @Override
-    public UUID getSenderId() {
-        return this.getUniqueId();
+    public UUID getSenderId(ISonusPlayer viewer) {
+        return this.getUniqueId(viewer);
     }
 
     @Override

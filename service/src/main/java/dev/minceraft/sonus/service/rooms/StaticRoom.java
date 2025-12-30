@@ -19,7 +19,7 @@ public class StaticRoom extends AbstractRoom {
     @Override
     protected void sendAudio0(IAudioSource source, SonusAudio audio) {
         for (ISonusPlayer member : this.members.values()) {
-            if (member.getSenderId().equals(source.getSenderId())) {
+            if (member.getSenderId(member).equals(source.getSenderId(member))) {
                 continue;
             }
             member.sendStaticAudio(source, audio);
@@ -29,7 +29,7 @@ public class StaticRoom extends AbstractRoom {
     @Override
     protected void sendAudioEnd0(IAudioSource source, long sequence) {
         for (ISonusPlayer member : this.members.values()) {
-            if (member.getSenderId().equals(source.getSenderId())) {
+            if (member.getSenderId(member).equals(source.getSenderId(member))) {
                 continue;
             }
             member.sendStaticAudioEnd(source, sequence);

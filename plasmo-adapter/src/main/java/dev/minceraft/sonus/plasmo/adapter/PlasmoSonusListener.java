@@ -69,6 +69,15 @@ public class PlasmoSonusListener implements ISonusServiceEvents {
     }
 
     @Override
+    public void onPlayerNickUpdate(ISonusPlayer player, UUID previousNick) {
+        PlayerDisconnectPacket packet = new PlayerDisconnectPacket();
+        packet.setUniqueId(previousNick);
+        this.adapter.getSessionManager().broadcastFrom(player, false, __ -> packet);
+
+        this.onPlayerStateUpdate(player, true);
+    }
+
+    @Override
     public void onPrimaryRoomJoined(ISonusPlayer player, IRoom room) {
         PlasmoSessionManager sessionManager = this.adapter.getSessionManager();
         PlasmoConnection connection = sessionManager.getConnectionByUniqueId(player.getUniqueId());

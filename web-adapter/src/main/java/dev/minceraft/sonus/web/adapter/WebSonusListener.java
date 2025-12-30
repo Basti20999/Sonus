@@ -57,6 +57,14 @@ public class WebSonusListener implements ISonusServiceEvents {
     }
 
     @Override
+    public void onPlayerNickUpdate(ISonusPlayer player, UUID previousNick) {
+        this.adapter.getSessions().broadcastFrom(player, false, __ ->
+                new StateRemovePacket(previousNick));
+
+        this.onPlayerStateUpdate(player, true);
+    }
+
+    @Override
     public void onPlayerPositionUpdate(ISonusPlayer player) {
         if (!player.isVoiceActive()) {
             return;
