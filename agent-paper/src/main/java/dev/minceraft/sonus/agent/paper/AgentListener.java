@@ -3,7 +3,8 @@ package dev.minceraft.sonus.agent.paper;
 
 import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
+import dev.minceraft.sonus.agent.paper.util.delta.DeltaTrackerMap;
+import dev.minceraft.sonus.agent.paper.util.delta.DeltaTrackerTable;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
@@ -31,7 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -42,18 +42,14 @@ public class AgentListener implements Listener {
 
     protected final SonusAgentPlugin plugin;
 
-    protected final Map<UUID, WorldRotatedVec3d> positions = new HashMap<>();
-    protected final Map<UUID, WorldRotatedVec3d> positionUpdates = new HashMap<>();
+    protected final DeltaTrackerMap<UUID, WorldRotatedVec3d> positions = new DeltaTrackerMap<>(HashMap::new);
 
-    protected final Table<UUID, UUID, SonusPlayerState> playerStates = HashBasedTable.create();
-    protected final Table<UUID, UUID, SonusPlayerState> playerStateUpdates = HashBasedTable.create();
+    protected final DeltaTrackerTable<UUID, UUID, SonusPlayerState> playerStates = new DeltaTrackerTable<>(HashBasedTable::create);
 
     protected final Set<Map.Entry<Player, Player>> visibilityChanges = new HashSet<>();
 
-    protected final Map<UUID, @Nullable String> teams = new HashMap<>();
-    protected final Map<UUID, @Nullable String> teamUpdates = new HashMap<>();
+    protected final DeltaTrackerMap<UUID, @Nullable String> teams = new DeltaTrackerMap<>(HashMap::new);
 
-    protected boolean dirtyPlayerMeta = true;
     protected boolean dirtyRoomDefinition = true;
 
     public AgentListener(SonusAgentPlugin plugin) {
@@ -80,34 +76,26 @@ public class AgentListener implements Listener {
 
         // set default player states for everything
         UUID playerId = player.getUniqueId();
-        Map<UUID, SonusPlayerState> playerRow = this.playerStates.row(playerId);
-        Map<UUID, SonusPlayerState> playerColumn = this.playerStates.column(playerId);
         for (Player target : Bukkit.getOnlinePlayers()) {
             if (player == target || this.isPlayerIgnored(target)) {
                 continue;
             }
             UUID targetId = target.getUniqueId();
-            playerRow.computeIfAbsent(targetId,
-                    __ -> this.buildState(player, target));
-            playerColumn.computeIfAbsent(targetId,
-                    __ -> this.buildState(target, player));
+
+            // initialize state for both directions, as visibility is not necessarily symmetric
+            this.playerStates.computeIfAbsent(targetId, playerId, () -> this.buildState(player, target));
+            this.playerStates.computeIfAbsent(playerId, targetId, () -> this.buildState(target, player));
         }
-        this.playerStateUpdates.row(playerId).putAll(playerRow);
-        this.playerStateUpdates.column(playerId).putAll(playerColumn);
-        this.dirtyPlayerMeta = true;
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         // remove cached data for player
         UUID playerId = event.getPlayer().getUniqueId();
-        this.positions.remove(playerId);
-        this.positionUpdates.remove(playerId);
-        this.playerStates.rowMap().remove(playerId);
-        this.playerStates.columnMap().remove(playerId);
-        this.playerStateUpdates.rowMap().remove(playerId);
-        this.playerStateUpdates.columnMap().remove(playerId);
-        this.teams.remove(playerId);
+        this.positions.removeSilent(playerId);
+        this.playerStates.removeRowSilent(playerId);
+        this.playerStates.removeColumnSilent(playerId);
+        this.teams.removeSilent(playerId);
 
         // re-send room definition to service if everyone quits
         int playerCount = 0;
@@ -161,9 +149,7 @@ public class AgentListener implements Listener {
         float pitch = location.getPitch();
 
         WorldRotatedVec3d pos = new WorldRotatedVec3d(location.getX(), posY, location.getZ(), yaw, pitch, dimensionKey);
-        this.positions.put(player.getUniqueId(), pos);
-        this.positionUpdates.put(player.getUniqueId(), pos);
-        this.dirtyPlayerMeta = true;
+        this.positions.change(player.getUniqueId(), pos);
     }
 
     public void tickPosition(Player player) {
@@ -188,11 +174,7 @@ public class AgentListener implements Listener {
         Team playerTeam = scoreboard.getPlayerTeam(player);
         String name = playerTeam == null ? null : playerTeam.getName();
 
-        String old = this.teams.put(player.getUniqueId(), name);
-        if (!Objects.equals(old, name)) {
-            this.teamUpdates.put(player.getUniqueId(), name);
-            this.dirtyPlayerMeta = true;
-        }
+        this.teams.change(player.getUniqueId(), name);
     }
 
     public void tickVisibilityChanges() {
@@ -201,9 +183,7 @@ public class AgentListener implements Listener {
             Map.Entry<Player, Player> entry = it.next();
             it.remove();
             SonusPlayerState state = this.buildState(entry.getKey(), entry.getValue());
-            this.playerStates.put(entry.getKey().getUniqueId(), state.playerId(), state);
-            this.playerStateUpdates.put(entry.getKey().getUniqueId(), state.playerId(), state);
-            this.dirtyPlayerMeta = true;
+            this.playerStates.change(entry.getKey().getUniqueId(), state.playerId(), state);
         }
     }
 
@@ -237,26 +217,27 @@ public class AgentListener implements Listener {
     }
 
     public void tickDirtyPlayerMeta() {
-        if (!this.dirtyPlayerMeta) {
-            return;
-        }
-        this.dirtyPlayerMeta = false;
-
+        boolean hasChanges = false;
         BackendTickMessage packet = new BackendTickMessage();
-        if (!this.positionUpdates.isEmpty()) {
-            packet.setPositions(this.positionUpdates);
+        if (this.positions.isDirty()) {
+            packet.setPositions(this.positions.getChanges());
+            hasChanges = true;
         }
-        if (!this.playerStateUpdates.isEmpty()) {
-            packet.setPerPlayerStates(this.playerStateUpdates);
+        if (this.playerStates.isDirty()) {
+            packet.setPerPlayerStates(this.playerStates.getChanges());
+            hasChanges = true;
         }
-        if (!this.teamUpdates.isEmpty()) {
-            packet.setTeams(this.teamUpdates);
+        if (this.teams.isDirty()) {
+            packet.setTeams(this.teams.getChanges());
+            hasChanges = true;
         }
-        this.plugin.sendMetaPacket(packet);
+        if (hasChanges) {
+            this.plugin.sendMetaPacket(packet);
+        }
 
-        this.positionUpdates.clear();
-        this.playerStateUpdates.clear();
-        this.teamUpdates.clear();
+        this.positions.clearChanges();
+        this.playerStates.clearChanges();
+        this.teams.clearChanges();
     }
 
     private void sendRoomDefinition() {
