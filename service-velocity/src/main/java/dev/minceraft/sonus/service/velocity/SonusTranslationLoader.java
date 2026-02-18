@@ -11,7 +11,6 @@ import java.util.ResourceBundle;
 
 import static net.kyori.adventure.key.Key.key;
 import static net.kyori.adventure.translation.GlobalTranslator.translator;
-import static net.kyori.adventure.util.UTF8ResourceBundleControl.utf8ResourceBundleControl;
 
 @NullMarked
 @Singleton
@@ -28,7 +27,7 @@ public class SonusTranslationLoader {
 
     public void load(Locale locale) {
         ClassLoader classloader = this.getClass().getClassLoader();
-        ResourceBundle bundle = ResourceBundle.getBundle(NAMESPACE, locale, classloader, utf8ResourceBundleControl());
+        ResourceBundle bundle = ResourceBundle.getBundle(NAMESPACE, locale, classloader);
         this.store.registerAll(locale, bundle.keySet(), bundle::getString);
     }
 
