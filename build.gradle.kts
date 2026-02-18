@@ -35,6 +35,7 @@ subprojects {
 
     tasks {
         withType<JavaCompile> {
+            options.release = 21
             options.encoding = Charsets.UTF_8.name()
             options.compilerArgs.add("-Xlint:unchecked")
             options.compilerArgs.add("-Xlint:removal")

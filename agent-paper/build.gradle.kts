@@ -23,7 +23,7 @@ configure<BukkitPluginDescription> {
 tasks {
     runServer {
         runDirectory = project.layout.projectDirectory.dir("run")
-        minecraftVersion("1.21.8")
+        minecraftVersion("1.21.11")
     }
 
     withType<ShadowJar> {

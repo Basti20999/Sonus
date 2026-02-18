@@ -1,28 +1,28 @@
 [versions]
 # plugins
 pluginyml = "0.6.0"
-gradleup-shadow = "9.2.2"
-runtask = "2.3.1"
+gradleup-shadow = "9.3.1"
+runtask = "3.0.2"
 
 # protocol
 leangen = "2.0.1"
 jspecify = "1.0.0"
-checkerqual = "3.49.5"
-netty = "4.2.7.Final"
-adventure = "4.23.0"
+checkerqual = "3.53.1"
+netty = "4.2.10.Final"
+adventure = "4.26.1"
 slf4j = "2.0.17"
-guava = "33.4.8-jre"
-gson = "2.10.1"
-fastutil = "8.5.13"
+guava = "33.5.0-jre"
+gson = "2.13.2"
+fastutil = "8.5.16"
 
 # config
-configurate = "4.1.2"
+configurate = "4.2.0"
 
 # paper agent
-paper-api = "1.21.7-R0.1-SNAPSHOT"
+paper-api = "1.21.11-R0.1-SNAPSHOT"
 
 # velocity service
-velocity = "3.4.0-SNAPSHOT"
+velocity = "3.5.0-SNAPSHOT"
 
 # audio processing
 speex4j = "1.0.3"
