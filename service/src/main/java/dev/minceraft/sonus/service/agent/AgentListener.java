@@ -3,8 +3,8 @@ package dev.minceraft.sonus.service.agent;
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.IAudioSource;
 import dev.minceraft.sonus.common.audio.SonusAudio;
-import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
+import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.servicebound.AudioStreamMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
@@ -34,9 +34,38 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
 
     @Override
     public void handleBackendTick(BackendTickMessage message) {
-        this.handlePositions(message.getPositions());
-        this.handlePerPlayerStates(message.getPerPlayerStates());
-        this.handleTeams(message.getTeams());
+        PlayerManager playerManager = this.service.getPlayerManager();
+
+        Map<UUID, WorldRotatedVec3d> positions = message.getPositions();
+        if (positions != null) {
+            for (Map.Entry<UUID, WorldRotatedVec3d> entry : positions.entrySet()) {
+                SonusPlayer player = playerManager.getPlayer(entry.getKey());
+                if (player == null) {
+                    continue;
+                }
+                player.setPosition(entry.getValue());
+                this.service.getEventManager().onPlayerPositionUpdate(player);
+            }
+        }
+        Table<UUID, UUID, SonusPlayerState> perPlayerStates = message.getPerPlayerStates();
+        if (perPlayerStates != null) {
+            for (Map.Entry<UUID, Map<UUID, SonusPlayerState>> row : perPlayerStates.rowMap().entrySet()) {
+                SonusPlayer player = playerManager.getPlayer(row.getKey());
+                if (player != null) {
+                    player.updateStates(row.getValue());
+                }
+            }
+        }
+        Map<UUID, @Nullable String> teams = message.getTeams();
+        if (teams != null) {
+            for (Map.Entry<UUID, @Nullable String> entry : teams.entrySet()) {
+                SonusPlayer player = playerManager.getPlayer(entry.getKey());
+                if (player == null) {
+                    continue;
+                }
+                player.setTeam(entry.getValue());
+            }
+        }
     }
 
     @Override
@@ -70,49 +99,6 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
     @Override
     public void handleRegisterAudioCategory(RegisterAudioCategoryMessage message) {
         this.server.registerCategory(message.getCategory());
-    }
-
-    private void handlePositions(@Nullable Map<UUID, WorldRotatedVec3d> positions) {
-        if (positions == null) {
-            return;
-        }
-        PlayerManager playerManager = this.service.getPlayerManager();
-        for (Map.Entry<UUID, WorldRotatedVec3d> entry : positions.entrySet()) {
-            SonusPlayer player = playerManager.getPlayer(entry.getKey());
-            if (player == null) {
-                continue;
-            }
-            player.setPosition(entry.getValue());
-            this.service.getEventManager().onPlayerPositionUpdate(player);
-        }
-    }
-
-    private void handlePerPlayerStates(@Nullable Table<UUID, UUID, SonusPlayerState> perPlayerStates) {
-        if (perPlayerStates == null) {
-            return;
-        }
-        PlayerManager playerManager = this.service.getPlayerManager();
-        for (Map.Entry<UUID, Map<UUID, SonusPlayerState>> row : perPlayerStates.rowMap().entrySet()) {
-            SonusPlayer player = playerManager.getPlayer(row.getKey());
-            if (player == null) {
-                continue;
-            }
-            player.updateStates(row.getValue());
-        }
-    }
-
-    private void handleTeams(@Nullable Map<UUID, @Nullable String> teams) {
-        if (teams == null) {
-            return;
-        }
-        PlayerManager playerManager = this.service.getPlayerManager();
-        for (Map.Entry<UUID, @Nullable String> entry : teams.entrySet()) {
-            SonusPlayer player = playerManager.getPlayer(entry.getKey());
-            if (player == null) {
-                continue;
-            }
-            player.setTeam(entry.getValue());
-        }
     }
 
     @Override
