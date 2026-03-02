@@ -8,7 +8,6 @@ import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.protocol.model.SonusWebPlayerState;
 import dev.minceraft.sonus.web.protocol.model.SonusWebRoom;
-import dev.minceraft.sonus.web.protocol.packets.clientbound.PositionUpdatePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;

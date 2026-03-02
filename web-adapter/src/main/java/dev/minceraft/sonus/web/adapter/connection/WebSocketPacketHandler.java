@@ -10,13 +10,19 @@ import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePack
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomLeaveResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
-import dev.minceraft.sonus.web.protocol.packets.servicebound.InputEndPacket;
-import dev.minceraft.sonus.web.protocol.packets.servicebound.InputSoundPacket;
+import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
+import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomCreatePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomLeavePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.StateInfoPacket;
+import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket;
+import dev.onvoid.webrtc.RTCIceCandidate;
+import dev.onvoid.webrtc.RTCPeerConnection;
+import dev.onvoid.webrtc.RTCSdpType;
+import net.kyori.adventure.util.Index;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class WebSocketPacketHandler implements IWebSocketHandler {
@@ -121,6 +127,26 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         player.setMuted(packet.isMuted());
         player.setDeafened(packet.isDeafened());
         player.updateState();
+    }
+
+    @Override
+    public void handleRtcIceCandidate(RtcIceCandidatePacket packet) {
+        RTCPeerConnection peer = this.connection.getRtc().getPeer();
+        int sdpMLineIndex = Objects.requireNonNullElse(packet.getSdpMLineIndex(), -1);
+        peer.addIceCandidate(new RTCIceCandidate(packet.getSdpMid(), sdpMLineIndex, packet.getSdp()));
+    }
+
+    private static final Index<String, RTCSdpType> RTC_SDP_TYPE_INDEX = Index.create(RTCSdpType.class, type -> type.name().toLowerCase());
+
+    @Override
+    public void handleRtcOffer(RtcOfferPacket packet) {
+        RTCSdpType type = RTC_SDP_TYPE_INDEX.valueOrThrow(packet.getType());
+        this.connection.getRtc().handleRemoteOffer(type, packet.getSdp());
+    }
+
+    @Override
+    public void handleVolume(VolumePacket packet) {
+        IWebSocketHandler.super.handleVolume(packet);
     }
 
     public void handleDisconnect() {

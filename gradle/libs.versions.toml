@@ -29,6 +29,9 @@ speex4j = "1.0.3"
 opus4j = "2.1.3"
 lame4j = "2.1.5"
 
+# web
+jrtc = "0.14.0"
+
 # others
 luckperms = "5.5"
 
@@ -73,6 +76,9 @@ velocity = { module = "com.velocitypowered:velocity-api", version.ref = "velocit
 speex4j = { module = "de.maxhenkel.speex4j:speex4j", version.ref = "speex4j" }
 opus4j = { module = "de.maxhenkel.opus4j:opus4j", version.ref = "opus4j" }
 lame4j = { module = "de.maxhenkel.lame4j:lame4j", version.ref = "lame4j" }
+
+# web
+jrtc = { module = "dev.onvoid.webrtc:webrtc-java", version.ref = "jrtc" }
 
 # others
 luckperms = { module = "net.luckperms:api", version.ref = "luckperms" }

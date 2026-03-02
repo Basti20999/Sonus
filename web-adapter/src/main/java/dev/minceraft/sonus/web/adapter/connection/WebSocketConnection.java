@@ -4,6 +4,7 @@ import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.ISonusServer;
 import dev.minceraft.sonus.web.adapter.WebAdapter;
+import dev.minceraft.sonus.web.adapter.rtc.RtcHandler;
 import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
@@ -74,6 +75,10 @@ public class WebSocketConnection implements AutoCloseable {
 
     public WebSocketPacketHandler getWebSocketHandler() {
         return this.packetHandler;
+    }
+
+    public RtcHandler getRtc() {
+        return this.adapter.getWebRtc().getPeer(this);
     }
 
     @Override
