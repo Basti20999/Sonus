@@ -1,30 +1,27 @@
 package dev.minceraft.sonus.web.protocol.packets;
 
-import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioEndPacket;
-import dev.minceraft.sonus.web.protocol.packets.clientbound.AudioPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
-import dev.minceraft.sonus.web.protocol.packets.clientbound.PositionUpdatePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomLeaveResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomRemovePacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.RtcConnectPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.VoiceActivityPacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
-import dev.minceraft.sonus.web.protocol.packets.servicebound.InputEndPacket;
-import dev.minceraft.sonus.web.protocol.packets.servicebound.InputSoundPacket;
+import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
+import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomCreatePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomLeavePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.StateInfoPacket;
+import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket;
 
 public interface IWebSocketHandler {
-
-    default void handleAudio(AudioPacket packet) {
-    }
 
     default void handleCategoryAdd(CategoryAddPacket packet) {
     }
@@ -33,9 +30,6 @@ public interface IWebSocketHandler {
     }
 
     default void handleConnected(ConnectedPacket packet) {
-    }
-
-    default void handlePositionUpdate(PositionUpdatePacket packet) {
     }
 
     default void handleRoomAdd(RoomAddPacket packet) {
@@ -62,9 +56,6 @@ public interface IWebSocketHandler {
     default void handlePing(PingPacket packet) {
     }
 
-    default void handleInputSound(InputSoundPacket packet) {
-    }
-
     default void handleRoomCreate(RoomCreatePacket packet) {
     }
 
@@ -77,9 +68,18 @@ public interface IWebSocketHandler {
     default void handleStateInfo(StateInfoPacket packet) {
     }
 
-    default void handleAudioEnd(AudioEndPacket packet) {
+    default void handleVoiceActivity(VoiceActivityPacket packet) {
     }
 
-    default void handleInputEnd(InputEndPacket packet) {
+    default void handleRtcConnect(RtcConnectPacket packet) {
+    }
+
+    default void handleRtcIceCandidate(RtcIceCandidatePacket packet) {
+    }
+
+    default void handleRtcOffer(RtcOfferPacket packet) {
+    }
+
+    default void handleVolume(VolumePacket packet) {
     }
 }
