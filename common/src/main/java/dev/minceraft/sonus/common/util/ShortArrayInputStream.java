@@ -1,4 +1,4 @@
-package dev.minceraft.sonus.agent.paper.util;
+package dev.minceraft.sonus.common.util;
 // Created by booky10 in Sonus (01:28 17.11.2025)
 
 import org.jspecify.annotations.NullMarked;
@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.util.Objects;
 
 @NullMarked
-public class ShortArrayInputStream extends InputStream {
+public final class ShortArrayInputStream extends InputStream {
 
     private final short[] buf;
     private final int length;

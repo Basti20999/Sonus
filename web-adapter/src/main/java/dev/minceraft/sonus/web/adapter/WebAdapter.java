@@ -12,7 +12,9 @@ import dev.minceraft.sonus.common.data.Vec3d;
 import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
+import dev.minceraft.sonus.web.adapter.rtc.RtcHandler;
 import dev.minceraft.sonus.web.adapter.rtc.RtcManager;
+import dev.minceraft.sonus.web.adapter.util.AudioSpatialToStereoUtil;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.VoiceActivityPacket;
@@ -52,21 +54,29 @@ public class WebAdapter implements SonusAdapter {
 
     @Override
     public void shutdown(ISonusService service) {
-        this.server.shutdown();
+        try (RtcManager ignoredWebrtc = this.webrtc) {
+            this.server.shutdown();
+        }
     }
 
     private void sendAudio(ISonusPlayer player, IAudioSource source, SonusAudio audio, @Nullable Vec3d pos) {
-        WebSocketConnection connection = this.sessions.getConnection(player.getUniqueId());
-        if (connection == null) {
+        RtcHandler rtcHandler = this.webrtc.getPeer(player.getUniqueId());
+        if (rtcHandler == null || !rtcHandler.isConnected()) {
             return;
         }
-        AudioPacket packet = new AudioPacket();
-        packet.setChannelId(source.getSenderId(player));
-        packet.setSenderId(source.getSenderId(player));
-        packet.setCategoryId(source.getCategoryId());
-        packet.setAudio(audio.asOpus(() -> connection.getProcessor(source.getSenderId(player))));
-        packet.setPosition(pos);
-        connection.sendPacket(packet);
+        // TODO volumes
+        short[] leftData = audio.pcm();
+        short[] rightData = leftData;
+        // transform from spatial to stereo
+        if (pos != null && player.getPosition() != null) {
+            rightData = new short[leftData.length]; // create new
+            AudioSpatialToStereoUtil.process(
+                    leftData, pos, player.getPosition(),
+                    leftData, rightData);
+        }
+        // append to audio mixer queue
+        UUID channelId = source.getSenderId(player);
+        rtcHandler.queueAudio(channelId, leftData, rightData);
     }
 
     @Override

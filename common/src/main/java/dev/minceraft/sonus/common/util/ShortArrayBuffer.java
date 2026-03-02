@@ -1,14 +1,14 @@
-package dev.minceraft.sonus.agent.paper.util;
+package dev.minceraft.sonus.common.util;
 
 import java.util.Arrays;
 
 // based on https://github.com/henkelmax/lame4j/blob/aa02bca4c389e3c5efe464a57a6741dfc1ddfc4e/src/main/java/de/maxhenkel/lame4j/ShortArrayBuffer.java, LGPL
-class ShortArrayBuffer {
+public final class ShortArrayBuffer {
 
     public static final int SOFT_MAX_ARRAY_LENGTH = Integer.MAX_VALUE - 8;
 
-    protected short[] buf;
-    protected int count;
+    private short[] buf;
+    private int count;
 
     public ShortArrayBuffer(int size) {
         if (size < 0) {

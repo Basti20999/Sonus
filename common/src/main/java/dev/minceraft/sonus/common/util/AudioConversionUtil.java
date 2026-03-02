@@ -1,9 +1,8 @@
-package dev.minceraft.sonus.agent.paper.util;
+package dev.minceraft.sonus.common.util;
 // Created by booky10 in TjcSonus (19:40 17.11.2024)
 
 import dev.minceraft.sonus.common.natives.LameNativesLoader;
 import dev.minceraft.sonus.common.natives.LameNativesLoader.Decoder;
-import org.joml.Math;
 import org.jspecify.annotations.NullMarked;
 
 import javax.sound.sampled.AudioFormat;
@@ -43,7 +42,7 @@ public final class AudioConversionUtil {
         }
         for (int i = 0, len = audioSamples.length; i < len; ++i) {
             float progress = i / (float) audioSamples.length;
-            float volume = Math.lerp(volumeMin, volumeMax, progress);
+            float volume = Math.fma(volumeMax - volumeMin, progress, volumeMin); // lerp
             audioSamples[i] = (short) (audioSamples[i] * volume);
         }
         return audioSamples;

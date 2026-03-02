@@ -20,7 +20,9 @@ import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPack
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomLeavePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.StateInfoPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public interface IWebSocketHandler {
 
     default void handleCategoryAdd(CategoryAddPacket packet) {

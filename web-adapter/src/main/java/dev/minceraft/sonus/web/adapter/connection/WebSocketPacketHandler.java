@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.web.adapter.connection;
 
 import dev.minceraft.sonus.common.SonusConstants;
-import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
@@ -21,17 +20,17 @@ import dev.onvoid.webrtc.RTCIceCandidate;
 import dev.onvoid.webrtc.RTCPeerConnection;
 import dev.onvoid.webrtc.RTCSdpType;
 import net.kyori.adventure.util.Index;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.UUID;
 
+@NullMarked
 public class WebSocketPacketHandler implements IWebSocketHandler {
-
-    private static final UUID MIC_CHANNEL_ID = new UUID(9018035903106730674L, -6405133132459802568L);
 
     private final WebSocketConnection connection;
     private State state = State.WAITING_ACK;
-    private long sequence = 0L;
 
     public WebSocketPacketHandler(WebSocketConnection connection) {
         this.connection = connection;
@@ -51,24 +50,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         }
     }
 
-    @Override
-    public void handleInputSound(InputSoundPacket packet) {
-        if (this.state != State.CONNECTED) {
-            return;
-        }
-        SonusAudio.Pcm pcm = packet.getAudio().asPcm(() -> this.connection.getProcessor(MIC_CHANNEL_ID));
-        this.connection.getPlayer().handleAudioInput(pcm.withSequenceNumber(this.sequence++));
-    }
-
-    @Override
-    public void handleInputEnd(InputEndPacket packet) {
-        if (this.state == State.CONNECTED) {
-            this.connection.getPlayer().handleAudioInputEnd(this.sequence++);
-            this.sequence = 0L;
-        }
-    }
-
-    private void tryJoinRoom(UUID roomId, String password) {
+    private void tryJoinRoom(UUID roomId, @Nullable String password) {
         IRoom room = this.connection.getAdapter().getService().getRoomManager().getRoom(roomId);
         boolean success = room != null && this.connection.getPlayer().canAccessRoom(room, password);
         if (success) {

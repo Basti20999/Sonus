@@ -1,7 +1,7 @@
 package dev.minceraft.sonus.agent.paper.audio;
 // Created by booky10 in TjcSonus (23:29 17.11.2024)
 
-import dev.minceraft.sonus.agent.paper.util.AudioConversionUtil;
+import dev.minceraft.sonus.common.util.AudioConversionUtil;
 import org.bukkit.util.NumberConversions;
 import org.joml.Math;
 import org.jspecify.annotations.NullMarked;
