@@ -24,11 +24,11 @@ public final class RtcSlf4jLogger implements LogSink {
     @Override
     public void onLogMessage(Logging.Severity severity, String message) {
         switch (severity) {
-            case NONE -> this.logger.trace(message);
-            case VERBOSE -> this.logger.debug(message);
-            case INFO -> this.logger.info(message);
-            case WARNING -> this.logger.warn(message);
-            case ERROR -> this.logger.error(message);
+            case NONE -> this.logger.trace(message.trim());
+            case VERBOSE -> this.logger.debug(message.trim());
+            case INFO -> this.logger.info(message.trim());
+            case WARNING -> this.logger.warn(message.trim());
+            case ERROR -> this.logger.error(message.trim());
         }
     }
 }
