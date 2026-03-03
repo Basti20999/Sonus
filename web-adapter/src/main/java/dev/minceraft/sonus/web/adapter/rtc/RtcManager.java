@@ -12,6 +12,7 @@ import dev.onvoid.webrtc.logging.Logging;
 import dev.onvoid.webrtc.media.SyncClock;
 import dev.onvoid.webrtc.media.audio.AudioProcessing;
 import dev.onvoid.webrtc.media.audio.AudioProcessingStreamConfig;
+import dev.onvoid.webrtc.media.audio.HeadlessAudioDeviceModule;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -28,7 +29,8 @@ public final class RtcManager implements AutoCloseable {
         RtcSlf4jLogger.register(Logging.Severity.INFO, "WebRtc");
     }
 
-    private final PeerConnectionFactory factory = new PeerConnectionFactory();
+    private final HeadlessAudioDeviceModule headlessAudioDevice;
+    private final PeerConnectionFactory factory;
     private final RTCConfiguration config = new RTCConfiguration();
     private final AudioProcessing processor = new AudioProcessing();
     private final SyncClock clock = new SyncClock();
@@ -37,6 +39,12 @@ public final class RtcManager implements AutoCloseable {
     private final Map<UUID, RtcHandler> peers = new HashMap<>();
 
     public RtcManager(WebConfig config) {
+        // we don't want audio playback on the server
+        this.headlessAudioDevice = new HeadlessAudioDeviceModule();
+        this.headlessAudioDevice.initPlayout();
+        this.headlessAudioDevice.startPlayout();
+        this.factory = new PeerConnectionFactory(this.headlessAudioDevice);
+
         // configure ICE STUN/TURN servers
         config.iceServers.stream()
                 .map(WebConfig.IceServerConfig::create)
@@ -100,5 +108,10 @@ public final class RtcManager implements AutoCloseable {
         });
         this.clock.dispose();
         this.audioTicker.close();
+        try {
+            this.headlessAudioDevice.stopPlayout();
+        } finally {
+            this.headlessAudioDevice.dispose();
+        }
     }
 }
