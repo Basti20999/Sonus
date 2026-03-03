@@ -17,7 +17,6 @@ import dev.minceraft.sonus.web.adapter.rtc.RtcManager;
 import dev.minceraft.sonus.web.adapter.util.AudioSpatialToStereoUtil;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryRemovePacket;
-import dev.minceraft.sonus.web.protocol.packets.clientbound.VoiceActivityPacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
@@ -63,6 +62,12 @@ public class WebAdapter implements SonusAdapter {
         if (rtcHandler == null || !rtcHandler.isConnected()) {
             return;
         }
+        // as we mix webrtc audio on the server, we have
+        // to calculate voice activity on the server too
+        if (source instanceof ISonusPlayer) {
+            rtcHandler.setVoiceActive(((ISonusPlayer) source).getUniqueId(player), true);
+        }
+
         // TODO volumes
         short[] leftData = audio.pcm();
         short[] rightData = leftData;
@@ -99,9 +104,9 @@ public class WebAdapter implements SonusAdapter {
 
     @Override
     public void sendAudioEnd(ISonusPlayer player, IAudioSource source, long sequence) {
-        WebSocketConnection connection = this.sessions.getConnection(player.getUniqueId());
-        if (connection != null) {
-            connection.sendPacket(new VoiceActivityPacket(source.getSenderId(player), false));
+        RtcHandler handler = this.webrtc.getPeer(player.getUniqueId());
+        if (handler != null) {
+            handler.setVoiceActive(source.getSenderId(player), false);
         }
     }
 

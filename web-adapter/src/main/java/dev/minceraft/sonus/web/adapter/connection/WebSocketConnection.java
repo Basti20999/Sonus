@@ -1,6 +1,5 @@
 package dev.minceraft.sonus.web.adapter.connection;
 
-import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.ISonusServer;
 import dev.minceraft.sonus.web.adapter.WebAdapter;
@@ -8,7 +7,6 @@ import dev.minceraft.sonus.web.adapter.rtc.RtcHandler;
 import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
-import dev.minceraft.sonus.web.protocol.packets.clientbound.VoiceActivityPacket;
 import io.netty.channel.Channel;
 import net.kyori.adventure.text.Component;
 
@@ -24,30 +22,11 @@ public class WebSocketConnection implements AutoCloseable {
 
     private final WebSocketPacketHandler packetHandler = new WebSocketPacketHandler(this);
     private int version = -1;
-    private boolean voiceActive = false;
 
     public WebSocketConnection(WebAdapter adapter, ISonusPlayer player, Channel channel) {
         this.adapter = adapter;
         this.player = player;
         this.channel = channel;
-    }
-
-    public void handleAudioInput(SonusAudio audio) {
-        // our web app doesn't keep track of whether the user itself is speaking, so just do this for now
-        if (!this.voiceActive) {
-            this.voiceActive = true;
-            this.sendPacket(new VoiceActivityPacket(this.player.getUniqueId(), true));
-        }
-        this.player.handleAudioInput(audio);
-    }
-
-    public void handleAudioInputEnd(long sequence) {
-        // see above for reason
-        if (this.voiceActive) {
-            this.voiceActive = false;
-            this.sendPacket(new VoiceActivityPacket(this.player.getUniqueId(), false));
-        }
-        this.player.handleAudioInputEnd(sequence);
     }
 
     public void sendConnected() {
