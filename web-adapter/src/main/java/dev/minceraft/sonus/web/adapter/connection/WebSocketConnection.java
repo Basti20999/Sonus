@@ -1,6 +1,6 @@
 package dev.minceraft.sonus.web.adapter.connection;
 
-import dev.minceraft.sonus.common.audio.AudioProcessor;
+import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.ISonusServer;
 import dev.minceraft.sonus.web.adapter.WebAdapter;
@@ -8,12 +8,11 @@ import dev.minceraft.sonus.web.adapter.rtc.RtcHandler;
 import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.VoiceActivityPacket;
 import io.netty.channel.Channel;
 import net.kyori.adventure.text.Component;
 
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static net.kyori.adventure.text.Component.text;
 
@@ -24,13 +23,31 @@ public class WebSocketConnection implements AutoCloseable {
     private final Channel channel;
 
     private final WebSocketPacketHandler packetHandler = new WebSocketPacketHandler(this);
-    private final Map<UUID, AudioProcessor> processors = new ConcurrentHashMap<>();
     private int version = -1;
+    private boolean voiceActive = false;
 
     public WebSocketConnection(WebAdapter adapter, ISonusPlayer player, Channel channel) {
         this.adapter = adapter;
         this.player = player;
         this.channel = channel;
+    }
+
+    public void handleAudioInput(SonusAudio audio) {
+        // our web app doesn't keep track of whether the user itself is speaking, so just do this for now
+        if (!this.voiceActive) {
+            this.voiceActive = true;
+            this.sendPacket(new VoiceActivityPacket(this.player.getUniqueId(), true));
+        }
+        this.player.handleAudioInput(audio);
+    }
+
+    public void handleAudioInputEnd(long sequence) {
+        // see above for reason
+        if (this.voiceActive) {
+            this.voiceActive = false;
+            this.sendPacket(new VoiceActivityPacket(this.player.getUniqueId(), false));
+        }
+        this.player.handleAudioInputEnd(sequence);
     }
 
     public void sendConnected() {
@@ -47,14 +64,9 @@ public class WebSocketConnection implements AutoCloseable {
     }
 
     public void sendPacket(AbstractWebPacket<?> packet) {
-        if (packet instanceof WebSocketPacket websocketPacket) {
+        if (packet instanceof WebSocketPacket) {
             this.channel.writeAndFlush(packet);
         }
-    }
-
-    public AudioProcessor getProcessor(UUID channelId) {
-        return this.processors.computeIfAbsent(channelId, __ ->
-                this.adapter.getService().createAudioProcessor(AudioProcessor.Mode.VOICE));
     }
 
     public ISonusPlayer getPlayer() {
@@ -84,9 +96,5 @@ public class WebSocketConnection implements AutoCloseable {
     @Override
     public void close() {
         this.channel.close();
-        this.processors.values().removeIf(processor -> {
-            processor.close();
-            return true;
-        });
     }
 }

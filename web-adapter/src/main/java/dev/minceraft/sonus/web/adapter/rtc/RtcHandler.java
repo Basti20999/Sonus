@@ -43,7 +43,7 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
 
     private static final Logger LOGGER = LoggerFactory.getLogger("WebRTC");
     private static final int INPUT_BUFFER_GC_INTERVAL = 0b1111111;
-    private static final int QUIET_FRAMES_THRESHOLD = 150 / SonusConstants.FRAMES_INTERVAL;
+    private static final int QUIET_FRAMES_THRESHOLD = 300 / SonusConstants.FRAMES_INTERVAL;
 
     private final RtcManager manager;
     private final WebSocketConnection signalConnection;
@@ -145,11 +145,11 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
             if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > 0e-6d * 0e-6d) {
                 this.quietBuffer = 0; // reset quiet buffer
                 SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);
-                this.signalConnection.getPlayer().handleAudioInput(audio);
+                this.signalConnection.handleAudioInput(audio);
             } else if (this.quietBuffer == QUIET_FRAMES_THRESHOLD) {
                 this.quietBuffer++;
                 // mark end of input
-                this.signalConnection.getPlayer().handleAudioInputEnd(this.sequenceNumber);
+                this.signalConnection.handleAudioInputEnd(this.sequenceNumber);
                 this.sequenceNumber = 0L;
             } else if (this.quietBuffer < QUIET_FRAMES_THRESHOLD) {
                 // wait a bit before marking as silent
