@@ -34,7 +34,7 @@ public class RtcOfferPacket extends WebSocketPacket {
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
         this.type = Utf8String.read(buf, 16);
-        this.sdp = DataTypeUtil.readNullable(buf, ew -> Utf8String.read(ew, 64));
+        this.sdp = DataTypeUtil.readNullable(buf, ew -> Utf8String.read(ew, 2048));
     }
 
     @Override

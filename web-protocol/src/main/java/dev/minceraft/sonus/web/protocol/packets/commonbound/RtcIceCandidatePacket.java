@@ -36,7 +36,7 @@ public class RtcIceCandidatePacket extends WebSocketPacket {
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.sdp = DataTypeUtil.readNullable(buf, ew -> Utf8String.read(ew, 64));
+        this.sdp = DataTypeUtil.readNullable(buf, ew -> Utf8String.read(ew, 256));
         this.sdpMid = DataTypeUtil.readNullable(buf, ew -> Utf8String.read(ew, 32));
         this.sdpMLineIndex = DataTypeUtil.readNullable(buf, VarInt::read);
     }
