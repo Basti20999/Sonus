@@ -79,25 +79,27 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
 
     @Override
     public void onAddStream(MediaStream stream) {
-        if (stream.getVideoTracks().length != 0) {
-            this.disconnect("expected no video track");
-            return;
-        }
-        AudioTrack[] tracks = stream.getAudioTracks();
-        if (tracks.length != 1) {
-            this.disconnect("expected singular audio track");
-            return;
-        }
-        this.updateMicTrack(tracks[0]);
+        this.disconnect("unexpected media stream");
     }
 
     @Override
     public void onRemoveStream(MediaStream stream) {
-        if (stream.getVideoTracks().length != 0) {
-            return;
+        this.disconnect("unexpected media stream removal");
+    }
+
+    @Override
+    public void onAddTrack(RTCRtpReceiver receiver, MediaStream[] mediaStreams) {
+        MediaStreamTrack track = receiver.getTrack();
+        if (track instanceof AudioTrack audioTrack) {
+            this.updateMicTrack(audioTrack);
+        } else {
+            this.disconnect("unexpected non-audio track");
         }
-        AudioTrack[] tracks = stream.getAudioTracks();
-        if (tracks.length == 1 && this.microphoneTrack == tracks[0]) {
+    }
+
+    @Override
+    public void onRemoveTrack(RTCRtpReceiver receiver) {
+        if (this.microphoneTrack == receiver.getTrack()) {
             this.updateMicTrack(null);
         }
     }
