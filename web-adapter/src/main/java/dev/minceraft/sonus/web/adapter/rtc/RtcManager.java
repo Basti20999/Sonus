@@ -95,7 +95,7 @@ public final class RtcManager implements AutoCloseable {
         this.factory.dispose();
         this.processor.dispose();
         this.peers.values().removeIf(handler -> {
-            handler.close();
+            handler.disconnect("manager closed");
             return true;
         });
         this.clock.dispose();

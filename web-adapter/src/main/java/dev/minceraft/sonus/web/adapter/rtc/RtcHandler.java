@@ -59,49 +59,17 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
         this.audioSource = new CustomAudioSource(manager.getClock());
     }
 
-    public void disconnect(String reason) {
-        // FIXME
+    public void disconnect(String ignoredReason) {
+        this.close();
     }
 
     public void initialize(PeerConnectionFactory factory, ScheduledExecutorService scheduler) {
-        // advertise receiving mic channel
-        RTCRtpTransceiverInit transceiverInit = new RTCRtpTransceiverInit();
-        transceiverInit.direction = RTCRtpTransceiverDirection.RECV_ONLY;
-        this.peer.addTransceiver(null, transceiverInit);
         // advertise sending output channel
-        AudioTrack outputTrack = factory.createAudioTrack("output", this.audioSource);
+        AudioTrack outputTrack = factory.createAudioTrack("output0", this.audioSource);
         this.peer.addTrack(outputTrack, List.of());
-
-        // create protocol offer and signal to client
-        this.prepareOffer();
 
         // start ticking audio mixer
         this.startTicking(scheduler);
-    }
-
-    private void prepareOffer() {
-        this.peer.createOffer(new RTCOfferOptions(), new CreateSessionDescriptionObserver() {
-            @Override
-            public void onSuccess(RTCSessionDescription description) {
-                RtcHandler.this.peer.setLocalDescription(description, new SetSessionDescriptionObserver() {
-                    @Override
-                    public void onSuccess() {
-                        String type = description.sdpType.name().toLowerCase(Locale.ROOT);
-                        RtcHandler.this.signalConnection.sendPacket(new RtcOfferPacket(type, description.sdp));
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        LOGGER.error("Failed to set local session description for {}: {}", RtcHandler.this.peer, error);
-                    }
-                });
-            }
-
-            @Override
-            public void onFailure(String error) {
-                LOGGER.error("Failed to create local session description for {}: {}", RtcHandler.this.peer, error);
-            }
-        });
     }
 
     @Override
@@ -185,7 +153,33 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
         this.peer.setRemoteDescription(new RTCSessionDescription(type, sdp), new SetSessionDescriptionObserver() {
             @Override
             public void onSuccess() {
-                // NO-OP
+                // construct answer
+                RTCAnswerOptions opts = new RTCAnswerOptions();
+                opts.voiceActivityDetection = false;
+                RtcHandler.this.peer.createAnswer(opts, new CreateSessionDescriptionObserver() {
+                    @Override
+                    public void onSuccess(RTCSessionDescription description) {
+                        // save answer locally
+                        RtcHandler.this.peer.setLocalDescription(description, new SetSessionDescriptionObserver() {
+                            @Override
+                            public void onSuccess() {
+                                // inform browser about answer
+                                String type = description.sdpType.name().toLowerCase(Locale.ROOT);
+                                RtcHandler.this.signalConnection.sendPacket(new RtcOfferPacket(type, description.sdp));
+                            }
+
+                            @Override
+                            public void onFailure(String error) {
+                                LOGGER.error("Failed to set local session description answer for {}: {}", RtcHandler.this.peer, error);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onFailure(String error) {
+                        LOGGER.error("Failed to create session description answer for {}: {}", RtcHandler.this.peer, error);
+                    }
+                });
             }
 
             @Override
