@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.common.audio;
 // Created by booky10 in Sonus (02:44 17.07.2025)
 
-import dev.minceraft.sonus.common.util.AudioConversionUtil;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.function.Supplier;
@@ -32,10 +31,6 @@ public sealed interface SonusAudio {
     boolean isZeroLength();
 
     record Pcm(short[] pcm, long sequenceNumber) implements SonusAudio {
-
-        public Pcm(byte[] pcm, long sequenceNumber) {
-            this(AudioConversionUtil.bytesToShorts(pcm), sequenceNumber);
-        }
 
         @Override
         public short[] pcm(Supplier<AudioProcessor> processor) {

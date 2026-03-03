@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.web.adapter.rtc;
 // Created by booky10 in Sonus (5:02 PM 02.03.2026)
 
+import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.adapter.util.AudioMixer;
@@ -9,19 +10,21 @@ import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import dev.onvoid.webrtc.CreateSessionDescriptionObserver;
 import dev.onvoid.webrtc.PeerConnectionFactory;
 import dev.onvoid.webrtc.PeerConnectionObserver;
+import dev.onvoid.webrtc.RTCAnswerOptions;
 import dev.onvoid.webrtc.RTCIceCandidate;
-import dev.onvoid.webrtc.RTCOfferOptions;
 import dev.onvoid.webrtc.RTCPeerConnection;
 import dev.onvoid.webrtc.RTCPeerConnectionState;
-import dev.onvoid.webrtc.RTCRtpTransceiverDirection;
-import dev.onvoid.webrtc.RTCRtpTransceiverInit;
+import dev.onvoid.webrtc.RTCRtpReceiver;
 import dev.onvoid.webrtc.RTCSdpType;
 import dev.onvoid.webrtc.RTCSessionDescription;
 import dev.onvoid.webrtc.SetSessionDescriptionObserver;
 import dev.onvoid.webrtc.media.MediaStream;
+import dev.onvoid.webrtc.media.MediaStreamTrack;
 import dev.onvoid.webrtc.media.audio.AudioTrack;
 import dev.onvoid.webrtc.media.audio.AudioTrackSink;
 import dev.onvoid.webrtc.media.audio.CustomAudioSource;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -39,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink, AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("WebRTC");
+    private static final long INPUT_BUFFER_GC_INTERVAL = 0b1111111;
 
     private final RtcManager manager;
     private final WebSocketConnection signalConnection;
@@ -50,6 +54,7 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
     private @MonotonicNonNull ScheduledFuture<?> ticker;
 
     // audio input handling
+    private final ByteBuf inputBuffer = PooledByteBufAllocator.DEFAULT.buffer(SonusConstants.FRAME_SIZE * 2);
     private @Nullable AudioTrack microphoneTrack;
     private long sequenceNumber = 0L;
 
@@ -119,9 +124,23 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
     public void onData(byte[] data, int bitsPerSample, int sampleRate, int channels, int frames) {
         // align with sonus codec
         data = this.manager.resampleAudio(data, sampleRate, channels);
-//        VoiceActivityDetector TODO
-        SonusAudio.Pcm audio = new SonusAudio.Pcm(data, this.sequenceNumber++);
-        this.signalConnection.getPlayer().handleAudioInput(audio);
+
+        // append to local buffer, webrtc usually has higher FPS than what we expect
+        ByteBuf inputBuf = this.inputBuffer;
+        inputBuf.writeBytes(data);
+        while (inputBuf.isReadable(SonusConstants.FRAME_SIZE * Short.BYTES)) {
+            short[] pcmData = new short[SonusConstants.FRAME_SIZE];
+            for (int i = 0; i < SonusConstants.FRAME_SIZE; i++) {
+                pcmData[i] = inputBuf.readShortLE();
+            }
+
+            SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);
+            this.signalConnection.getPlayer().handleAudioInput(audio);
+            // periodically clean buffer
+            if ((audio.sequenceNumber() & INPUT_BUFFER_GC_INTERVAL) == 0L) {
+                inputBuf.discardSomeReadBytes();
+            }
+        }
     }
 
     public void queueAudio(UUID channelId, short[] leftAudio, short[] rightAudio) {
@@ -213,5 +232,6 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
         this.mixer.close();
         this.audioSource.dispose();
         this.ticker.cancel(true);
+        this.inputBuffer.release();
     }
 }
