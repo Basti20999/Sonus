@@ -77,6 +77,12 @@ public final class RtcManager implements AutoCloseable {
         return handler;
     }
 
+    public boolean removePeer(UUID playerId) {
+        try (RtcHandler handler = this.peers.remove(playerId)) {
+            return handler != null;
+        }
+    }
+
     public byte[] resampleAudio(byte[] src, int sampleRate, int channels) {
         AudioProcessingStreamConfig inputConf = new AudioProcessingStreamConfig(sampleRate, channels);
         AudioProcessingStreamConfig outputConf = new AudioProcessingStreamConfig(SonusConstants.SAMPLE_RATE, SonusConstants.CHANNELS);

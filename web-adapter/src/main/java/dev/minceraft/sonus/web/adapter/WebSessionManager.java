@@ -126,6 +126,8 @@ public class WebSessionManager {
     public boolean removeSession(UUID playerId) {
         try (WebSocketConnection conn = this.connections.remove(playerId)) {
             return conn != null;
+        } finally {
+            this.adapter.getWebRtc().removePeer(playerId);
         }
     }
 }
