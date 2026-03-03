@@ -38,7 +38,6 @@ public class WebAdapter implements SonusAdapter {
     public void load(ISonusService service) {
         this.service = service;
         service.getConfigHolder().registerConfigTemplate("web", WebConfig.class, WebConfig::new);
-        this.webrtc = new RtcManager(service.getConfig().getSubConfig(WebConfig.class));
     }
 
     private AdapterInfo buildAdapterInfo() {
@@ -48,7 +47,7 @@ public class WebAdapter implements SonusAdapter {
     @Override
     public void init(ISonusService service) {
         this.server.openSocket();
-
+        this.webrtc = new RtcManager(service.getConfig().getSubConfig(WebConfig.class));
         this.service.getEventManager().registerListener(new WebSonusListener(this));
     }
 
