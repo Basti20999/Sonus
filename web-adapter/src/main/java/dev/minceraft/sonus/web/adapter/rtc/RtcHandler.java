@@ -146,7 +146,8 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
             return; // check for actual audio
         }
         this.audioSource.pushAudio(data, RtcConstants.BITS_PER_SAMPLE,
-                RtcConstants.SAMPLE_RATE, 2, 1);
+                RtcConstants.SAMPLE_RATE, 2,
+                RtcConstants.FRAME_SIZE);
     }
 
     public void handleRemoteOffer(RTCSdpType type, @Nullable String sdp) {
