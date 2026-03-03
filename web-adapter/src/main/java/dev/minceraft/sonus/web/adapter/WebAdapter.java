@@ -63,10 +63,11 @@ public class WebAdapter implements SonusAdapter {
         if (rtcHandler == null || !rtcHandler.isConnected()) {
             return;
         }
+        WebSocketConnection connection = rtcHandler.getSignalConnection();
         // as we mix webrtc audio on the server, we have
         // to calculate voice activity on the server too
         if (source instanceof ISonusPlayer) {
-            rtcHandler.setVoiceActive(source.getSenderId(player), true);
+            connection.setVoiceActive(source.getSenderId(player), true);
         }
 
         short[] leftData = audio.pcm();
@@ -80,7 +81,6 @@ public class WebAdapter implements SonusAdapter {
         }
 
         // apply source-specific volumes server-side
-        WebSocketConnection connection = rtcHandler.getSignalConnection();
         float volume = connection.getVolume(VolumeType.PLAYER, source.getSenderId(player));
         UUID categoryId = source.getCategoryId();
         if (categoryId != null) {
@@ -113,9 +113,9 @@ public class WebAdapter implements SonusAdapter {
 
     @Override
     public void sendAudioEnd(ISonusPlayer player, IAudioSource source, long sequence) {
-        RtcHandler handler = this.webrtc.getPeer(player.getUniqueId());
-        if (handler != null) {
-            handler.setVoiceActive(source.getSenderId(player), false);
+        WebSocketConnection connection = this.sessions.getConnection(player.getUniqueId());
+        if (connection != null) {
+            connection.setVoiceActive(source.getSenderId(player), false);
         }
     }
 

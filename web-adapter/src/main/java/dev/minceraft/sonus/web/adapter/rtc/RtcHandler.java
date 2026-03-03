@@ -5,7 +5,6 @@ import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.adapter.util.AudioMixer;
-import dev.minceraft.sonus.web.protocol.packets.clientbound.VoiceActivityPacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import dev.onvoid.webrtc.CreateSessionDescriptionObserver;
@@ -34,9 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +50,6 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
     private @MonotonicNonNull RTCPeerConnection peer;
 
     // audio output handling
-    private final Set<UUID> voiceActivity = ConcurrentHashMap.newKeySet();
     private final CustomAudioSource audioSource;
     private final AudioMixer mixer = new AudioMixer();
     private @MonotonicNonNull ScheduledFuture<?> ticker;
@@ -82,14 +78,6 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
 
         // start ticking audio mixer
         this.startTicking(scheduler);
-    }
-
-    public void setVoiceActive(UUID playerId, boolean active) {
-        // only send packets if the state has changed
-        if (active && this.voiceActivity.add(playerId)
-                || !active && this.voiceActivity.remove(playerId)) {
-            this.signalConnection.sendPacket(new VoiceActivityPacket(playerId, active));
-        }
     }
 
     @Override
@@ -156,13 +144,13 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
             // check whether this is loud enough or not
             if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > 0e-6d * 0e-6d) {
                 this.quietBuffer = 0; // reset quiet buffer
-                this.setVoiceActive(this.signalConnection.getPlayer().getUniqueId(), true);
+                this.signalConnection.setVoiceActive(this.signalConnection.getPlayer().getUniqueId(), true);
                 SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);
                 this.signalConnection.getPlayer().handleAudioInput(audio);
             } else if (this.quietBuffer == QUIET_FRAMES_THRESHOLD) {
                 this.quietBuffer++;
                 // mark end of input
-                this.setVoiceActive(this.signalConnection.getPlayer().getUniqueId(), false);
+                this.signalConnection.setVoiceActive(this.signalConnection.getPlayer().getUniqueId(), false);
                 this.signalConnection.getPlayer().handleAudioInputEnd(this.sequenceNumber);
                 this.sequenceNumber = 0L;
             } else if (this.quietBuffer < QUIET_FRAMES_THRESHOLD) {

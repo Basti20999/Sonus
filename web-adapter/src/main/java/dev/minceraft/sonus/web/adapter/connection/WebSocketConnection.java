@@ -7,12 +7,14 @@ import dev.minceraft.sonus.web.adapter.rtc.RtcHandler;
 import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.VoiceActivityPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket;
 import io.netty.channel.Channel;
 import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,6 +30,7 @@ public class WebSocketConnection implements AutoCloseable {
     private final WebSocketPacketHandler packetHandler = new WebSocketPacketHandler(this);
     private int version = -1;
 
+    private final Set<UUID> voiceActivity = ConcurrentHashMap.newKeySet();
     private final Map<UUID, Float> categoryVolumeMap = new ConcurrentHashMap<>();
     private final Map<UUID, Float> playerVolumeMap = new ConcurrentHashMap<>();
 
@@ -35,6 +38,14 @@ public class WebSocketConnection implements AutoCloseable {
         this.adapter = adapter;
         this.player = player;
         this.channel = channel;
+    }
+
+    public void setVoiceActive(UUID playerId, boolean active) {
+        // only send packets if the state has changed
+        if (active && this.voiceActivity.add(playerId)
+                || !active && this.voiceActivity.remove(playerId)) {
+            this.sendPacket(new VoiceActivityPacket(playerId, active));
+        }
     }
 
     public float getVolume(VolumePacket.VolumeType volumeType, UUID entryId) {
