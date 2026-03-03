@@ -492,10 +492,6 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
         this.lastKeepAlive = System.currentTimeMillis();
 
         this.service.getEventManager().onConnectionState(this);
-        if (voiceActive) {
-            // initialize position
-            this.service.getEventManager().onPlayerPositionUpdate(this);
-        }
 
         if (sendToAgent) {
             this.sendConnectionToAgent();

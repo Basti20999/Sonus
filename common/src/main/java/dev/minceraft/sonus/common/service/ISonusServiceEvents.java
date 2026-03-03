@@ -27,9 +27,6 @@ public interface ISonusServiceEvents {
     default void onPlayerStateUpdate(ISonusPlayer player, boolean globalUpdate) {
     }
 
-    default void onPlayerPositionUpdate(ISonusPlayer player) {
-    }
-
     default void onChannelRegistered(UUID playerId, Set<Key> channel) {
     }
 
