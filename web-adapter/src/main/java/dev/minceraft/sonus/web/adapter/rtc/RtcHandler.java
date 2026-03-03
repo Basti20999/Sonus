@@ -42,7 +42,8 @@ import java.util.concurrent.TimeUnit;
 public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink, AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("WebRTC");
-    private static final long INPUT_BUFFER_GC_INTERVAL = 0b1111111;
+    private static final int INPUT_BUFFER_GC_INTERVAL = 0b1111111;
+    private static final int QUIET_FRAMES_THRESHOLD = 150 / SonusConstants.FRAMES_INTERVAL;
 
     private final RtcManager manager;
     private final WebSocketConnection signalConnection;
@@ -55,8 +56,10 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
 
     // audio input handling
     private final ByteBuf inputBuffer = PooledByteBufAllocator.DEFAULT.buffer(SonusConstants.FRAME_SIZE * 2);
+    private int inputBufferGc = INPUT_BUFFER_GC_INTERVAL;
     private @Nullable AudioTrack microphoneTrack;
     private long sequenceNumber = 0L;
+    private int quietBuffer = QUIET_FRAMES_THRESHOLD + 1;
 
     public RtcHandler(RtcManager manager, WebSocketConnection signalConnection) {
         this.manager = manager;
@@ -129,16 +132,34 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
         ByteBuf inputBuf = this.inputBuffer;
         inputBuf.writeBytes(data);
         while (inputBuf.isReadable(SonusConstants.FRAME_SIZE * Short.BYTES)) {
+            // read pcm shorts from buffer whilst also calculating audio level using RMS
+            double rmsAmplitude = 0d;
             short[] pcmData = new short[SonusConstants.FRAME_SIZE];
             for (int i = 0; i < SonusConstants.FRAME_SIZE; i++) {
-                pcmData[i] = inputBuf.readShortLE();
+                short s = inputBuf.readShortLE();
+                pcmData[i] = s;
+                double amplitude = (double) s / (double) Short.MAX_VALUE;
+                rmsAmplitude += amplitude * amplitude;
+            }
+            // check whether this is loud enough or not
+            if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > 0e-6d * 0e-6d) {
+                this.quietBuffer = 0; // reset quiet buffer
+                SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);
+                this.signalConnection.getPlayer().handleAudioInput(audio);
+            } else if (this.quietBuffer == QUIET_FRAMES_THRESHOLD) {
+                this.quietBuffer++;
+                // mark end of input
+                this.signalConnection.getPlayer().handleAudioInputEnd(this.sequenceNumber);
+                this.sequenceNumber = 0L;
+            } else if (this.quietBuffer < QUIET_FRAMES_THRESHOLD) {
+                // wait a bit before marking as silent
+                this.quietBuffer++;
             }
 
-            SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);
-            this.signalConnection.getPlayer().handleAudioInput(audio);
             // periodically clean buffer
-            if ((audio.sequenceNumber() & INPUT_BUFFER_GC_INTERVAL) == 0L) {
+            if (this.inputBufferGc-- <= 0) {
                 inputBuf.discardSomeReadBytes();
+                this.inputBufferGc = INPUT_BUFFER_GC_INTERVAL;
             }
         }
     }
