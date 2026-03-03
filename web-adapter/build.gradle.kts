@@ -6,5 +6,9 @@ dependencies {
     api(libs.netty.codec.http)
     api(libs.jrtc)
 
+    sequenceOf("windows-x86_64", "macos-x86_64", "macos-aarch64", "linux-x86_64", "linux-aarch64")
+        .map { variantOf(libs.jrtc) { classifier(it) } }
+        .forEach { runtimeOnly(it) }
+
     implementation(projects.network)
 }
