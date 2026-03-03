@@ -178,8 +178,8 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
         }
     }
 
-    public void queueAudio(UUID channelId, short[] leftAudio, short[] rightAudio) {
-        this.mixer.handle(channelId, leftAudio, rightAudio);
+    public void queueAudio(UUID channelId, short[] leftAudio, short[] rightAudio, float volume) {
+        this.mixer.handle(channelId, leftAudio, rightAudio, volume);
     }
 
     private void startTicking(ScheduledExecutorService scheduler) {
@@ -248,6 +248,10 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
 
     public RTCPeerConnection getPeer() {
         return this.peer;
+    }
+
+    public WebSocketConnection getSignalConnection() {
+        return this.signalConnection;
     }
 
     public void setPeer(RTCPeerConnection peer) {

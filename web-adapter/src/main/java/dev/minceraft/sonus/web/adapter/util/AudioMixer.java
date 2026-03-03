@@ -30,18 +30,18 @@ public final class AudioMixer implements AutoCloseable {
                 PooledByteBufAllocator.DEFAULT.buffer(SonusConstants.FRAME_SIZE * 4));
     }
 
-    private static void append(ByteBuf buf, short[] leftData, short[] rightData) {
+    private static void append(ByteBuf buf, short[] leftData, short[] rightData, float volume) {
         int len = leftData.length;
         buf.ensureWritable(len * 2 * Short.BYTES);
         for (int i = 0; i < len; i++) {
-            buf.writeShortLE(leftData[i]);
-            buf.writeShortLE(rightData[i]);
+            buf.writeShortLE((short) (leftData[i] * volume));
+            buf.writeShortLE((short) (rightData[i] * volume));
         }
     }
 
-    public void handle(UUID channelId, short[] leftData, short[] rightData) {
+    public void handle(UUID channelId, short[] leftData, short[] rightData, float volume) {
         synchronized (this.lock) {
-            append(this.getBuffer(channelId), leftData, rightData);
+            append(this.getBuffer(channelId), leftData, rightData, volume);
         }
     }
 

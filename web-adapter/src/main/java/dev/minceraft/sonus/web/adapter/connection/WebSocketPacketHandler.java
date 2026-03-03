@@ -128,7 +128,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
 
     @Override
     public void handleVolume(VolumePacket packet) {
-        IWebSocketHandler.super.handleVolume(packet);
+        this.connection.setVolume(packet.getType(), packet.getEntryId(), packet.getVolume());
     }
 
     public void handleDisconnect() {

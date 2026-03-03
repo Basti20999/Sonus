@@ -18,6 +18,7 @@ import dev.minceraft.sonus.web.adapter.util.AudioSpatialToStereoUtil;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.CategoryRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
+import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket.VolumeType;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -65,10 +66,9 @@ public class WebAdapter implements SonusAdapter {
         // as we mix webrtc audio on the server, we have
         // to calculate voice activity on the server too
         if (source instanceof ISonusPlayer) {
-            rtcHandler.setVoiceActive(((ISonusPlayer) source).getUniqueId(player), true);
+            rtcHandler.setVoiceActive(source.getSenderId(player), true);
         }
 
-        // TODO volumes
         short[] leftData = audio.pcm();
         short[] rightData = leftData;
         // transform from spatial to stereo
@@ -78,9 +78,18 @@ public class WebAdapter implements SonusAdapter {
                     leftData, pos, player.getPosition(),
                     leftData, rightData);
         }
+
+        // apply source-specific volumes server-side
+        WebSocketConnection connection = rtcHandler.getSignalConnection();
+        float volume = connection.getVolume(VolumeType.PLAYER, source.getSenderId(player));
+        UUID categoryId = source.getCategoryId();
+        if (categoryId != null) {
+            volume *= connection.getVolume(VolumeType.CATEGORY, categoryId);
+        }
+
         // append to audio mixer queue
         UUID channelId = source.getSenderId(player);
-        rtcHandler.queueAudio(channelId, leftData, rightData);
+        rtcHandler.queueAudio(channelId, leftData, rightData, volume);
     }
 
     @Override

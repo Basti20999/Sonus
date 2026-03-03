@@ -7,13 +7,18 @@ import dev.minceraft.sonus.web.adapter.rtc.RtcHandler;
 import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.ConnectedPacket;
+import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket;
 import io.netty.channel.Channel;
 import net.kyori.adventure.text.Component;
+import org.jspecify.annotations.NullMarked;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static net.kyori.adventure.text.Component.text;
 
+@NullMarked
 public class WebSocketConnection implements AutoCloseable {
 
     private final WebAdapter adapter;
@@ -23,10 +28,27 @@ public class WebSocketConnection implements AutoCloseable {
     private final WebSocketPacketHandler packetHandler = new WebSocketPacketHandler(this);
     private int version = -1;
 
+    private final Map<UUID, Float> categoryVolumeMap = new ConcurrentHashMap<>();
+    private final Map<UUID, Float> playerVolumeMap = new ConcurrentHashMap<>();
+
     public WebSocketConnection(WebAdapter adapter, ISonusPlayer player, Channel channel) {
         this.adapter = adapter;
         this.player = player;
         this.channel = channel;
+    }
+
+    public float getVolume(VolumePacket.VolumeType volumeType, UUID entryId) {
+        return (switch (volumeType) {
+            case CATEGORY -> this.categoryVolumeMap;
+            case PLAYER -> this.playerVolumeMap;
+        }).getOrDefault(entryId, 1f);
+    }
+
+    public void setVolume(VolumePacket.VolumeType volumeType, UUID entryId, float volume) {
+        (switch (volumeType) {
+            case CATEGORY -> this.categoryVolumeMap;
+            case PLAYER -> this.playerVolumeMap;
+        }).put(entryId, volume);
     }
 
     public void sendConnected() {
