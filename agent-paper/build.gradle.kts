@@ -26,6 +26,12 @@ tasks {
         minecraftVersion("1.21.11")
     }
 
+    withType<Jar>  {
+        manifest.attributes(
+            "paperweight-mappings-namespace" to "mojang"
+        )
+    }
+
     withType<ShadowJar> {
         relocate("org.bstats", "dev.minceraft.sonus.agent.paper.bstats")
     }
