@@ -141,7 +141,7 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
             return;
         }
 
-        byte[] data = this.mixer.tickAsBytes(RtcConstants.FRAME_SIZE);
+        byte[] data = this.mixer.tick(RtcConstants.FRAME_SIZE);
         if (data == null) {
             return; // check for actual audio
         }

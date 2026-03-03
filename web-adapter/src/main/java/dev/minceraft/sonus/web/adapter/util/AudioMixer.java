@@ -2,9 +2,9 @@ package dev.minceraft.sonus.web.adapter.util;
 // Created by booky10 in Sonus (9:51 PM 02.03.2026)
 
 import dev.minceraft.sonus.common.SonusConstants;
-import dev.minceraft.sonus.common.util.AudioConversionUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.Unpooled;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -45,17 +45,9 @@ public final class AudioMixer implements AutoCloseable {
         }
     }
 
-    public byte @Nullable [] tickAsBytes(int samples) {
-        short[] samplesArr = this.tick(samples);
-        if (samplesArr != null) {
-            return AudioConversionUtil.shortsToBytes(samplesArr);
-        }
-        return null;
-    }
-
-    public short @Nullable [] tick(int samples) {
+    public byte @Nullable [] tick(int samples) {
         boolean gc = (this.tick++ & GC_INTERVAL) == 0;
-        short[] mixed = null;
+        ByteBuf mixed = null;
         synchronized (this.lock) {
             for (Iterator<ByteBuf> it = this.queue.values().iterator(); it.hasNext(); ) {
                 ByteBuf buf = it.next();
@@ -65,18 +57,20 @@ public final class AudioMixer implements AutoCloseable {
                     continue;
                 }
                 if (mixed == null) {
-                    mixed = new short[samples * 2];
+                    // lazy init
+                    mixed = Unpooled.wrappedBuffer(new byte[samples * 2 * Short.BYTES]);
                 }
                 int maxStereoSamples = Math.min(samples * 2, buf.readableBytes());
                 for (int i = 0; i < maxStereoSamples; i++) {
-                    mixed[i] = clampedAdd(buf.readShortLE(), mixed[i]);
+                    short v = clampedAdd(buf.readShortLE(), mixed.getShortLE(i));
+                    mixed.setShortLE(i, v);
                 }
                 if (gc) {
                     buf.discardSomeReadBytes();
                 }
             }
         }
-        return mixed;
+        return mixed != null ? mixed.array() : null;
     }
 
     private static short clampedAdd(short a, short b) {
@@ -100,6 +94,6 @@ public final class AudioMixer implements AutoCloseable {
 
     @Override
     public void close() {
-        this.clear()
+        this.clear();
     }
 }
