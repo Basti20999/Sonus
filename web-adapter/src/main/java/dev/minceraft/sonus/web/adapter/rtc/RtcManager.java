@@ -37,7 +37,12 @@ public final class RtcManager implements AutoCloseable {
     private final AudioProcessing processor = new AudioProcessing();
     private final SyncClock clock = new SyncClock();
 
-    private final ScheduledExecutorService audioTicker = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService audioTicker = Executors.newScheduledThreadPool(1, r -> {
+        Thread thread = new Thread(r);
+        thread.setName("webrtc_scheduler_" + System.identityHashCode(r));
+        thread.setDaemon(true);
+        return thread;
+    });
     private final Map<UUID, RtcHandler> peers = new HashMap<>();
 
     public RtcManager(WebConfig config) {
