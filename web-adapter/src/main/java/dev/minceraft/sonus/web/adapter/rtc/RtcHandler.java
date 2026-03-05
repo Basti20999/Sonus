@@ -74,7 +74,7 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
     public void initialize(PeerConnectionFactory factory, ScheduledExecutorService scheduler) {
         // advertise sending output channel
         AudioTrack outputTrack = factory.createAudioTrack("output0", this.audioSource);
-        this.peer.addTrack(outputTrack, List.of());
+        this.peer.addTrack(outputTrack, List.of("output0"));
 
         // start ticking audio mixer
         this.startTicking(scheduler);
