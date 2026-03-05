@@ -3,6 +3,7 @@ package dev.minceraft.sonus.web.adapter.rtc;
 
 import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.audio.SonusAudio;
+import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.adapter.util.AudioMixer;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
@@ -125,6 +126,12 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
 
     @Override
     public void onData(byte[] data, int bitsPerSample, int sampleRate, int channels, int frames) {
+        ISonusPlayer player = this.signalConnection.getPlayer();
+        if (player.isMuted()) {
+            this.inputBuffer.clear();
+            this.signalConnection.setVoiceActive(player.getUniqueId(), false);
+            return;
+        }
         // align with sonus codec
         data = this.manager.resampleAudio(data, sampleRate, channels);
 
@@ -144,14 +151,14 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
             // check whether this is loud enough or not
             if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > 0e-6d * 0e-6d) {
                 this.quietBuffer = 0; // reset quiet buffer
-                this.signalConnection.setVoiceActive(this.signalConnection.getPlayer().getUniqueId(), true);
+                this.signalConnection.setVoiceActive(player.getUniqueId(), true);
                 SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);
-                this.signalConnection.getPlayer().handleAudioInput(audio);
+                player.handleAudioInput(audio);
             } else if (this.quietBuffer == QUIET_FRAMES_THRESHOLD) {
                 this.quietBuffer++;
                 // mark end of input
-                this.signalConnection.setVoiceActive(this.signalConnection.getPlayer().getUniqueId(), false);
-                this.signalConnection.getPlayer().handleAudioInputEnd(this.sequenceNumber);
+                this.signalConnection.setVoiceActive(player.getUniqueId(), false);
+                player.handleAudioInputEnd(this.sequenceNumber);
                 this.sequenceNumber = 0L;
             } else if (this.quietBuffer < QUIET_FRAMES_THRESHOLD) {
                 // wait a bit before marking as silent
