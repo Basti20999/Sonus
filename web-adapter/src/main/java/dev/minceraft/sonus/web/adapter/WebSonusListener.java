@@ -35,12 +35,8 @@ public class WebSonusListener implements ISonusServiceEvents {
 
     @Override
     public void onPlayerDisconnect(ISonusPlayer player) {
-        boolean existed = this.adapter.getSessions().removeSession(player.getUniqueId());
+        this.adapter.getSessions().removeSession(player.getUniqueId());
         this.adapter.getSessions().broadcastFrom(player, new StateRemovePacket(player.getUniqueId()));
-
-        if (existed && player.isOnline()) {
-            this.sendConnectionStateMessage(player, false);
-        }
     }
 
     @Override
