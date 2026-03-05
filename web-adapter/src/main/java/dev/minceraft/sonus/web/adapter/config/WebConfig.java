@@ -1,7 +1,6 @@
 package dev.minceraft.sonus.web.adapter.config;
 
 import dev.minceraft.sonus.common.config.ISubConfig;
-import dev.onvoid.webrtc.RTCIceServer;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
@@ -28,13 +27,13 @@ public class WebConfig implements ISubConfig {
             String url, @Nullable String user, @Nullable String auth
     ) {
 
-        public RTCIceServer create() {
-            RTCIceServer ret = new RTCIceServer();
-            ret.urls.add(this.url);
-            ret.username = this.user;
-            ret.password = this.auth;
-            return ret;
-        }
+//        public RTCIceServer create() {
+//            RTCIceServer ret = new RTCIceServer();
+//            ret.urls.add(this.url);
+//            ret.username = this.user;
+//            ret.password = this.auth;
+//            return ret;
+//        }
     }
 
     public RtcNetworkConfig rtcNetwork = new RtcNetworkConfig();

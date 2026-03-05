@@ -16,14 +16,11 @@ import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPack
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomLeavePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.StateInfoPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket;
-import dev.onvoid.webrtc.RTCIceCandidate;
-import dev.onvoid.webrtc.RTCPeerConnection;
-import dev.onvoid.webrtc.RTCSdpType;
 import net.kyori.adventure.util.Index;
+import org.freedesktop.gstreamer.webrtc.WebRTCSDPType;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.UUID;
 
 @NullMarked
@@ -113,16 +110,15 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
 
     @Override
     public void handleRtcIceCandidate(RtcIceCandidatePacket packet) {
-        RTCPeerConnection peer = this.connection.getRtc().getPeer();
-        int sdpMLineIndex = Objects.requireNonNullElse(packet.getSdpMLineIndex(), -1);
-        peer.addIceCandidate(new RTCIceCandidate(packet.getSdpMid(), sdpMLineIndex, packet.getSdp()));
+        this.connection.getRtc().handleRemoteIce(packet.getSdp(), packet.getSdpMLineIndex());
     }
 
-    private static final Index<String, RTCSdpType> RTC_SDP_TYPE_INDEX = Index.create(RTCSdpType.class, type -> type.name().toLowerCase());
+    private static final Index<String, WebRTCSDPType> RTC_SDP_TYPE_INDEX = Index.create(WebRTCSDPType.class,
+            type -> type.name().toLowerCase());
 
     @Override
     public void handleRtcOffer(RtcOfferPacket packet) {
-        RTCSdpType type = RTC_SDP_TYPE_INDEX.valueOrThrow(packet.getType());
+        WebRTCSDPType type = RTC_SDP_TYPE_INDEX.valueOrThrow(packet.getType());
         this.connection.getRtc().handleRemoteOffer(type, packet.getSdp());
     }
 
