@@ -31,8 +31,11 @@ public final class AudioMixer implements AutoCloseable {
     }
 
     private static void append(ByteBuf buf, short[] leftData, short[] rightData, float volume) {
+        if (buf.readableBytes() > SonusConstants.FRAME_SIZE * SonusConstants.FRAMES_PER_SECOND * 3) {
+            return; // don't queue if buffer already too large
+        }
         int len = leftData.length;
-        buf.ensureWritable(len * 2 * Short.BYTES);
+        buf.ensureWritable(len * (Short.BYTES * 2));
         for (int i = 0; i < len; i++) {
             buf.writeShortLE((short) (leftData[i] * volume));
             buf.writeShortLE((short) (rightData[i] * volume));
@@ -57,11 +60,12 @@ public final class AudioMixer implements AutoCloseable {
                     continue;
                 }
                 if (mixed == null) {
-                    // lazy init
-                    mixed = Unpooled.wrappedBuffer(new byte[samples * 2 * Short.BYTES]);
+                    // lazy init, samples*2*2 because of stereo and 16-bit audio
+                    mixed = Unpooled.wrappedBuffer(new byte[samples << 2]);
                 }
-                int maxStereoSamples = Math.min(samples * 2, buf.readableBytes());
-                for (int i = 0; i < maxStereoSamples; i++) {
+                // samples*2*2 because see above
+                int maxStereoSamples = Math.min(samples << 2, buf.readableBytes());
+                for (int i = 0; i < maxStereoSamples; i += Short.BYTES) {
                     short v = clampedAdd(buf.readShortLE(), mixed.getShortLE(i));
                     mixed.setShortLE(i, v);
                 }

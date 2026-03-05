@@ -26,7 +26,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public final class RtcManager implements AutoCloseable {
 
     static {
-        RtcSlf4jLogger.register(Logging.Severity.INFO, "WebRtc"); // FIXME set to warn
+        RtcSlf4jLogger.register(Logging.Severity.WARNING, "WebRtc");
     }
 
     // we don't want audio playback on the server
@@ -91,8 +91,8 @@ public final class RtcManager implements AutoCloseable {
     public byte[] resampleAudio(byte[] src, int sampleRate, int channels) {
         AudioProcessingStreamConfig inputConf = new AudioProcessingStreamConfig(sampleRate, channels);
         AudioProcessingStreamConfig outputConf = new AudioProcessingStreamConfig(SonusConstants.SAMPLE_RATE, SonusConstants.CHANNELS);
-        byte[] dst = sampleRate == SonusConstants.SAMPLE_RATE && channels == SonusConstants.CHANNELS ? src :
-                new byte[this.processor.getTargetBufferSize(inputConf, outputConf)];
+        int dstLength = SonusConstants.SAMPLE_RATE * SonusConstants.CHANNELS * src.length / (sampleRate * channels);
+        byte[] dst = dstLength == src.length ? src : new byte[dstLength];
 
         int errorCode = this.processor.processStream(src, inputConf, outputConf, dst);
         if (errorCode != 0) {

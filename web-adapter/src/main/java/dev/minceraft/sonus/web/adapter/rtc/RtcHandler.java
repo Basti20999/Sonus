@@ -182,7 +182,7 @@ public final class RtcHandler implements PeerConnectionObserver, AudioTrackSink,
             throw new IllegalStateException("Already started ticking");
         }
         this.ticker = scheduler.scheduleAtFixedRate(this::tickAudio,
-                RtcConstants.FRAME_INTERVAL, RtcConstants.FRAME_INTERVAL,
+                RtcConstants.FRAME_INTERVAL - 1, RtcConstants.FRAME_INTERVAL - 1,
                 TimeUnit.MILLISECONDS);
     }
 
