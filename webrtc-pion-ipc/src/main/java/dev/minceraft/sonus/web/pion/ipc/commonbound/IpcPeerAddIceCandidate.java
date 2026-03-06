@@ -1,6 +1,8 @@
 package dev.minceraft.sonus.web.pion.ipc.commonbound;
 // Created by booky10 in Sonus (7:03 PM 06.03.2026)
 
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
+import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.web.pion.ipc.IpcMessage;
 import dev.minceraft.sonus.web.pion.ipc.IpcTypes;
 import io.netty.buffer.ByteBuf;
@@ -16,8 +18,8 @@ public class IpcPeerAddIceCandidate extends IpcMessage {
 
     public IpcPeerAddIceCandidate(ByteBuf buf) {
         this(
-                buf.readInt(), IpcTypes.readUtf8(buf),
-                IpcTypes.readNullable(buf, IpcTypes::readUtf8),
+                VarInt.read(buf), Utf8String.read(buf),
+                IpcTypes.readNullable(buf, Utf8String::read),
                 IpcTypes.readNullable(buf, ByteBuf::readShort)
         );
     }
@@ -32,8 +34,8 @@ public class IpcPeerAddIceCandidate extends IpcMessage {
     @Override
     public void encode(ByteBuf buf) {
         super.encode(buf);
-        IpcTypes.writeUtf8(buf, this.candidate);
-        IpcTypes.writeNullable(buf, this.sdpMid, IpcTypes::writeUtf8);
+        Utf8String.write(buf, this.candidate);
+        IpcTypes.writeNullable(buf, this.sdpMid, Utf8String::write);
         IpcTypes.writeNullable(buf, this.sdpMLineIndex, (ew, v) -> ew.writeShort(v));
     }
 

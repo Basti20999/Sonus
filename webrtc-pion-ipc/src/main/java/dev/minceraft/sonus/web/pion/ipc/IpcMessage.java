@@ -14,7 +14,7 @@ public abstract class IpcMessage {
     }
 
     public void encode(ByteBuf buf) {
-        buf.writeInt(this.handlerId);
+        VarInt.write(buf, this.handlerId);
     }
 
     public int getHandlerId() {

@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.web.pion.ipc.sonusbound;
 // Created by booky10 in Sonus (8:37 PM 06.03.2026)
 
+import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.web.pion.ipc.IpcMessage;
 import dev.minceraft.sonus.web.pion.ipc.IpcTypes;
 import io.netty.buffer.ByteBuf;
@@ -16,8 +17,8 @@ public class IpcPeerOnAudioTrack extends IpcMessage {
 
     public IpcPeerOnAudioTrack(ByteBuf buf) {
         this(
-                buf.readInt(), IpcTypes.readEnum(buf, Type.TYPES),
-                buf.readInt(), buf.readInt(), buf.readShort()
+                VarInt.read(buf), IpcTypes.readEnum(buf, Type.TYPES),
+                VarInt.read(buf), VarInt.read(buf), buf.readShort()
         );
     }
 

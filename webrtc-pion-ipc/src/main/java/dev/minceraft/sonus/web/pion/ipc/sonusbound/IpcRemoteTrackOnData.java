@@ -1,6 +1,7 @@
 package dev.minceraft.sonus.web.pion.ipc.sonusbound;
 // Created by booky10 in Sonus (8:55 PM 06.03.2026)
 
+import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.web.pion.ipc.IpcMessage;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
@@ -13,7 +14,10 @@ public class IpcRemoteTrackOnData extends IpcMessage {
     private final long durationNanos;
 
     public IpcRemoteTrackOnData(ByteBuf buf) {
-        this(buf.readInt(), buf.readInt(), buf.readRetainedSlice(buf.readShort()), buf.readLong());
+        this(
+                VarInt.read(buf), VarInt.read(buf),
+                buf.readRetainedSlice(VarInt.read(buf)), buf.readLong()
+        );
     }
 
     public IpcRemoteTrackOnData(int handlerId, int trackId, ByteBuf data, long durationNanos) {

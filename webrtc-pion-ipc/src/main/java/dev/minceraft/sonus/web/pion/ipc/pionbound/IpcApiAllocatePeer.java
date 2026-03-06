@@ -1,10 +1,11 @@
 package dev.minceraft.sonus.web.pion.ipc.pionbound;
 // Created by booky10 in Sonus (6:30 PM 06.03.2026)
 
+import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.web.pion.PionApi;
 import dev.minceraft.sonus.web.pion.PionApi.BundlePolicy;
-import dev.minceraft.sonus.web.pion.ipc.IpcTypes;
 import dev.minceraft.sonus.web.pion.ipc.IpcMessage;
+import dev.minceraft.sonus.web.pion.ipc.IpcTypes;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 
@@ -29,7 +30,7 @@ public class IpcApiAllocatePeer extends IpcMessage {
         super.encode(buf);
         IpcTypes.writeCollection(buf, this.iceServers, IpcTypes::writeIceServer);
         IpcTypes.writeEnum(buf, this.bundlePolicy);
-        IpcTypes.writeUtf8(buf, this.id);
+        Utf8String.write(buf, this.id);
     }
 
     public List<PionApi.IceServer> getIceServers() {
