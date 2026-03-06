@@ -17,6 +17,7 @@ import org.freedesktop.gstreamer.Caps;
 import org.freedesktop.gstreamer.Element;
 import org.freedesktop.gstreamer.ElementFactory;
 import org.freedesktop.gstreamer.FlowReturn;
+import org.freedesktop.gstreamer.Pad;
 import org.freedesktop.gstreamer.PadDirection;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.SDPMessage;
@@ -98,8 +99,17 @@ public final class RtcHandler implements AutoCloseable {
         // register handlers
         this.rtcBin.connect((WebRTCBin.ON_ICE_CANDIDATE) (sdpMLineIndex, candidate) ->
                 this.signalConnection.sendPacket(new RtcIceCandidatePacket(candidate, null, sdpMLineIndex)));
-        this.rtcBin.connect((Element.PAD_ADDED) (__, track) -> {
-            LOGGER.info("Receiving stream! Element: {} Pad: {}", __, track);
+
+        this.setupMicTrack();
+        this.setupOutputTrack(scheduler);
+
+        // start!
+        this.pipe.play();
+    }
+
+    private void setupMicTrack() {
+        this.rtcBin.connect((Element.PAD_ADDED) (eleme, track) -> {
+            LOGGER.info("Receiving stream! Element: {} Pad: {}", eleme, track);
             if (track.getDirection() != PadDirection.SRC) {
                 return;
             }
@@ -113,59 +123,63 @@ public final class RtcHandler implements AutoCloseable {
 
             // decode incoming stream
             DecodeBin decodeBin = new DecodeBin(ELEMENT_RX_PREFIX + "decodebin");
-            decodeBin.connect((Element.PAD_ADDED) (___, decodedTrack) -> {
-                if (!decodedTrack.hasCurrentCaps()) {
-                    this.disconnect("unexpected pad added: " + decodedTrack);
-                    return;
-                }
-                Caps caps = decodedTrack.getCurrentCaps();
-                LOGGER.info("Received stream with caps {}", caps);
-                if (!caps.isAlwaysCompatible(Caps.fromString("audio/x-raw"))) {
-                    this.disconnect("caps are not compatible with audio");
-                    return;
-                }
-
-                // create rx elements
-                Element q = ElementFactory.make("queue", ELEMENT_RX_PREFIX + "audioqueue");
-                Element conv = ElementFactory.make("audioconvert", ELEMENT_RX_PREFIX + "audioconvert");
-                Element resample = ElementFactory.make("audioresample", ELEMENT_RX_PREFIX + "audioresample");
-                Element capsFilter = ElementFactory.make("capsfilter", ELEMENT_RX_PREFIX + "cfilter");
-                capsFilter.setCaps(RTC_IN_DECODED_CAPS);
-                AppSink sink = new AppSink(ELEMENT_RX_PREFIX + "micsink");
-
-                // add nodes
-                this.pipe.addMany(q, conv, resample, capsFilter, sink);
-                q.syncStateWithParent();
-                conv.syncStateWithParent();
-                resample.syncStateWithParent();
-                capsFilter.syncStateWithParent();
-                sink.syncStateWithParent();
-
-                // link nodes
-                decodedTrack.link(q.getStaticPad("sink"));
-                Element.linkMany(q, conv, resample, capsFilter, sink);
-
-                // setup sink
-                sink.set("emit-signals", true);
-                sink.set("sync", false);
-                sink.connect((AppSink.NEW_SAMPLE) elem -> {
-                    Buffer buffer = elem.pullSample().getBuffer();
-                    ByteBuffer nioBuf = buffer.map(false);
-                    try {
-                        this.handleMicInput(nioBuf);
-                    } finally {
-                        buffer.unmap();
-                    }
-                    return FlowReturn.OK;
-                });
-            });
+            decodeBin.connect((Element.PAD_ADDED) this::handleMicTrack);
 
             // start decoding
             this.pipe.add(decodeBin);
             decodeBin.syncStateWithParent();
             track.link(decodeBin.getStaticPad("sink"));
         });
+    }
 
+    private void handleMicTrack(Element ignoredElem, Pad track) {
+        if (!track.hasCurrentCaps()) {
+            this.disconnect("unexpected pad added: " + track);
+            return;
+        }
+        Caps caps = track.getCurrentCaps();
+        LOGGER.info("Received stream with caps {}", caps);
+        if (!caps.isAlwaysCompatible(Caps.fromString("audio/x-raw"))) {
+            this.disconnect("caps are not compatible with audio");
+            return;
+        }
+
+        // create rx elements
+        Element q = ElementFactory.make("queue", ELEMENT_RX_PREFIX + "audioqueue");
+        Element conv = ElementFactory.make("audioconvert", ELEMENT_RX_PREFIX + "audioconvert");
+        Element resample = ElementFactory.make("audioresample", ELEMENT_RX_PREFIX + "audioresample");
+        Element capsFilter = ElementFactory.make("capsfilter", ELEMENT_RX_PREFIX + "cfilter");
+        capsFilter.setCaps(RTC_IN_DECODED_CAPS);
+        AppSink sink = new AppSink(ELEMENT_RX_PREFIX + "micsink");
+
+        // add nodes
+        this.pipe.addMany(q, conv, resample, capsFilter, sink);
+        q.syncStateWithParent();
+        conv.syncStateWithParent();
+        resample.syncStateWithParent();
+        capsFilter.syncStateWithParent();
+        sink.syncStateWithParent();
+
+        // link nodes
+        track.link(q.getStaticPad("sink"));
+        Element.linkMany(q, conv, resample, capsFilter, sink);
+
+        // setup sink
+        sink.set("emit-signals", true);
+        sink.set("sync", false);
+        sink.connect((AppSink.NEW_SAMPLE) elem -> {
+            Buffer buffer = elem.pullSample().getBuffer();
+            ByteBuffer nioBuf = buffer.map(false);
+            try {
+                this.handleMicInput(nioBuf);
+            } finally {
+                buffer.unmap();
+            }
+            return FlowReturn.OK;
+        });
+    }
+
+    private void setupOutputTrack(ScheduledExecutorService scheduler) {
         // 2 is sendonly (https://gstreamer.freedesktop.org/documentation/webrtclib/webrtc_fwd.html?gi-language=c#GstWebRTCRTPTransceiverDirection)
         this.rtcBin.emit("add-transceiver", 2L, RTC_OUT_ENCODED_CAPS);
 
@@ -222,12 +236,9 @@ public final class RtcHandler implements AutoCloseable {
 
         // link
         Element.linkMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue, this.rtcBin);
-
-        // start!
-        this.pipe.play();
     }
 
-    public void handleMicInput(ByteBuffer data) {
+    private void handleMicInput(ByteBuffer data) {
         ISonusPlayer player = this.signalConnection.getPlayer();
         if (player.isMuted()) {
             this.inputBuffer.clear();
