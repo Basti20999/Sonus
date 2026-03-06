@@ -1,4 +1,4 @@
-module github.com/MinceraftMC/Sonus/webrtc-pion
+module minceraft.dev/sonus/webrtc-pion
 
 go 1.25
 

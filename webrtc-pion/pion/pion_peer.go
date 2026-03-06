@@ -1,4 +1,4 @@
-package main
+package pion
 
 import (
 	"fmt"
@@ -166,17 +166,17 @@ func (peer *PionPeer) isTrackActive(track *webrtc.TrackRemote) bool {
 		*peer.activeTrack == track.ID()
 }
 
-func (peer *PionPeer) HandleOffer(sdp string) (*string, error) {
+func (peer *PionPeer) HandleOffer(sdp string) (string, error) {
 	if err := peer.SetRemoteDescription(webrtc.SessionDescription{Type: webrtc.SDPTypeOffer, SDP: sdp}); err != nil {
-		return nil, err
+		return "", err
 	}
 	answer, err := peer.CreateAnswer(nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	} else if err = peer.SetLocalDescription(answer); err != nil {
-		return nil, err
+		return "", err
 	}
-	return &answer.SDP, nil
+	return answer.SDP, nil
 }
 
 func (peer *PionPeer) AddIceCandidate(candidate string, sdpMid *string, sdpMLineIndex *uint16) error {

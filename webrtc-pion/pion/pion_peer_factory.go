@@ -1,4 +1,4 @@
-package main
+package pion
 
 import "github.com/pion/webrtc/v4"
 
