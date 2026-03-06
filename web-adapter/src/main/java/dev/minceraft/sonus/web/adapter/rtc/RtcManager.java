@@ -49,6 +49,15 @@ public final class RtcManager implements AutoCloseable {
     }
 
     private RtcHandler configureRtcHandler(RtcHandler handler) {
+        try {
+            return this.configureRtcHandler0(handler);
+        } catch (Throwable throwable) {
+            handler.close();
+            throw throwable;
+        }
+    }
+
+    private RtcHandler configureRtcHandler0(RtcHandler handler) {
         for (WebConfig.IceServerConfig iceServer : this.config.get().iceServers) {
             handler.addTurnServer(iceServer.url(), iceServer.user(), iceServer.auth());
         }

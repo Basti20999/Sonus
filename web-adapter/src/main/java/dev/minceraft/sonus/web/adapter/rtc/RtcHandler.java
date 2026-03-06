@@ -11,6 +11,7 @@ import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Buffer;
 import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.Caps;
@@ -39,11 +40,11 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.EnumSet;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @NullMarked
 public final class RtcHandler implements AutoCloseable {
@@ -68,6 +69,8 @@ public final class RtcHandler implements AutoCloseable {
     // audio output handling
     private final AudioMixer mixer = new AudioMixer();
     private @MonotonicNonNull ScheduledFuture<?> ticker = null;
+    private @MonotonicNonNull AppSrc outputSource;
+    private volatile boolean push = false;
 
     // audio input handling
     private final ByteBuf inputBuffer = PooledByteBufAllocator.DEFAULT.buffer(SonusConstants.FRAME_SIZE * 2);
@@ -119,6 +122,9 @@ public final class RtcHandler implements AutoCloseable {
                     .toArray(Element[]::new);
             if (rxElements.length > 0) {
                 this.pipe.removeMany(rxElements);
+                for (Element rxElement : rxElements) {
+                    rxElement.close();
+                }
             }
 
             // decode incoming stream
@@ -129,6 +135,8 @@ public final class RtcHandler implements AutoCloseable {
             this.pipe.add(decodeBin);
             decodeBin.syncStateWithParent();
             track.link(decodeBin.getStaticPad("sink"));
+
+            this.pipe.debugToDotFile(EnumSet.allOf(Bin.DebugGraphDetails.class), "fucku");
         });
     }
 
@@ -188,6 +196,8 @@ public final class RtcHandler implements AutoCloseable {
         outSrc.set("format", 3L); // time (https://gstreamer.freedesktop.org/documentation/gstreamer/gstformat.html?gi-language=c#GstFormat)
         outSrc.set("is-live", true);
         outSrc.set("do-timestamp", true);
+        outSrc.set("emit-signals", true);
+        outSrc.setCaps(RTC_OUT_CAPS);
         Element srcFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "srcfilter");
         srcFilter.setCaps(RTC_OUT_CAPS);
         Element conv = ElementFactory.make("audioconvert", ELEMENT_TX_PREFIX + "audioconvert");
@@ -209,33 +219,37 @@ public final class RtcHandler implements AutoCloseable {
         dstFilter.syncStateWithParent();
         queue.syncStateWithParent();
 
-        AtomicBoolean push = new AtomicBoolean(true);
-        outSrc.connect((AppSrc.ENOUGH_DATA) elem -> {
-            System.out.println("ENOUGH DATA " + elem);
-            push.set(false);
-        });
-        outSrc.connect((AppSrc.NEED_DATA) (elem, size) -> {
-            System.out.println("NEED DATA " + elem + " " + size);
-            push.set(true);
-        });
+        this.outputSource = outSrc;
+        outSrc.connect((AppSrc.ENOUGH_DATA) elem -> this.push = false);
+        outSrc.connect((AppSrc.NEED_DATA) (elem, size) -> this.push = true);
 
-        // start push task
-        this.ticker = scheduler.scheduleAtFixedRate(() -> {
-            // *2*2 because 16-bit and stereo
-            Buffer buf = new Buffer(RtcConstants.FRAME_SIZE << 2);
-            this.mixer.tick(buf.map(true));
-            FlowReturn ret = null;
-            if (push.get()) {
-                buf.unmap();
-                ret = outSrc.pushBuffer(buf);
-            } else {
-                buf.close();
-            }
-            System.out.println("PUSHED: " + System.nanoTime() / 1_000_000d + " " + outSrc.getState() + " " + ret);
-        }, RtcConstants.FRAME_INTERVAL, RtcConstants.FRAME_INTERVAL, TimeUnit.MILLISECONDS);
+        // start push task, needs to be run with set interval
+        this.ticker = scheduler.scheduleAtFixedRate(this::tickAudio,
+                RtcConstants.FRAME_INTERVAL, RtcConstants.FRAME_INTERVAL, TimeUnit.MILLISECONDS);
 
         // link
         Element.linkMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue, this.rtcBin);
+    }
+
+    private void tickAudio() {
+        try {
+            this.tickAudio0();
+        } catch (Throwable throwable) {
+            LOGGER.error("Error while ticking audio", throwable);
+        }
+    }
+
+    private void tickAudio0() {
+        // *2*2 because 16-bit and stereo
+        Buffer buf = new Buffer(RtcConstants.FRAME_SIZE << 2);
+        this.mixer.tick(buf.map(true));
+        FlowReturn ret = null;
+        if (this.push) {
+            buf.unmap();
+            ret = this.outputSource.pushBuffer(buf);
+        } else {
+            buf.close();
+        }
     }
 
     private void handleMicInput(ByteBuffer data) {
@@ -333,6 +347,13 @@ public final class RtcHandler implements AutoCloseable {
     public void addTurnServer(String uri, @Nullable String user, @Nullable String auth) {
         try {
             URI parsedUri = new URI(uri);
+
+            // gstreamer only supports simple stun servers
+            if ("stun".equals(parsedUri.getScheme())) {
+                this.rtcBin.setStunServer(uri);
+                return;
+            }
+
             if (user != null) {
                 String encodedUser = URLEncoder.encode(user, StandardCharsets.UTF_8);
                 String encodedAuth = auth != null ? URLEncoder.encode(auth, StandardCharsets.UTF_8) : null;
@@ -366,6 +387,7 @@ public final class RtcHandler implements AutoCloseable {
         this.inputBuffer.release();
         if (this.ticker != null) {
             this.ticker.cancel(false);
+            this.ticker = null;
         }
     }
 }
