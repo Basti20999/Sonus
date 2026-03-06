@@ -47,7 +47,7 @@ public class WebAdapter implements SonusAdapter {
     @Override
     public void init(ISonusService service) {
         this.server.openSocket();
-        this.webrtc = new RtcManager(service.getConfig().getSubConfig(WebConfig.class));
+        this.webrtc = new RtcManager(() -> service.getConfig().getSubConfig(WebConfig.class));
         this.service.getEventManager().registerListener(new WebSonusListener(this));
     }
 

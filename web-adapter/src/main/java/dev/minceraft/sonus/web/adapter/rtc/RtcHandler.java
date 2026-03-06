@@ -10,6 +10,7 @@ import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacke
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.freedesktop.gstreamer.Buffer;
 import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.Caps;
@@ -32,13 +33,16 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @NullMarked
 public final class RtcHandler implements AutoCloseable {
@@ -62,21 +66,18 @@ public final class RtcHandler implements AutoCloseable {
 
     // audio output handling
     private final AudioMixer mixer = new AudioMixer();
+    private @MonotonicNonNull ScheduledFuture<?> ticker = null;
 
     // audio input handling
-    private final AtomicInteger inputTrackIndex = new AtomicInteger();
     private final ByteBuf inputBuffer = PooledByteBufAllocator.DEFAULT.buffer(SonusConstants.FRAME_SIZE * 2);
     private int inputBufferGc = INPUT_BUFFER_GC_INTERVAL;
     private long sequenceNumber = 0L;
     private int quietBuffer = QUIET_FRAMES_THRESHOLD + 1;
 
-    public RtcHandler(RtcManager manager, String stun, WebSocketConnection signalConnection) {
+    public RtcHandler(RtcManager manager, WebSocketConnection signalConnection) {
         this.manager = manager;
         this.signalConnection = signalConnection;
-
-        this.rtcBin.setStunServer(stun);
         this.pipe.setState(State.PAUSED);
-        this.initialize();
     }
 
     private static WebRTCBin createWebRtcBin(Pipeline pipe) {
@@ -91,7 +92,7 @@ public final class RtcHandler implements AutoCloseable {
         this.manager.removePeer(this.signalConnection.getPlayer().getUniqueId());
     }
 
-    private void initialize() {
+    public void initialize(ScheduledExecutorService scheduler) {
         this.setupPipeLogging(this.pipe);
 
         // register handlers
@@ -205,8 +206,7 @@ public final class RtcHandler implements AutoCloseable {
         });
 
         // start push task
-        ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
-        sched.scheduleAtFixedRate(() -> {
+        this.ticker = scheduler.scheduleAtFixedRate(() -> {
             // *2*2 because 16-bit and stereo
             Buffer buf = new Buffer(RtcConstants.FRAME_SIZE << 2);
             this.mixer.tick(buf.map(true));
@@ -319,6 +319,26 @@ public final class RtcHandler implements AutoCloseable {
         });
     }
 
+    public void addTurnServer(String uri, @Nullable String user, @Nullable String auth) {
+        try {
+            URI parsedUri = new URI(uri);
+            if (user != null) {
+                String encodedUser = URLEncoder.encode(user, StandardCharsets.UTF_8);
+                String encodedAuth = auth != null ? URLEncoder.encode(auth, StandardCharsets.UTF_8) : null;
+                String userInfo = encodedUser + (auth != null ? ":" + encodedAuth : "");
+                // inject user info string into uri
+                URI turnUri = new URI(parsedUri.getScheme(), userInfo,
+                        parsedUri.getHost(), parsedUri.getPort(), parsedUri.getRawPath(),
+                        parsedUri.getRawQuery(), parsedUri.getRawFragment());
+                uri = turnUri.toString();
+            }
+        } catch (URISyntaxException exception) {
+            throw new IllegalStateException("Invalid turn uri: " + uri, exception);
+        }
+
+        this.rtcBin.emit("add-turn-server", uri);
+    }
+
     public WebSocketConnection getSignalConnection() {
         return this.signalConnection;
     }
@@ -333,5 +353,8 @@ public final class RtcHandler implements AutoCloseable {
         this.pipe.close();
         this.mixer.close();
         this.inputBuffer.release();
+        if (this.ticker != null) {
+            this.ticker.cancel(false);
+        }
     }
 }

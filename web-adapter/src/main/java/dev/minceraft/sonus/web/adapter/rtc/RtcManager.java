@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
 
 @NullMarked
 public final class RtcManager implements AutoCloseable {
@@ -29,26 +30,12 @@ public final class RtcManager implements AutoCloseable {
         thread.setDaemon(true);
         return thread;
     });
+    private final Supplier<WebConfig> config;
+
     private final Map<UUID, RtcHandler> peers = new HashMap<>();
 
-    public RtcManager(WebConfig config) {
-//        // configure ICE STUN/TURN servers
-//        config.iceServers.stream()
-//                .map(WebConfig.IceServerConfig::create)
-//                .forEach(this.config.iceServers::add);
-//
-//        // apply network config
-//        WebConfig.RtcNetworkConfig netConf = config.rtcNetwork;
-//        PortAllocatorConfig allocConf = this.config.portAllocatorConfig;
-//        allocConf.minPort = netConf.minPort;
-//        allocConf.maxPort = netConf.maxPort;
-//        allocConf.setDisableTcp(!netConf.enableTcp);
-//        allocConf.setDisableUdp(!netConf.enableUdp);
-//        allocConf.setEnableIpv6(netConf.enableIpv6);
-//        allocConf.setEnableIpv6OnWifi(netConf.enableIpv6);
-//        allocConf.setDisableStun(!netConf.enableStun);
-//        allocConf.setDisableRelay(!netConf.enableRelay);
-//        allocConf.setDisableUdpRelay(!netConf.enableRelay);
+    public RtcManager(Supplier<WebConfig> config) {
+        this.config = config;
     }
 
     public @Nullable RtcHandler getPeer(UUID playerId) {
@@ -58,7 +45,15 @@ public final class RtcManager implements AutoCloseable {
     public RtcHandler getPeer(WebSocketConnection connection) {
         UUID playerId = connection.getPlayer().getUniqueId();
         return this.peers.computeIfAbsent(playerId, __ ->
-                new RtcHandler(this, "stun://stun.l.google.com:19302", connection));
+                this.configureRtcHandler(new RtcHandler(this, connection)));
+    }
+
+    private RtcHandler configureRtcHandler(RtcHandler handler) {
+        for (WebConfig.IceServerConfig iceServer : this.config.get().iceServers) {
+            handler.addTurnServer(iceServer.url(), iceServer.user(), iceServer.auth());
+        }
+        handler.initialize(this.audioTicker);
+        return handler;
     }
 
     public boolean removePeer(UUID playerId) {

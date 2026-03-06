@@ -19,34 +19,12 @@ public class WebConfig implements ISubConfig {
     public String linkPattern = "https://sonus.example.com/%s";
 
     public List<IceServerConfig> iceServers = List.of(
-            new IceServerConfig("stun:stun.l.google.com:5349", null, null)
+            new IceServerConfig("stun://stun.l.google.com:5349", null, null)
     );
 
     @ConfigSerializable
     public record IceServerConfig(
             String url, @Nullable String user, @Nullable String auth
     ) {
-
-//        public RTCIceServer create() {
-//            RTCIceServer ret = new RTCIceServer();
-//            ret.urls.add(this.url);
-//            ret.username = this.user;
-//            ret.password = this.auth;
-//            return ret;
-//        }
-    }
-
-    public RtcNetworkConfig rtcNetwork = new RtcNetworkConfig();
-
-    @ConfigSerializable
-    public static final class RtcNetworkConfig {
-
-        public int minPort = 49100;
-        public int maxPort = 49300;
-        public boolean enableTcp = false;
-        public boolean enableUdp = true;
-        public boolean enableIpv6 = true;
-        public boolean enableStun = true;
-        public boolean enableRelay = true;
     }
 }
