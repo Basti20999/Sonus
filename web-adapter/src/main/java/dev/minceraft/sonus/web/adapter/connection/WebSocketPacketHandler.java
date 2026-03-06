@@ -119,6 +119,9 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
     @Override
     public void handleRtcOffer(RtcOfferPacket packet) {
         WebRTCSDPType type = RTC_SDP_TYPE_INDEX.valueOrThrow(packet.getType());
+        if (type != WebRTCSDPType.OFFER || packet.getSdp() == null) {
+            throw new IllegalStateException("Unexpected packet: " + packet);
+        }
         this.connection.getRtc().handleRemoteOffer(type, packet.getSdp());
     }
 

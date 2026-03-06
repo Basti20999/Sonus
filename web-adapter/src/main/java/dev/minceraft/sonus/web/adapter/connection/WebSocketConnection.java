@@ -59,7 +59,7 @@ public class WebSocketConnection implements AutoCloseable {
         (switch (volumeType) {
             case CATEGORY -> this.categoryVolumeMap;
             case PLAYER -> this.playerVolumeMap;
-        }).put(entryId, volume);
+        }).put(entryId, Math.clamp(volume, 0f, 2f));
     }
 
     public void sendConnected() {
@@ -108,5 +108,10 @@ public class WebSocketConnection implements AutoCloseable {
     @Override
     public void close() {
         this.channel.close();
+    }
+
+    @Override
+    public String toString() {
+        return "WebSocket[" + this.player.getUniqueId() + ' ' + this.channel + ']';
     }
 }

@@ -21,6 +21,7 @@ import org.freedesktop.gstreamer.FlowReturn;
 import org.freedesktop.gstreamer.Pad;
 import org.freedesktop.gstreamer.PadDirection;
 import org.freedesktop.gstreamer.Pipeline;
+import org.freedesktop.gstreamer.Promise;
 import org.freedesktop.gstreamer.SDPMessage;
 import org.freedesktop.gstreamer.State;
 import org.freedesktop.gstreamer.elements.AppSink;
@@ -102,17 +103,20 @@ public final class RtcHandler implements AutoCloseable {
         // register handlers
         this.rtcBin.connect((WebRTCBin.ON_ICE_CANDIDATE) (sdpMLineIndex, candidate) ->
                 this.signalConnection.sendPacket(new RtcIceCandidatePacket(candidate, null, sdpMLineIndex)));
+        this.rtcBin.connect((WebRTCBin.ON_NEGOTIATION_NEEDED) elem -> LOGGER.info("Negotiation needed for {}", this.signalConnection));
 
         this.setupMicTrack();
         this.setupOutputTrack(scheduler);
+
+        this.pipe.debugToDotFile(EnumSet.allOf(Bin.DebugGraphDetails.class), "fucku1");
 
         // start!
         this.pipe.play();
     }
 
     private void setupMicTrack() {
-        this.rtcBin.connect((Element.PAD_ADDED) (eleme, track) -> {
-            LOGGER.info("Receiving stream! Element: {} Pad: {}", eleme, track);
+        this.rtcBin.connect((Element.PAD_ADDED) (elem, track) -> {
+            LOGGER.info("Receiving stream! Element: {} Pad: {}", elem, track);
             if (track.getDirection() != PadDirection.SRC) {
                 return;
             }
@@ -136,7 +140,7 @@ public final class RtcHandler implements AutoCloseable {
             decodeBin.syncStateWithParent();
             track.link(decodeBin.getStaticPad("sink"));
 
-            this.pipe.debugToDotFile(EnumSet.allOf(Bin.DebugGraphDetails.class), "fucku");
+            this.pipe.debugToDotFile(EnumSet.allOf(Bin.DebugGraphDetails.class), "fucku2");
         });
     }
 
@@ -188,9 +192,6 @@ public final class RtcHandler implements AutoCloseable {
     }
 
     private void setupOutputTrack(ScheduledExecutorService scheduler) {
-        // 2 is sendonly (https://gstreamer.freedesktop.org/documentation/webrtclib/webrtc_fwd.html?gi-language=c#GstWebRTCRTPTransceiverDirection)
-        this.rtcBin.emit("add-transceiver", 2L, RTC_OUT_ENCODED_CAPS);
-
         // create audio output pipeline elements
         AppSrc outSrc = new AppSrc(ELEMENT_TX_PREFIX + "src");
         outSrc.set("format", 3L); // time (https://gstreamer.freedesktop.org/documentation/gstreamer/gstformat.html?gi-language=c#GstFormat)
@@ -243,10 +244,9 @@ public final class RtcHandler implements AutoCloseable {
         // *2*2 because 16-bit and stereo
         Buffer buf = new Buffer(RtcConstants.FRAME_SIZE << 2);
         this.mixer.tick(buf.map(true));
-        FlowReturn ret = null;
         if (this.push) {
             buf.unmap();
-            ret = this.outputSource.pushBuffer(buf);
+            this.outputSource.pushBuffer(buf);
         } else {
             buf.close();
         }
@@ -313,30 +313,34 @@ public final class RtcHandler implements AutoCloseable {
                 this.disconnect("Error from source: " + source + ", with code: " + code + ", and message: " + message));
 
         bus.connect((source, old, current, pending) -> {
-            if (source instanceof Pipeline) {
+            if (source instanceof Pipeline && old != current) {
                 LOGGER.info("Pipe {} state changed from {} to {}", this.pipe, old, current);
             }
         });
     }
 
     public void handleRemoteIce(@Nullable String sdp, @Nullable Integer sdpMLineIndex) {
+        LOGGER.info("Accepting ICE candidate from {}", this.signalConnection);
         this.rtcBin.addIceCandidate(sdpMLineIndex == null ? -1 : sdpMLineIndex, sdp);
     }
 
-    public void handleRemoteOffer(WebRTCSDPType type, @Nullable String sdp) {
+    public void handleRemoteOffer(WebRTCSDPType type, String sdp) {
+        LOGGER.info("Accepting offer from {}", this.signalConnection);
         // configure remote description
-        WebRTCSessionDescription remoteSessionDesc;
-        if (sdp != null) {
-            SDPMessage sdpMsg = new SDPMessage();
-            sdpMsg.parseBuffer(sdp);
-            remoteSessionDesc = new WebRTCSessionDescription(type, sdpMsg);
-        } else {
-            remoteSessionDesc = null;
-        }
-        this.rtcBin.setRemoteDescription(remoteSessionDesc);
+        SDPMessage sdpMsg = new SDPMessage();
+        sdpMsg.parseBuffer(sdp);
+        WebRTCSessionDescription remoteSessionDesc = new WebRTCSessionDescription(type, sdpMsg);
+
+        // built-in api doesn't wait for remote description promise
+        Promise promise = new Promise();
+        remoteSessionDesc.disown();
+        this.rtcBin.emit("set-remote-description", remoteSessionDesc, promise);
+        promise.waitResult();
+        promise.dispose();
 
         // construct answer
         this.rtcBin.createAnswer(answer -> {
+            LOGGER.info("Sending answer to {} in state {}/{}", this.signalConnection, this.rtcBin.getConnectionState(), this.rtcBin.getICEGatheringState());
             this.rtcBin.setLocalDescription(answer);
             // send to web app
             String answerSdp = answer.getSDPMessage().toString();
