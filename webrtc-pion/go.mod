@@ -1,8 +1,11 @@
-module github.com/MinceraftMC/Sonus/web-pion
+module github.com/MinceraftMC/Sonus/webrtc-pion
 
 go 1.25
 
-require github.com/pion/webrtc/v4 v4.2.9
+require (
+	github.com/pion/rtp v1.10.1
+	github.com/pion/webrtc/v4 v4.2.9
+)
 
 require (
 	github.com/google/uuid v1.6.0 // indirect
@@ -12,10 +15,8 @@ require (
 	github.com/pion/interceptor v0.1.44 // indirect
 	github.com/pion/logging v0.2.4 // indirect
 	github.com/pion/mdns/v2 v2.1.0 // indirect
-	github.com/pion/opus v0.0.0-20260219180131-abe26becac00 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/rtcp v1.2.16 // indirect
-	github.com/pion/rtp v1.10.1 // indirect
 	github.com/pion/sctp v1.9.2 // indirect
 	github.com/pion/sdp/v3 v3.0.18 // indirect
 	github.com/pion/srtp/v3 v3.0.10 // indirect
