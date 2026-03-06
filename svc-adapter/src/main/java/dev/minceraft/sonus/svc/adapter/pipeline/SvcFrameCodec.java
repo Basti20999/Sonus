@@ -5,7 +5,6 @@ import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.svc.adapter.SvcUdpPipelineNode;
 import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import org.jspecify.annotations.NullMarked;
@@ -23,8 +22,8 @@ public final class SvcFrameCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
 
     @Override
     public void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
-        out.add(Unpooled.compositeBuffer(2)
-                .addComponent(true, VarInt.buffer(msg.readableBytes()))
+        out.add(ctx.alloc().compositeBuffer(2)
+                .addComponent(true, VarInt.buffer(ctx.alloc(), msg.readableBytes()))
                 .addComponent(true, msg));
     }
 

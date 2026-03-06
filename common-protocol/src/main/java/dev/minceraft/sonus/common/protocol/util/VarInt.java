@@ -2,7 +2,7 @@ package dev.minceraft.sonus.common.protocol.util;
 // Created by booky10 in Sonus (01:17 17.07.2025)
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBufAllocator;
 import org.jspecify.annotations.NullMarked;
 
 // copied from https://github.com/PaperMC/Velocity/blob/81deb1fff82957705108755f420be621c9ba4f8f/proxy/src/main/java/com/velocitypowered/proxy/protocol/ProtocolUtils.java#L158-L254
@@ -11,6 +11,7 @@ public final class VarInt {
 
     private static final int MAXIMUM_VARINT_SIZE = 5;
     private static final int[] VAR_INT_EXACT_BYTE_LENGTHS = new int[33];
+    private static final QuietCodecException BAD_VARINT = new QuietCodecException("Bad VarInt decoded");
 
     static {
         initVarIntLengths();
@@ -28,15 +29,13 @@ public final class VarInt {
         VAR_INT_EXACT_BYTE_LENGTHS[32] = 1;
     }
 
-    public static ByteBuf buffer(int value) {
-        int size = size(value);
-        ByteBuf buf = Unpooled.wrappedBuffer(new byte[size]);
-        buf.resetWriterIndex();
+    public static ByteBuf buffer(ByteBufAllocator alloc, int value) {
+        ByteBuf buf = alloc.buffer(size(value));
         write(buf, value);
         return buf;
     }
 
-    static int size(int value) {
+    public static int size(int value) {
         return VAR_INT_EXACT_BYTE_LENGTHS[Integer.numberOfLeadingZeros(value)];
     }
 
@@ -46,11 +45,11 @@ public final class VarInt {
      * @param buf the buffer to read from
      * @return the decoded VarInt
      */
-    public static int read(ByteBuf buf) {
+    public static int read(ByteBuf buf) throws QuietCodecException {
         int readable = buf.readableBytes();
         if (readable == 0) {
             // special case for empty buffer
-            throw new IllegalStateException("Bad VarInt decoded");
+            throw BAD_VARINT;
         }
 
         // we can read at least one byte, and this should be a common case
@@ -69,7 +68,7 @@ public final class VarInt {
                 return i;
             }
         }
-        throw new IllegalStateException("Bad VarInt decoded");
+        throw BAD_VARINT;
     }
 
     /**

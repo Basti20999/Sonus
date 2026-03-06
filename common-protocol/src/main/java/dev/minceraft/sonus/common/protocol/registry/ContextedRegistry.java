@@ -180,5 +180,13 @@ public class ContextedRegistry<D, T extends ProtocolMessage<?>, C> {
             this.decode = decode;
             this.encode = encode;
         }
+
+        public boolean isDecode() {
+            return this.decode;
+        }
+
+        public boolean isEncode() {
+            return this.encode;
+        }
     }
 }
