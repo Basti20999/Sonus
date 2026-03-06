@@ -1,11 +1,9 @@
 package dev.minceraft.sonus.web.adapter.rtc;
 // Created by booky10 in Sonus (4:26 AM 02.03.2026)
 
+import dev.minceraft.sonus.common.natives.OpusNativesLoader;
 import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
-import org.freedesktop.gstreamer.Gst;
-import org.freedesktop.gstreamer.Version;
-import org.freedesktop.gstreamer.glib.GLib;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -19,10 +17,7 @@ import java.util.function.Supplier;
 @NullMarked
 public final class RtcManager implements AutoCloseable {
 
-    static {
-        GLib.setEnv("GST_DEBUG", "4", true);
-        Gst.init(Version.of(1, 16));
-    }
+    private final OpusNativesLoader opusLoader = new OpusNativesLoader();
 
     private final ScheduledExecutorService audioTicker = Executors.newScheduledThreadPool(1, r -> {
         Thread thread = new Thread(r);
@@ -44,31 +39,25 @@ public final class RtcManager implements AutoCloseable {
 
     public RtcHandler getPeer(WebSocketConnection connection) {
         UUID playerId = connection.getPlayer().getUniqueId();
-        return this.peers.computeIfAbsent(playerId, __ ->
-                this.configureRtcHandler(new RtcHandler(this, connection)));
-    }
-
-    private RtcHandler configureRtcHandler(RtcHandler handler) {
-        try {
-            return this.configureRtcHandler0(handler);
-        } catch (Throwable throwable) {
-            handler.close();
-            throw throwable;
-        }
-    }
-
-    private RtcHandler configureRtcHandler0(RtcHandler handler) {
-        for (WebConfig.IceServerConfig iceServer : this.config.get().iceServers) {
-            handler.addTurnServer(iceServer.url(), iceServer.user(), iceServer.auth());
-        }
-        handler.initialize(this.audioTicker);
-        return handler;
+        return this.peers.computeIfAbsent(playerId, __ -> {
+            RtcHandler ret = new RtcHandler(this, connection);
+            ret.startTicking(this.audioTicker);
+            return ret;
+        });
     }
 
     public boolean removePeer(UUID playerId) {
         try (RtcHandler handler = this.peers.remove(playerId)) {
             return handler != null;
         }
+    }
+
+    public OpusNativesLoader getOpusLoader() {
+        return this.opusLoader;
+    }
+
+    public WebConfig getConfig() {
+        return this.config.get();
     }
 
     @Override
@@ -78,6 +67,6 @@ public final class RtcManager implements AutoCloseable {
             return true;
         });
         this.audioTicker.close();
-        Gst.quit();
+        this.opusLoader.close();
     }
 }

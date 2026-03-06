@@ -3,42 +3,43 @@ package dev.minceraft.sonus.web.protocol.packets.commonbound;
 
 import dev.minceraft.sonus.common.protocol.util.DataTypeUtil;
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
-import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.web.protocol.WsPacketContext;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
 import dev.minceraft.sonus.web.protocol.packets.WebSocketPacket;
 import io.netty.buffer.ByteBuf;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 @NullMarked
 public class RtcIceCandidatePacket extends WebSocketPacket {
 
-    private @Nullable String sdp;
+    private @MonotonicNonNull String candidate;
     private @Nullable String sdpMid;
-    private @Nullable Integer sdpMLineIndex;
+    private @Nullable Short sdpMLineIndex;
 
     public RtcIceCandidatePacket() {
     }
 
-    public RtcIceCandidatePacket(@Nullable String sdp, @Nullable String sdpMid, @Nullable Integer sdpMLineIndex) {
-        this.sdp = sdp;
+    public RtcIceCandidatePacket(@MonotonicNonNull String candidate, @Nullable String sdpMid, @Nullable Short sdpMLineIndex) {
+        this.candidate = candidate;
         this.sdpMid = sdpMid;
         this.sdpMLineIndex = sdpMLineIndex;
     }
 
     @Override
     public void encode(ByteBuf buf, WsPacketContext context) {
-        DataTypeUtil.writeNullable(buf, this.sdp, Utf8String::write);
+        Utf8String.write(buf, this.candidate);
         DataTypeUtil.writeNullable(buf, this.sdpMid, Utf8String::write);
-        DataTypeUtil.writeNullable(buf, this.sdpMLineIndex, VarInt::write);
+        DataTypeUtil.writeNullable(buf, this.sdpMLineIndex,
+                (ew, v) -> ew.writeShort(v));
     }
 
     @Override
     public void decode(ByteBuf buf, WsPacketContext context) {
-        this.sdp = DataTypeUtil.readNullable(buf, ew -> Utf8String.read(ew, 256));
+        this.candidate = Utf8String.read(buf, 256);
         this.sdpMid = DataTypeUtil.readNullable(buf, ew -> Utf8String.read(ew, 32));
-        this.sdpMLineIndex = DataTypeUtil.readNullable(buf, VarInt::read);
+        this.sdpMLineIndex = DataTypeUtil.readNullable(buf, ByteBuf::readShort);
     }
 
     @Override
@@ -46,12 +47,12 @@ public class RtcIceCandidatePacket extends WebSocketPacket {
         handler.handleRtcIceCandidate(this);
     }
 
-    public @Nullable String getSdp() {
-        return this.sdp;
+    public String getCandidate() {
+        return this.candidate;
     }
 
-    public void setSdp(@Nullable String sdp) {
-        this.sdp = sdp;
+    public void setCandidate(String candidate) {
+        this.candidate = candidate;
     }
 
     public @Nullable String getSdpMid() {
@@ -62,11 +63,11 @@ public class RtcIceCandidatePacket extends WebSocketPacket {
         this.sdpMid = sdpMid;
     }
 
-    public @Nullable Integer getSdpMLineIndex() {
+    public @Nullable Short getSdpMLineIndex() {
         return this.sdpMLineIndex;
     }
 
-    public void setSdpMLineIndex(@Nullable Integer sdpMLineIndex) {
+    public void setSdpMLineIndex(@Nullable Short sdpMLineIndex) {
         this.sdpMLineIndex = sdpMLineIndex;
     }
 }

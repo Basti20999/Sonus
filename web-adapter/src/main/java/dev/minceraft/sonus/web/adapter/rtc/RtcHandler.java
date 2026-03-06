@@ -4,58 +4,33 @@ package dev.minceraft.sonus.web.adapter.rtc;
 import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
+import dev.minceraft.sonus.common.natives.OpusNativesLoader;
+import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.adapter.util.AudioMixer;
+import dev.minceraft.sonus.web.pion.IceConnectionState;
+import dev.minceraft.sonus.web.pion.PeerConnectionState;
+import dev.minceraft.sonus.web.pion.PionApi;
+import dev.minceraft.sonus.web.pion.PionLocalTrack;
+import dev.minceraft.sonus.web.pion.PionPeer;
+import dev.minceraft.sonus.web.pion.PionRemoteTrack;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
-import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.freedesktop.gstreamer.Bin;
-import org.freedesktop.gstreamer.Buffer;
-import org.freedesktop.gstreamer.Bus;
-import org.freedesktop.gstreamer.Caps;
-import org.freedesktop.gstreamer.Element;
-import org.freedesktop.gstreamer.ElementFactory;
-import org.freedesktop.gstreamer.FlowReturn;
-import org.freedesktop.gstreamer.Pad;
-import org.freedesktop.gstreamer.PadDirection;
-import org.freedesktop.gstreamer.Pipeline;
-import org.freedesktop.gstreamer.Promise;
-import org.freedesktop.gstreamer.SDPMessage;
-import org.freedesktop.gstreamer.State;
-import org.freedesktop.gstreamer.elements.AppSink;
-import org.freedesktop.gstreamer.elements.AppSrc;
-import org.freedesktop.gstreamer.elements.DecodeBin;
-import org.freedesktop.gstreamer.webrtc.WebRTCBin;
-import org.freedesktop.gstreamer.webrtc.WebRTCPeerConnectionState;
-import org.freedesktop.gstreamer.webrtc.WebRTCSDPType;
-import org.freedesktop.gstreamer.webrtc.WebRTCSessionDescription;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 @NullMarked
-public final class RtcHandler implements AutoCloseable {
-
-    private static final Caps RTC_IN_DECODED_CAPS = new Caps("audio/x-raw,format=S16LE,rate=" + SonusConstants.SAMPLE_RATE + ",channels=1");
-    private static final Caps RTC_OUT_CAPS = new Caps("audio/x-raw,format=S16LE,rate=" + RtcConstants.SAMPLE_RATE + ",channels=2,layout=interleaved");
-    private static final Caps RTC_OUT_ENCODED_CAPS = new Caps("application/x-rtp,media=audio,encoding-name=OPUS,payload=96");
-
-    private static final String ELEMENT_RX_PREFIX = "rx_";
-    private static final String ELEMENT_TX_PREFIX = "tx_";
+public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("WebRTC");
     private static final int INPUT_BUFFER_GC_INTERVAL = 0b1111111;
@@ -64,16 +39,15 @@ public final class RtcHandler implements AutoCloseable {
 
     private final RtcManager manager;
     private final WebSocketConnection signalConnection;
-    private final Pipeline pipe = new Pipeline();
-    private final WebRTCBin rtcBin = createWebRtcBin(this.pipe);
+    private final PionPeer peer;
 
     // audio output handling
     private final AudioMixer mixer = new AudioMixer();
     private @MonotonicNonNull ScheduledFuture<?> ticker = null;
-    private @MonotonicNonNull AppSrc outputSource;
-    private volatile boolean push = false;
+    private @MonotonicNonNull PionLocalTrack outputTrack;
 
     // audio input handling
+    private OpusNativesLoader.@Nullable Decoder opusDecoder;
     private final ByteBuf inputBuffer = PooledByteBufAllocator.DEFAULT.buffer(SonusConstants.FRAME_SIZE * 2);
     private int inputBufferGc = INPUT_BUFFER_GC_INTERVAL;
     private long sequenceNumber = 0L;
@@ -82,177 +56,82 @@ public final class RtcHandler implements AutoCloseable {
     public RtcHandler(RtcManager manager, WebSocketConnection signalConnection) {
         this.manager = manager;
         this.signalConnection = signalConnection;
-        this.pipe.setState(State.PAUSED);
-    }
 
-    private static WebRTCBin createWebRtcBin(Pipeline pipe) {
-        WebRTCBin ret = new WebRTCBin("webrtcbin");
-        ret.set("bundle-policy", 3L); // max-bundle (https://gstreamer.freedesktop.org/documentation/webrtclib/webrtc_fwd.html?gi-language=c#GstWebRTCBundlePolicy)
-        pipe.add(ret);
-        return ret;
+        // configure pion
+        WebConfig config = manager.getConfig();
+        List<PionApi.IceServer> servers = config.iceServers.stream()
+                .map(WebConfig.IceServerConfig::create).toList();
+        String streamId = signalConnection.getPlayer().getUniqueId().toString().substring(0, 8);
+        this.peer = PionApi.allocatePeer(servers, config.bundlePolicy, this, streamId);
     }
 
     public void disconnect(String reason) {
-        LOGGER.info("Disconnected {}/{} because: {}", this.pipe.getName(), this.rtcBin.getName(), reason);
+        LOGGER.info("Disconnected {} because: {}", this.peer, reason);
         this.manager.removePeer(this.signalConnection.getPlayer().getUniqueId());
     }
 
-    public void initialize(ScheduledExecutorService scheduler) {
-        this.setupPipeLogging(this.pipe);
-
-        // register handlers
-        this.rtcBin.connect((WebRTCBin.ON_ICE_CANDIDATE) (sdpMLineIndex, candidate) ->
-                this.signalConnection.sendPacket(new RtcIceCandidatePacket(candidate, null, sdpMLineIndex)));
-        this.rtcBin.connect((WebRTCBin.ON_NEGOTIATION_NEEDED) elem -> LOGGER.info("Negotiation needed for {}", this.signalConnection));
-
-        this.setupMicTrack();
-        this.setupOutputTrack(scheduler);
-
-        this.pipe.debugToDotFile(EnumSet.allOf(Bin.DebugGraphDetails.class), "fucku1");
-
-        // start!
-        this.pipe.play();
+    @Override
+    public void onIceCandidate(String candidate, @Nullable String sdpMid, @Nullable Short sdpMLineIndex) {
+        this.signalConnection.sendPacket(new RtcIceCandidatePacket(candidate, sdpMid, sdpMLineIndex));
     }
 
-    private void setupMicTrack() {
-        this.rtcBin.connect((Element.PAD_ADDED) (elem, track) -> {
-            LOGGER.info("Receiving stream! Element: {} Pad: {}", elem, track);
-            if (track.getDirection() != PadDirection.SRC) {
-                return;
-            }
-            // remove previous rx elements
-            Element[] rxElements = this.pipe.getElements().stream()
-                    .filter(element -> element.getName().startsWith(ELEMENT_RX_PREFIX))
-                    .toArray(Element[]::new);
-            if (rxElements.length > 0) {
-                this.pipe.removeMany(rxElements);
-                for (Element rxElement : rxElements) {
-                    rxElement.close();
-                }
-            }
-
-            // decode incoming stream
-            DecodeBin decodeBin = new DecodeBin(ELEMENT_RX_PREFIX + "decodebin");
-            decodeBin.connect((Element.PAD_ADDED) this::handleMicTrack);
-
-            // start decoding
-            this.pipe.add(decodeBin);
-            decodeBin.syncStateWithParent();
-            track.link(decodeBin.getStaticPad("sink"));
-
-            this.pipe.debugToDotFile(EnumSet.allOf(Bin.DebugGraphDetails.class), "fucku2");
-        });
+    @Override
+    public void onIceConnectionStateChange(IceConnectionState state) {
+        LOGGER.info("Received ice connection state change for {}: {}", this.peer, state);
     }
 
-    private void handleMicTrack(Element ignoredElem, Pad track) {
-        if (!track.hasCurrentCaps()) {
-            this.disconnect("unexpected pad added: " + track);
-            return;
+    @Override
+    public void onConnectionStateChange(PeerConnectionState state) {
+        LOGGER.info("Received connection state change for {}: {}", this.peer, state);
+    }
+
+    @Override
+    public PionRemoteTrack.Callback onRemoteAudioTrack(PionRemoteTrack track) {
+        if (this.opusDecoder != null) {
+            this.opusDecoder.close();
+            this.opusDecoder = null;
         }
-        Caps caps = track.getCurrentCaps();
-        LOGGER.info("Received stream with caps {}", caps);
-        if (!caps.isAlwaysCompatible(Caps.fromString("audio/x-raw"))) {
-            this.disconnect("caps are not compatible with audio");
-            return;
-        }
+        int sampleRate = track.getSampleRate();
+        short channels = track.getChannels();
+        OpusNativesLoader.Decoder opusDecoder = this.manager.getOpusLoader().new Decoder(sampleRate, channels);
+        this.opusDecoder = opusDecoder;
 
-        // create rx elements
-        Element q = ElementFactory.make("queue", ELEMENT_RX_PREFIX + "audioqueue");
-        Element conv = ElementFactory.make("audioconvert", ELEMENT_RX_PREFIX + "audioconvert");
-        Element resample = ElementFactory.make("audioresample", ELEMENT_RX_PREFIX + "audioresample");
-        Element capsFilter = ElementFactory.make("capsfilter", ELEMENT_RX_PREFIX + "cfilter");
-        capsFilter.setCaps(RTC_IN_DECODED_CAPS);
-        AppSink sink = new AppSink(ELEMENT_RX_PREFIX + "micsink");
-
-        // add nodes
-        this.pipe.addMany(q, conv, resample, capsFilter, sink);
-        q.syncStateWithParent();
-        conv.syncStateWithParent();
-        resample.syncStateWithParent();
-        capsFilter.syncStateWithParent();
-        sink.syncStateWithParent();
-
-        // link nodes
-        track.link(q.getStaticPad("sink"));
-        Element.linkMany(q, conv, resample, capsFilter, sink);
-
-        // setup sink
-        sink.set("emit-signals", true);
-        sink.set("sync", false);
-        sink.connect((AppSink.NEW_SAMPLE) elem -> {
-            Buffer buffer = elem.pullSample().getBuffer();
-            ByteBuffer nioBuf = buffer.map(false);
-            try {
-                this.handleMicInput(nioBuf);
-            } finally {
-                buffer.unmap();
-            }
-            return FlowReturn.OK;
-        });
+        return (data, durationNanos) -> {
+            int frameInterval = (int) (durationNanos / 1_000_000L);
+            opusDecoder.setFrameSize(sampleRate * frameInterval / 1000);
+            this.handleMicInput(opusDecoder.decode(data));
+        };
     }
 
-    private void setupOutputTrack(ScheduledExecutorService scheduler) {
-        // create audio output pipeline elements
-        AppSrc outSrc = new AppSrc(ELEMENT_TX_PREFIX + "src");
-        outSrc.set("format", 3L); // time (https://gstreamer.freedesktop.org/documentation/gstreamer/gstformat.html?gi-language=c#GstFormat)
-        outSrc.set("is-live", true);
-        outSrc.set("do-timestamp", true);
-        outSrc.set("emit-signals", true);
-        outSrc.setCaps(RTC_OUT_CAPS);
-        Element srcFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "srcfilter");
-        srcFilter.setCaps(RTC_OUT_CAPS);
-        Element conv = ElementFactory.make("audioconvert", ELEMENT_TX_PREFIX + "audioconvert");
-        Element resample = ElementFactory.make("audioresample", ELEMENT_TX_PREFIX + "audioresample");
-        Element encoder = ElementFactory.make("opusenc", ELEMENT_TX_PREFIX + "opusencoder");
-        Element realtime = ElementFactory.make("rtpopuspay", ELEMENT_TX_PREFIX + "rtpopuspay");
-        Element dstFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "dstfilter");
-        dstFilter.setCaps(RTC_OUT_ENCODED_CAPS);
-        Element queue = ElementFactory.make("queue", ELEMENT_TX_PREFIX + "queue");
+    @Override
+    public void onLocalAudioTrack(PionLocalTrack track) {
+        this.outputTrack = track;
+    }
 
-        // add to pipeline
-        this.pipe.addMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue);
-        outSrc.syncStateWithParent();
-        srcFilter.syncStateWithParent();
-        conv.syncStateWithParent();
-        resample.syncStateWithParent();
-        encoder.syncStateWithParent();
-        realtime.syncStateWithParent();
-        dstFilter.syncStateWithParent();
-        queue.syncStateWithParent();
+    @Override
+    public void onError(Error error) {
+        LOGGER.error("Received internal error for {}", this.peer, error);
+        this.disconnect("internal error");
+    }
 
-        this.outputSource = outSrc;
-        outSrc.connect((AppSrc.ENOUGH_DATA) elem -> this.push = false);
-        outSrc.connect((AppSrc.NEED_DATA) (elem, size) -> this.push = true);
-
+    public void startTicking(ScheduledExecutorService scheduler) {
         // start push task, needs to be run with set interval
         this.ticker = scheduler.scheduleAtFixedRate(this::tickAudio,
                 RtcConstants.FRAME_INTERVAL, RtcConstants.FRAME_INTERVAL, TimeUnit.MILLISECONDS);
-
-        // link
-        Element.linkMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue, this.rtcBin);
     }
 
     private void tickAudio() {
         try {
-            this.tickAudio0();
+            byte[] frame = this.mixer.tick(RtcConstants.FRAME_SIZE);
+            if (frame != null) {
+                this.outputTrack.sendData(frame, RtcConstants.FRAME_INTERVAL * 1_000_000L);
+            }
         } catch (Throwable throwable) {
             LOGGER.error("Error while ticking audio", throwable);
         }
     }
 
-    private void tickAudio0() {
-        // *2*2 because 16-bit and stereo
-        Buffer buf = new Buffer(RtcConstants.FRAME_SIZE << 2);
-        this.mixer.tick(buf.map(true));
-        if (this.push) {
-            buf.unmap();
-            this.outputSource.pushBuffer(buf);
-        } else {
-            buf.close();
-        }
-    }
-
-    private void handleMicInput(ByteBuffer data) {
+    private void handleMicInput(short[] samples) {
         ISonusPlayer player = this.signalConnection.getPlayer();
         if (player.isMuted()) {
             this.inputBuffer.clear();
@@ -262,7 +141,9 @@ public final class RtcHandler implements AutoCloseable {
 
         // append to local buffer, webrtc usually has higher FPS than what we expect
         ByteBuf inputBuf = this.inputBuffer;
-        inputBuf.writeBytes(data);
+        for (short sample : samples) {
+            inputBuf.writeShortLE(sample);
+        }
         while (inputBuf.isReadable(SonusConstants.FRAME_SIZE * Short.BYTES)) {
             // read pcm shorts from buffer whilst also calculating audio level using RMS
             double rmsAmplitude = 0d;
@@ -304,75 +185,14 @@ public final class RtcHandler implements AutoCloseable {
         }
     }
 
-    private void setupPipeLogging(Pipeline pipe) {
-        Bus bus = pipe.getBus();
-        bus.connect((Bus.EOS) source ->
-                this.disconnect("Reached end of stream: " + source.toString()));
-
-        bus.connect((Bus.ERROR) (source, code, message) ->
-                this.disconnect("Error from source: " + source + ", with code: " + code + ", and message: " + message));
-
-        bus.connect((source, old, current, pending) -> {
-            if (source instanceof Pipeline && old != current) {
-                LOGGER.info("Pipe {} state changed from {} to {}", this.pipe, old, current);
-            }
-        });
-    }
-
-    public void handleRemoteIce(@Nullable String sdp, @Nullable Integer sdpMLineIndex) {
+    public void handleRemoteIce(String candidate, @Nullable String sdpMid, @Nullable Short sdpMLineIndex) {
         LOGGER.info("Accepting ICE candidate from {}", this.signalConnection);
-        this.rtcBin.addIceCandidate(sdpMLineIndex == null ? -1 : sdpMLineIndex, sdp);
+        this.peer.addIceCandidate(candidate, sdpMid, sdpMLineIndex);
     }
 
-    public void handleRemoteOffer(WebRTCSDPType type, String sdp) {
-        LOGGER.info("Accepting offer from {}", this.signalConnection);
-        // configure remote description
-        SDPMessage sdpMsg = new SDPMessage();
-        sdpMsg.parseBuffer(sdp);
-        WebRTCSessionDescription remoteSessionDesc = new WebRTCSessionDescription(type, sdpMsg);
-
-        // built-in api doesn't wait for remote description promise
-        Promise promise = new Promise();
-        remoteSessionDesc.disown();
-        this.rtcBin.emit("set-remote-description", remoteSessionDesc, promise);
-        promise.waitResult();
-        promise.dispose();
-
-        // construct answer
-        this.rtcBin.createAnswer(answer -> {
-            LOGGER.info("Sending answer to {} in state {}/{}", this.signalConnection, this.rtcBin.getConnectionState(), this.rtcBin.getICEGatheringState());
-            this.rtcBin.setLocalDescription(answer);
-            // send to web app
-            String answerSdp = answer.getSDPMessage().toString();
-            this.signalConnection.sendPacket(new RtcOfferPacket("answer", answerSdp));
-        });
-    }
-
-    public void addTurnServer(String uri, @Nullable String user, @Nullable String auth) {
-        try {
-            URI parsedUri = new URI(uri);
-
-            // gstreamer only supports simple stun servers
-            if ("stun".equals(parsedUri.getScheme())) {
-                this.rtcBin.setStunServer(uri);
-                return;
-            }
-
-            if (user != null) {
-                String encodedUser = URLEncoder.encode(user, StandardCharsets.UTF_8);
-                String encodedAuth = auth != null ? URLEncoder.encode(auth, StandardCharsets.UTF_8) : null;
-                String userInfo = encodedUser + (auth != null ? ":" + encodedAuth : "");
-                // inject user info string into uri
-                URI turnUri = new URI(parsedUri.getScheme(), userInfo,
-                        parsedUri.getHost(), parsedUri.getPort(), parsedUri.getRawPath(),
-                        parsedUri.getRawQuery(), parsedUri.getRawFragment());
-                uri = turnUri.toString();
-            }
-        } catch (URISyntaxException exception) {
-            throw new IllegalStateException("Invalid turn uri: " + uri, exception);
-        }
-
-        this.rtcBin.emit("add-turn-server", uri);
+    public void handleRemoteOffer(String sdp) {
+        LOGGER.info("Handling offer from {}", this.signalConnection);
+        this.peer.handleOffer(sdp);
     }
 
     public WebSocketConnection getSignalConnection() {
@@ -380,18 +200,25 @@ public final class RtcHandler implements AutoCloseable {
     }
 
     public boolean isConnected() {
-        return this.rtcBin.getConnectionState() == WebRTCPeerConnectionState.CONNECTED;
+        return this.peer.getConnectionState() == PeerConnectionState.CONNECTED;
+    }
+
+    public boolean isIceConnected() {
+        return this.peer.getIceConnectionState() == IceConnectionState.CONNECTED;
     }
 
     @Override
     public void close() {
-        this.pipe.setState(State.NULL);
-        this.pipe.close();
+        this.peer.close();
         this.mixer.close();
         this.inputBuffer.release();
         if (this.ticker != null) {
             this.ticker.cancel(false);
             this.ticker = null;
+        }
+        if (this.opusDecoder != null) {
+            this.opusDecoder.close();
+            this.opusDecoder = null;
         }
     }
 }

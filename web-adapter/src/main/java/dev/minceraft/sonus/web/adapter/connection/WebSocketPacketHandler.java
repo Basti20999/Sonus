@@ -4,6 +4,7 @@ import dev.minceraft.sonus.common.SonusConstants;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
+import dev.minceraft.sonus.web.adapter.rtc.RtcHandler;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomLeaveResponsePacket;
@@ -16,8 +17,6 @@ import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPack
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomLeavePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.StateInfoPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket;
-import net.kyori.adventure.util.Index;
-import org.freedesktop.gstreamer.webrtc.WebRTCSDPType;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -110,19 +109,17 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
 
     @Override
     public void handleRtcIceCandidate(RtcIceCandidatePacket packet) {
-        this.connection.getRtc().handleRemoteIce(packet.getSdp(), packet.getSdpMLineIndex());
+        RtcHandler rtc = this.connection.getRtc();
+        if (rtc.isIceConnected()) {
+            rtc.handleRemoteIce(packet.getCandidate(), packet.getSdpMid(), packet.getSdpMLineIndex());
+        }
     }
-
-    private static final Index<String, WebRTCSDPType> RTC_SDP_TYPE_INDEX = Index.create(WebRTCSDPType.class,
-            type -> type.name().toLowerCase());
 
     @Override
     public void handleRtcOffer(RtcOfferPacket packet) {
-        WebRTCSDPType type = RTC_SDP_TYPE_INDEX.valueOrThrow(packet.getType());
-        if (type != WebRTCSDPType.OFFER || packet.getSdp() == null) {
-            throw new IllegalStateException("Unexpected packet: " + packet);
+        if ("offer".equals(packet.getType()) && packet.getSdp() != null) {
+            this.connection.getRtc().handleRemoteOffer(packet.getSdp());
         }
-        this.connection.getRtc().handleRemoteOffer(type, packet.getSdp());
     }
 
     @Override

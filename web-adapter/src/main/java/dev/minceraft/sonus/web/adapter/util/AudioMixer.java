@@ -6,8 +6,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -48,13 +48,10 @@ public final class AudioMixer implements AutoCloseable {
         }
     }
 
-    public boolean tick(ByteBuffer nioBuf) {
-        // java nio bytebuffers are always big endian, so wrap using netty
-        int capacity = nioBuf.capacity();
-        ByteBuf nettyBuf = Unpooled.wrappedBuffer(nioBuf);
 
-        boolean mut = false;
+    public byte @Nullable [] tick(int samples) {
         boolean gc = (this.tick++ & GC_INTERVAL) == 0;
+        ByteBuf mixed = null;
         synchronized (this.lock) {
             for (Iterator<ByteBuf> it = this.queue.values().iterator(); it.hasNext(); ) {
                 ByteBuf buf = it.next();
@@ -63,19 +60,22 @@ public final class AudioMixer implements AutoCloseable {
                     it.remove();
                     continue;
                 }
-                mut = true;
-                // fill buffer
-                int maxStereoSamples = Math.min(capacity, buf.readableBytes());
+                if (mixed == null) {
+                    // lazy init, samples*2*2 because of stereo and 16-bit audio
+                    mixed = Unpooled.wrappedBuffer(new byte[samples << 2]);
+                }
+                // samples*2*2 because see above
+                int maxStereoSamples = Math.min(samples << 2, buf.readableBytes());
                 for (int i = 0; i < maxStereoSamples; i += Short.BYTES) {
-                    short v = clampedAdd(buf.readShortLE(), nettyBuf.getShortLE(i));
-                    nettyBuf.setShortLE(i, v);
+                    short v = clampedAdd(buf.readShortLE(), mixed.getShortLE(i));
+                    mixed.setShortLE(i, v);
                 }
                 if (gc) {
                     buf.discardSomeReadBytes();
                 }
             }
         }
-        return mut;
+        return mixed != null ? mixed.array() : null;
     }
 
     private static short clampedAdd(short a, short b) {

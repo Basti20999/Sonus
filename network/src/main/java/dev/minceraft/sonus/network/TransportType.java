@@ -22,6 +22,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.unix.UnixChannel;
 import io.netty.channel.uring.IoUring;
 import io.netty.channel.uring.IoUringDatagramChannel;
 import io.netty.channel.uring.IoUringIoHandler;
@@ -55,18 +56,23 @@ public enum TransportType {
     // udp
     private final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
 
+    // unix
+    private final ChannelFactory<? extends UnixChannel> unixChannelFactory;
+
     TransportType(
             String displayName,
             Supplier<IoHandlerFactory> ioHandlerCtor,
             ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
             ChannelFactory<? extends SocketChannel> socketChannelFactory,
-            ChannelFactory<? extends DatagramChannel> datagramChannelFactory
+            ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
+            ChannelFactory<? extends UnixChannel> unixChannelFactory
     ) {
         this.displayName = displayName;
         this.ioHandlerCtor = ioHandlerCtor;
         this.serverSocketChannelFactory = serverSocketChannelFactory;
         this.socketChannelFactory = socketChannelFactory;
         this.datagramChannelFactory = datagramChannelFactory;
+        this.unixChannelFactory = unixChannelFactory;
     }
 
     private static ThreadFactory createThreadFactory(String name, String type) {
@@ -102,5 +108,9 @@ public enum TransportType {
 
     public ChannelFactory<? extends DatagramChannel> getDatagramChannelFactory() {
         return this.datagramChannelFactory;
+    }
+
+    public ChannelFactory<? extends UnixChannel> getUnixChannelFactory() {
+        return this.unixChannelFactory;
     }
 }
