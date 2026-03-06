@@ -15,6 +15,7 @@ import dev.minceraft.sonus.web.pion.PionLocalTrack;
 import dev.minceraft.sonus.web.pion.PionPeer;
 import dev.minceraft.sonus.web.pion.PionRemoteTrack;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
+import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -73,6 +74,11 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
     @Override
     public void onIceCandidate(String candidate, @Nullable String sdpMid, @Nullable Short sdpMLineIndex) {
         this.signalConnection.sendPacket(new RtcIceCandidatePacket(candidate, sdpMid, sdpMLineIndex));
+    }
+
+    @Override
+    public void onAnswerCreated(String sdp) {
+        this.signalConnection.sendPacket(new RtcOfferPacket(RtcOfferPacket.Type.ANSWER, sdp));
     }
 
     @Override

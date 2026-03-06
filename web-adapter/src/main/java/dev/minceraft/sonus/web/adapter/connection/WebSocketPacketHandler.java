@@ -117,7 +117,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
 
     @Override
     public void handleRtcOffer(RtcOfferPacket packet) {
-        if ("offer".equals(packet.getType()) && packet.getSdp() != null) {
+        if (packet.getType() == RtcOfferPacket.Type.OFFER) {
             this.connection.getRtc().handleRemoteOffer(packet.getSdp());
         }
     }

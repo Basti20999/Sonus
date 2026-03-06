@@ -11,10 +11,12 @@ import java.util.List;
 @NullMarked
 public final class PionApi {
 
+    private static final Path DEFAULT_SOCKET_PATH = Path.of(System.getProperty("PION_IPC_SOCKET", "/tmp/pion.socket"));
+
     final IpcConnection ipc;
 
     public PionApi() {
-        this(Path.of(System.getProperty("PION_IPC_SOCKET", "/tmp/pion.socket")));
+        this(DEFAULT_SOCKET_PATH);
     }
 
     public PionApi(Path socketPath) {
@@ -25,7 +27,7 @@ public final class PionApi {
             List<IceServer> iceServers, BundlePolicy bundlePolicy,
             PionPeer.Callback callback, String id
     ) {
-        // FIXME
+        return new PionPeer(this.ipc, iceServers, bundlePolicy, id, callback);
     }
 
     public enum BundlePolicy {

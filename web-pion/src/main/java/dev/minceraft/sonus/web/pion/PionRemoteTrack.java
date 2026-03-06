@@ -4,7 +4,7 @@ package dev.minceraft.sonus.web.pion;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public final class PionRemoteTrack implements AutoCloseable {
+public final class PionRemoteTrack {
 
     public int getSampleRate() {
 
@@ -12,10 +12,6 @@ public final class PionRemoteTrack implements AutoCloseable {
 
     public short getChannels() {
 
-    }
-
-    @Override
-    public void close() {
     }
 
     public interface Callback {

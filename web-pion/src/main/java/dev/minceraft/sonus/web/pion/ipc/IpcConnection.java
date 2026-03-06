@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import java.net.UnixDomainSocketAddress;
 import java.nio.file.Path;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @NullMarked
 public final class IpcConnection {
@@ -18,6 +21,9 @@ public final class IpcConnection {
     private static final Logger LOGGER = LoggerFactory.getLogger("PionIpc");
 
     private final Channel channel;
+
+    private final Map<Integer, IpcHandler> handlers = new ConcurrentHashMap<>();
+    private final AtomicInteger handlerCount = new AtomicInteger();
 
     private IpcConnection(Channel channel) {
         this.channel = channel;
@@ -38,7 +44,19 @@ public final class IpcConnection {
         return new IpcConnection(future.channel());
     }
 
-    public void
+    public int registerHandler(IpcHandler handler) {
+        int id = this.handlerCount.getAndIncrement();
+        this.handlers.put(id, handler);
+        return id;
+    }
+
+    public void unregisterHandler(int handlerId) {
+        this.handlers.remove(handlerId);
+    }
+
+    public void send(IpcMessage message) {
+        this.channel.writeAndFlush(message);
+    }
 
     public Channel getChannel() {
         return this.channel;
