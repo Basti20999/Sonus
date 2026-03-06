@@ -2,8 +2,9 @@ package dev.minceraft.sonus.web.pion;
 // Created by booky10 in Sonus (3:23 PM 06.03.2026)
 
 import dev.minceraft.sonus.web.pion.ipc.IpcConnection;
+import dev.minceraft.sonus.web.pion.ipc.model.BundlePolicy;
+import dev.minceraft.sonus.web.pion.ipc.model.IceServer;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -32,19 +33,5 @@ public final class PionApi implements AutoCloseable {
     @Override
     public void close() {
         this.ipc.close();
-    }
-
-    public enum BundlePolicy {
-        UNKNOWN,
-        BALANCED,
-        MAX_COMPAT,
-        MAX_BUNDLE,
-    }
-
-    public record IceServer(
-            String url,
-            @Nullable String user,
-            @Nullable String auth
-    ) {
     }
 }

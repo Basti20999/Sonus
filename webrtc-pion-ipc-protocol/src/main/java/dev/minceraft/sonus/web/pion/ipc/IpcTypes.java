@@ -3,7 +3,7 @@ package dev.minceraft.sonus.web.pion.ipc;
 
 import dev.minceraft.sonus.common.protocol.util.Utf8String;
 import dev.minceraft.sonus.common.protocol.util.VarInt;
-import dev.minceraft.sonus.web.pion.PionApi;
+import dev.minceraft.sonus.web.pion.ipc.model.IceServer;
 import io.netty.buffer.ByteBuf;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -30,15 +30,15 @@ public final class IpcTypes {
         VarInt.write(buf, val.ordinal());
     }
 
-    public static PionApi.IceServer readIceServer(ByteBuf buf) {
-        return new PionApi.IceServer(
+    public static IceServer readIceServer(ByteBuf buf) {
+        return new IceServer(
                 Utf8String.read(buf),
                 readNullable(buf, Utf8String::read),
                 readNullable(buf, Utf8String::read)
         );
     }
 
-    public static void writeIceServer(ByteBuf buf, PionApi.IceServer iceServer) {
+    public static void writeIceServer(ByteBuf buf, IceServer iceServer) {
         Utf8String.write(buf, iceServer.url());
         writeNullable(buf, iceServer.user(), Utf8String::write);
         writeNullable(buf, iceServer.auth(), Utf8String::write);

@@ -8,12 +8,12 @@ import dev.minceraft.sonus.common.natives.OpusNativesLoader;
 import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.adapter.util.AudioMixer;
-import dev.minceraft.sonus.web.pion.IceConnectionState;
-import dev.minceraft.sonus.web.pion.PeerConnectionState;
-import dev.minceraft.sonus.web.pion.PionApi;
+import dev.minceraft.sonus.web.pion.ipc.model.IceConnectionState;
+import dev.minceraft.sonus.web.pion.ipc.model.PeerConnectionState;
 import dev.minceraft.sonus.web.pion.PionLocalTrack;
 import dev.minceraft.sonus.web.pion.PionPeer;
 import dev.minceraft.sonus.web.pion.PionRemoteTrack;
+import dev.minceraft.sonus.web.pion.ipc.model.IceServer;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import io.netty.buffer.ByteBuf;
@@ -61,7 +61,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
 
         // configure pion
         WebConfig config = manager.getConfig();
-        List<PionApi.IceServer> servers = config.iceServers.stream()
+        List<IceServer> servers = config.iceServers.stream()
                 .map(WebConfig.IceServerConfig::create).toList();
         String streamId = signalConnection.getPlayer().getUniqueId().toString().substring(0, 8);
         this.peer = manager.getPion().allocatePeer(servers, config.bundlePolicy, streamId, this);
