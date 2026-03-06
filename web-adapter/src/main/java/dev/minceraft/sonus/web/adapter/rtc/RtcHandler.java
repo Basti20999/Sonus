@@ -37,6 +37,8 @@ import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @NullMarked
 public final class RtcHandler implements AutoCloseable {
@@ -45,13 +47,8 @@ public final class RtcHandler implements AutoCloseable {
     private static final Caps RTC_OUT_CAPS = new Caps("audio/x-raw,format=S16LE,rate=" + RtcConstants.SAMPLE_RATE + ",channels=2,layout=interleaved");
     private static final Caps RTC_OUT_ENCODED_CAPS = new Caps("application/x-rtp,media=audio,encoding-name=OPUS,payload=96");
 
-    private static final String GST_PIPE_DESC_TX = ""
-            + "appsrc name=output0 format=time is-live=true do-timestamp=true ! " + RTC_OUT_CAPS
-            + " ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay ! queue ! " + RTC_OUT_ENCODED_CAPS
-            + " ! webrtcbin. ";
-    private static final String GST_PIPE_DESC_RX = ""
-            + "webrtcbin name=webrtcbin bundle-policy=max-bundle stun-server=%s";
-    private static final String GST_PIPE_DESC = GST_PIPE_DESC_TX + " " + GST_PIPE_DESC_RX + " ";
+    private static final String ELEMENT_RX_PREFIX = "rx_";
+    private static final String ELEMENT_TX_PREFIX = "tx_";
 
     private static final Logger LOGGER = LoggerFactory.getLogger("WebRTC");
     private static final int INPUT_BUFFER_GC_INTERVAL = 0b1111111;
@@ -66,6 +63,7 @@ public final class RtcHandler implements AutoCloseable {
     private final AudioMixer mixer = new AudioMixer();
 
     // audio input handling
+    private final AtomicInteger inputTrackIndex = new AtomicInteger();
     private final ByteBuf inputBuffer = PooledByteBufAllocator.DEFAULT.buffer(SonusConstants.FRAME_SIZE * 2);
     private int inputBufferGc = INPUT_BUFFER_GC_INTERVAL;
     private long sequenceNumber = 0L;
@@ -75,13 +73,13 @@ public final class RtcHandler implements AutoCloseable {
         this.manager = manager;
         this.signalConnection = signalConnection;
 
-        this.rtcBin.set("stun-server", stun);
+        this.rtcBin.setStunServer(stun);
         this.pipe.setState(State.PAUSED);
         this.initialize();
     }
 
     private static WebRTCBin createWebRtcBin(Pipeline pipe) {
-        WebRTCBin ret = (WebRTCBin) ElementFactory.make("webrtcbin", "webrtcbin");
+        WebRTCBin ret = new WebRTCBin("webrtcbin");
         ret.set("bundle-policy", 3L); // max-bundle (https://gstreamer.freedesktop.org/documentation/webrtclib/webrtc_fwd.html?gi-language=c#GstWebRTCBundlePolicy)
         pipe.add(ret);
         return ret;
@@ -98,30 +96,40 @@ public final class RtcHandler implements AutoCloseable {
         // register handlers
         this.rtcBin.connect((WebRTCBin.ON_ICE_CANDIDATE) (sdpMLineIndex, candidate) ->
                 this.signalConnection.sendPacket(new RtcIceCandidatePacket(candidate, null, sdpMLineIndex)));
-        this.rtcBin.connect((Element.PAD_ADDED) (uncElement, uncPad) -> {
-            LOGGER.info("Receiving stream! Element: {} Pad: {}", uncElement, uncPad);
-            if (uncPad.getDirection() != PadDirection.SRC) {
+        this.rtcBin.connect((Element.PAD_ADDED) (__, track) -> {
+            LOGGER.info("Receiving stream! Element: {} Pad: {}", __, track);
+            if (track.getDirection() != PadDirection.SRC) {
                 return;
             }
-            DecodeBin decodeBin = new DecodeBin("rxdecodebin_" + uncPad.getName());
-            decodeBin.connect((Element.PAD_ADDED) (element, pad) -> { // decoded stream
-                if (!pad.hasCurrentCaps()) {
-                    this.disconnect("unexpected pad added: " + pad);
+            // remove previous rx elements
+            Element[] rxElements = this.pipe.getElements().stream()
+                    .filter(element -> element.getName().startsWith(ELEMENT_RX_PREFIX))
+                    .toArray(Element[]::new);
+            if (rxElements.length > 0) {
+                this.pipe.removeMany(rxElements);
+            }
+
+            // decode incoming stream
+            DecodeBin decodeBin = new DecodeBin(ELEMENT_RX_PREFIX + "decodebin");
+            decodeBin.connect((Element.PAD_ADDED) (___, decodedTrack) -> {
+                if (!decodedTrack.hasCurrentCaps()) {
+                    this.disconnect("unexpected pad added: " + decodedTrack);
                     return;
                 }
-                Caps caps = pad.getCurrentCaps();
-                LOGGER.info("Received stream with caps {}", caps, new Throwable());
+                Caps caps = decodedTrack.getCurrentCaps();
+                LOGGER.info("Received stream with caps {}", caps);
                 if (!caps.isAlwaysCompatible(Caps.fromString("audio/x-raw"))) {
                     this.disconnect("caps are not compatible with audio");
                     return;
                 }
-                // create nodes
-                Element q = ElementFactory.make("queue", "rxaudioqueue");
-                Element conv = ElementFactory.make("audioconvert", "rxaudioconvert");
-                Element resample = ElementFactory.make("audioresample", "rxaudioresample");
-                Element capsFilter = ElementFactory.make("capsfilter", "rxcfilter");
+
+                // create rx elements
+                Element q = ElementFactory.make("queue", ELEMENT_RX_PREFIX + "audioqueue");
+                Element conv = ElementFactory.make("audioconvert", ELEMENT_RX_PREFIX + "audioconvert");
+                Element resample = ElementFactory.make("audioresample", ELEMENT_RX_PREFIX + "audioresample");
+                Element capsFilter = ElementFactory.make("capsfilter", ELEMENT_RX_PREFIX + "cfilter");
                 capsFilter.setCaps(RTC_IN_DECODED_CAPS);
-                Element sink = ElementFactory.make("appsink", "rxmicsink");
+                AppSink sink = new AppSink(ELEMENT_RX_PREFIX + "micsink");
 
                 // add nodes
                 this.pipe.addMany(q, conv, resample, capsFilter, sink);
@@ -132,16 +140,13 @@ public final class RtcHandler implements AutoCloseable {
                 sink.syncStateWithParent();
 
                 // link nodes
-                pad.link(q.getStaticPad("sink"));
-                q.link(conv);
-                conv.link(resample);
-                resample.link(capsFilter);
-                capsFilter.link(sink);
+                decodedTrack.link(q.getStaticPad("sink"));
+                Element.linkMany(q, conv, resample, capsFilter, sink);
 
                 // setup sink
                 sink.set("emit-signals", true);
                 sink.set("sync", false);
-                ((AppSink) sink).connect((AppSink.NEW_SAMPLE) elem -> {
+                sink.connect((AppSink.NEW_SAMPLE) elem -> {
                     Buffer buffer = elem.pullSample().getBuffer();
                     ByteBuffer nioBuf = buffer.map(false);
                     try {
@@ -153,72 +158,76 @@ public final class RtcHandler implements AutoCloseable {
                 });
             });
 
+            // start decoding
             this.pipe.add(decodeBin);
             decodeBin.syncStateWithParent();
-            uncPad.link(decodeBin.getStaticPad("sink"));
+            track.link(decodeBin.getStaticPad("sink"));
         });
 
-        if (false) {
-            // handle audio output
-        /*
-            + "appsrc name=output0 format=time is-live=true do-timestamp=true ! " + RTC_OUT_CAPS
-            + " ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay ! queue ! " + RTC_OUT_ENCODED_CAPS
-            + " ! webrtcbin. ";
-         */
-            AppSrc outSrc = (AppSrc) ElementFactory.make("appsrc", "txsrc");
-            Element conv = ElementFactory.make("audioconvert", "txaudioconvert");
-            Element resample = ElementFactory.make("audioresample", "txaudioresample");
-            Element queue = ElementFactory.make("queue", "txaudioqueue");
-            Element encoder = ElementFactory.make("opusenc", "txopusencoder");
-            Element realtime = ElementFactory.make("rtpopuspay", "txrtpopuspay");
-            Element rtcQueue = ElementFactory.make("queue", "txrtcqueue");
-            this.pipe.addMany(outSrc, conv, resample, queue, encoder, realtime, rtcQueue);
-            outSrc.syncStateWithParent();
-            conv.syncStateWithParent();
-            resample.syncStateWithParent();
-            queue.syncStateWithParent();
-            encoder.syncStateWithParent();
-            realtime.syncStateWithParent();
-            rtcQueue.syncStateWithParent();
+        // sendonly (https://gstreamer.freedesktop.org/documentation/webrtclib/webrtc_fwd.html?gi-language=c#GstWebRTCRTPTransceiverDirection), null caps
+        this.rtcBin.emit("add-transceiver", 2L, RTC_OUT_ENCODED_CAPS);
 
-//        AppSrc outSrc = (AppSrc) this.pipe.getElementByName("output0");
-//        appSrc.set("emit-signals", true);
-//        appSrc.connect((AppSrc.NEED_DATA) (elem, size) -> {
-//            System.out.println("NEED: " + size);
-//            // *2*2 because 16-bit and stereo
-//            Buffer buf = new Buffer(size == -1 ? RtcConstants.FRAME_SIZE << 2 : size);
-//            this.mixer.tick(buf.map(true));
-//            elem.pushBuffer(buf);
-//        });
-
-            outSrc.set("format", "time");
+        if (true) {
+            // create audio output pipeline elements
+            AppSrc outSrc = new AppSrc(ELEMENT_TX_PREFIX + "src");
+            outSrc.set("format", 3L); // time (https://gstreamer.freedesktop.org/documentation/gstreamer/gstformat.html?gi-language=c#GstFormat)
             outSrc.set("is-live", true);
             outSrc.set("do-timestamp", true);
-            outSrc.set("block", true);
-            outSrc.setCaps(RTC_OUT_CAPS);
+            Element srcFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "srcfilter");
+            srcFilter.setCaps(RTC_OUT_CAPS);
+            Element conv = ElementFactory.make("audioconvert", ELEMENT_TX_PREFIX + "audioconvert");
+            Element resample = ElementFactory.make("audioresample", ELEMENT_TX_PREFIX + "audioresample");
+            Element encoder = ElementFactory.make("opusenc", ELEMENT_TX_PREFIX + "opusencoder");
+            Element realtime = ElementFactory.make("rtpopuspay", ELEMENT_TX_PREFIX + "rtpopuspay");
+            Element dstFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "dstfilter");
+            dstFilter.setCaps(RTC_OUT_ENCODED_CAPS);
+            Element queue = ElementFactory.make("queue", ELEMENT_TX_PREFIX + "queue");
+
+            // add to pipeline
+            this.pipe.addMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue);
+            outSrc.syncStateWithParent();
+            srcFilter.syncStateWithParent();
+            conv.syncStateWithParent();
+            resample.syncStateWithParent();
+            encoder.syncStateWithParent();
+            realtime.syncStateWithParent();
+            dstFilter.syncStateWithParent();
+            queue.syncStateWithParent();
+
+            AtomicBoolean push = new AtomicBoolean(true);
+            outSrc.connect((AppSrc.ENOUGH_DATA) elem -> {
+                System.out.println("ENOUGH DATA " + elem);
+                push.set(false);
+            });
+            outSrc.connect((AppSrc.NEED_DATA) (elem, size) -> {
+                System.out.println("NEED DATA " + elem + " " + size);
+                push.set(true);
+            });
+
             // start push task
             ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
             sched.scheduleAtFixedRate(() -> {
                 // *2*2 because 16-bit and stereo
                 Buffer buf = new Buffer(RtcConstants.FRAME_SIZE << 2);
                 this.mixer.tick(buf.map(true));
-                buf.unmap();
-                outSrc.pushBuffer(buf);
-                System.out.println("PUSHED: " + System.nanoTime() / 1_000_000d + " " + outSrc.getState());
+                FlowReturn ret = null;
+                if (push.get()) {
+                    buf.unmap();
+                    ret = outSrc.pushBuffer(buf);
+                } else {
+                    buf.close();
+                }
+                System.out.println("PUSHED: " + System.nanoTime() / 1_000_000d + " " + outSrc.getState() + " " + ret);
             }, RtcConstants.FRAME_INTERVAL, RtcConstants.FRAME_INTERVAL, TimeUnit.MILLISECONDS);
 
             // link
-            outSrc.link(conv);
-            conv.link(resample);
-            resample.link(queue);
-            queue.link(encoder);
-            encoder.link(realtime);
-            realtime.link(rtcQueue);
-            rtcQueue.link(this.rtcBin);
+            Element.linkMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue, this.rtcBin);
         }
 
+        System.out.println("PRE PLAY");
         // start!
         this.pipe.play();
+        System.out.println("POST PLAY");
     }
 
     public void handleMicInput(ByteBuffer data) {
@@ -243,7 +252,7 @@ public final class RtcHandler implements AutoCloseable {
                 rmsAmplitude += amplitude * amplitude;
             }
             // check whether this is loud enough or not
-            if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > 0e-6d * 0e-6d) {
+            if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > 0e-5d * 0e-5d) {
                 this.quietBuffer = 0; // reset quiet buffer
                 this.signalConnection.setVoiceActive(player.getUniqueId(), true);
                 SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);

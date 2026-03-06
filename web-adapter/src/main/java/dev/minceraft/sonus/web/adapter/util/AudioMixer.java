@@ -48,11 +48,12 @@ public final class AudioMixer implements AutoCloseable {
         }
     }
 
-    public void tick(ByteBuffer nioBuf) {
+    public boolean tick(ByteBuffer nioBuf) {
         // java nio bytebuffers are always big endian, so wrap using netty
         int capacity = nioBuf.capacity();
         ByteBuf nettyBuf = Unpooled.wrappedBuffer(nioBuf);
 
+        boolean mut = false;
         boolean gc = (this.tick++ & GC_INTERVAL) == 0;
         synchronized (this.lock) {
             for (Iterator<ByteBuf> it = this.queue.values().iterator(); it.hasNext(); ) {
@@ -62,6 +63,7 @@ public final class AudioMixer implements AutoCloseable {
                     it.remove();
                     continue;
                 }
+                mut = true;
                 // fill buffer
                 int maxStereoSamples = Math.min(capacity, buf.readableBytes());
                 for (int i = 0; i < maxStereoSamples; i += Short.BYTES) {
@@ -73,6 +75,7 @@ public final class AudioMixer implements AutoCloseable {
                 }
             }
         }
+        return mut;
     }
 
     private static short clampedAdd(short a, short b) {
