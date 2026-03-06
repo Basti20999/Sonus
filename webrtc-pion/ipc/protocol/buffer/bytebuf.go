@@ -174,26 +174,15 @@ func (buf *ByteBuf) WriteVarInt(v uint32) {
 }
 
 func (buf *ByteBuf) ReadUtf8() (string, error) {
-	bytelen, err := buf.ReadVarInt()
+	arr, err := buf.ReadByteArray()
 	if err != nil {
 		return "", err
-	} else if err = buf.EnsureReadable(bytelen); err != nil {
-		return "", err
 	}
-	// convert byte array slice to string
-	ret := string(buf.data[buf.ri : buf.ri+bytelen])
-	buf.ri += bytelen
-	return ret, nil
+	return string(arr), nil
 }
 
 func (buf *ByteBuf) WriteUtf8(v string) {
-	slice := []uint8(v)
-	sliceLen := uint32(len(slice))
-	buf.WriteVarInt(sliceLen) // write byte length
-	buf.EnsureWritable(sliceLen)
-	// copy string slice into data array at writer index
-	copy(buf.data[buf.wi:], slice)
-	buf.wi += sliceLen
+	buf.WriteByteArray([]uint8(v))
 }
 
 func ReadNilable[T any](buf *ByteBuf, decoder func() (T, error)) (*T, error) {
@@ -231,9 +220,29 @@ func ReadSlice[T any](buf *ByteBuf, decoder func() (T, error)) ([]T, error) {
 }
 
 func WriteSlice[T any](buf *ByteBuf, vs []T, encoder func(v T)) {
-	size := uint32(len(vs))
-	buf.WriteVarInt(size)
+	buf.WriteVarInt(uint32(len(vs)))
 	for _, v := range vs {
 		encoder(v)
 	}
+}
+
+func (buf *ByteBuf) ReadByteArray() ([]uint8, error) {
+	size, err := buf.ReadVarInt()
+	if err != nil {
+		return nil, err
+	} else if err = buf.EnsureReadable(size); err != nil {
+		return nil, err
+	}
+	ret := buf.data[buf.ri : buf.ri+size]
+	buf.ri += size
+	return ret, nil
+}
+
+func (buf *ByteBuf) WriteByteArray(vs []uint8) {
+	arrLen := uint32(len(vs))
+	buf.WriteVarInt(arrLen) // write byte length
+	buf.EnsureWritable(arrLen)
+	// copy given array into data array at writer index
+	copy(buf.data[buf.wi:], vs)
+	buf.wi += arrLen
 }

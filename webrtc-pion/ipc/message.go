@@ -1,7 +1,7 @@
 package ipc
 
 import (
-	"minceraft.dev/sonus/webrtc-pion/ipc/protocol/buf"
+	"minceraft.dev/sonus/webrtc-pion/ipc/protocol/buffer"
 )
 
 type IpcMessage interface {

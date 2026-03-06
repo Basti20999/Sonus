@@ -14,22 +14,22 @@ import (
 type PionTrackCallback func(data []byte, duration time.Duration)
 
 type PionPeerCallback interface {
-	OnIceCandidate(candidate string, sdpMid *string, sdpMLineIndex *uint16)
-	OnIceConnectionStateChange(state int)
-	OnConnectionStateChange(state int)
-	onRemoteAudioTrack(sampleRate uint32, channels uint16) PionTrackCallback
-	onLocalAudioTrack(sampleRate uint32, channels uint16, callback PionTrackCallback)
-	onError(err error)
+	OnIceCandidate(candidate string, sdpMid *string, sdpMLineIndex *uint16) error
+	OnIceConnectionStateChange(state webrtc.ICEConnectionState) error
+	OnConnectionStateChange(state webrtc.PeerConnectionState) error
+	OnRemoteAudioTrack(sampleRate uint32, channels uint16) (PionTrackCallback, error)
+	OnLocalAudioTrack(sampleRate uint32, channels uint16, callback PionTrackCallback) error
+	OnError(err error)
 }
 
 type PionPeer struct {
 	*webrtc.PeerConnection
-	callback    PionPeerCallback
+	Callback    PionPeerCallback
 	activeTrack *string
 	closed      bool
 }
 
-func (peer *PionPeer) init(id string) error {
+func (peer *PionPeer) Initialize(id string) error {
 	// we want to receive an audio track
 	if _, err := peer.AddTransceiverFromKind(webrtc.RTPCodecTypeAudio, webrtc.RTPTransceiverInit{
 		Direction: webrtc.RTPTransceiverDirectionRecvonly,
@@ -62,7 +62,7 @@ func (peer *PionPeer) init(id string) error {
 		if strings.EqualFold(codec.MimeType, webrtc.MimeTypeOpus) {
 			go peer.handleOpusTrack(track)
 		} else {
-			peer.callback.onError(fmt.Errorf("expected incoming opus track, received %s", codec.MimeType))
+			peer.Callback.OnError(fmt.Errorf("expected incoming opus track, received %s", codec.MimeType))
 		}
 	})
 
@@ -72,7 +72,7 @@ func (peer *PionPeer) init(id string) error {
 func (peer *PionPeer) handleLocalCandidate(candidate *webrtc.ICECandidate) {
 	iceCandidate, err := candidate.ToICE()
 	if err != nil {
-		peer.callback.onError(err)
+		peer.Callback.OnError(err)
 		return
 	}
 	// pass to callback
@@ -84,15 +84,21 @@ func (peer *PionPeer) handleLocalCandidate(candidate *webrtc.ICECandidate) {
 	if candidate.SDPMLineIndex != 0 {
 		sdpMLineIndex = &candidate.SDPMLineIndex
 	}
-	peer.callback.OnIceCandidate(iceCandidate.Marshal(), sdpMid, sdpMLineIndex)
+	if err = peer.Callback.OnIceCandidate(iceCandidate.Marshal(), sdpMid, sdpMLineIndex); err != nil {
+		peer.Callback.OnError(err)
+	}
 }
 
 func (peer *PionPeer) handleIceConnectionStateChange(state webrtc.ICEConnectionState) {
-	peer.callback.OnIceConnectionStateChange(int(state))
+	if err := peer.Callback.OnIceConnectionStateChange(int(state)); err != nil {
+		peer.Callback.OnError(err)
+	}
 }
 
 func (peer *PionPeer) handleConnectionStateChange(state webrtc.PeerConnectionState) {
-	peer.callback.OnConnectionStateChange(int(state))
+	if err := peer.Callback.OnConnectionStateChange(int(state)); err != nil {
+		peer.Callback.OnError(err)
+	}
 }
 
 func (peer *PionPeer) initOutputTrack(track *webrtc.TrackLocalStaticSample) error {
@@ -106,7 +112,7 @@ func (peer *PionPeer) initOutputTrack(track *webrtc.TrackLocalStaticSample) erro
 		rtcpBuf := make([]byte, 1500)
 		for !peer.closed {
 			if _, _, rtcpErr := sender.Read(rtcpBuf); rtcpErr != nil {
-				peer.callback.onError(rtcpErr)
+				peer.Callback.OnError(rtcpErr)
 				return
 			}
 		}
@@ -114,19 +120,21 @@ func (peer *PionPeer) initOutputTrack(track *webrtc.TrackLocalStaticSample) erro
 
 	// push callback to api consumer and let them write samples
 	codec := track.Codec()
-	peer.callback.onLocalAudioTrack(codec.ClockRate, codec.Channels, func(data []byte, duration time.Duration) {
+	return peer.Callback.OnLocalAudioTrack(codec.ClockRate, codec.Channels, func(data []byte, duration time.Duration) {
 		writeError := track.WriteSample(media.Sample{Data: data, Duration: duration})
 		if writeError != nil {
-			peer.callback.onError(writeError)
+			peer.Callback.OnError(writeError)
 		}
 	})
-	return nil
 }
 
 func (peer *PionPeer) handleOpusTrack(track *webrtc.TrackRemote) {
 	codec := track.Codec()
-	callback := peer.callback.onRemoteAudioTrack(codec.ClockRate, codec.Channels)
-	if callback == nil {
+	callback, err := peer.Callback.OnRemoteAudioTrack(codec.ClockRate, codec.Channels)
+	if err != nil {
+		peer.Callback.OnError(err)
+		return
+	} else if callback == nil {
 		return // track got ignored
 	}
 	// set as active track
@@ -140,7 +148,7 @@ func (peer *PionPeer) handleOpusTrack(track *webrtc.TrackRemote) {
 		if !peer.isTrackActive(track) {
 			break
 		} else if err != nil {
-			peer.callback.onError(err)
+			peer.Callback.OnError(err)
 			peer.activeTrack = nil
 			break
 		}

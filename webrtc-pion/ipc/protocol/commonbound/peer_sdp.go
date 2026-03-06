@@ -5,12 +5,12 @@ import (
 	"minceraft.dev/sonus/webrtc-pion/ipc/protocol/buffer"
 )
 
-type IcpPeerSdp struct {
+type IpcPeerSdp struct {
 	HandlerId uint32
 	Sdp       string
 }
 
-func (msg *IcpPeerSdp) Decode(buf *buffer.ByteBuf) (err error) {
+func (msg *IpcPeerSdp) Decode(buf *buffer.ByteBuf) (err error) {
 	if msg.HandlerId, err = buf.ReadVarInt(); err != nil {
 		return
 	}
@@ -18,23 +18,23 @@ func (msg *IcpPeerSdp) Decode(buf *buffer.ByteBuf) (err error) {
 	return
 }
 
-func (msg *IcpPeerSdp) Encode(buf *buffer.ByteBuf) error {
+func (msg *IpcPeerSdp) Encode(buf *buffer.ByteBuf) error {
 	buf.WriteVarInt(msg.HandlerId)
 	buf.WriteUtf8(msg.Sdp)
 	return nil
 }
 
-func (msg *IcpPeerSdp) Handle(handler *ipc.Handler) error {
+func (msg *IpcPeerSdp) Handle(handler *ipc.Handler) error {
 	answerSdp, err := handler.Peer.HandleOffer(msg.Sdp)
 	if err != nil {
 		return err
 	}
-	return handler.Socket.Send(&IcpPeerSdp{
+	return handler.Socket.Send(&IpcPeerSdp{
 		HandlerId: msg.HandlerId,
 		Sdp:       answerSdp,
 	})
 }
 
-func (msg *IcpPeerSdp) GetHandlerId() uint32 {
+func (msg *IpcPeerSdp) GetHandlerId() uint32 {
 	return msg.HandlerId
 }
