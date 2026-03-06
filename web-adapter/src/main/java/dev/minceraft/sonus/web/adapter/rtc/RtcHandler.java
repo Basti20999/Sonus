@@ -53,6 +53,7 @@ public final class RtcHandler implements AutoCloseable {
     private static final Logger LOGGER = LoggerFactory.getLogger("WebRTC");
     private static final int INPUT_BUFFER_GC_INTERVAL = 0b1111111;
     private static final int QUIET_FRAMES_THRESHOLD = 300 / SonusConstants.FRAMES_INTERVAL;
+    private static final double QUIET_THRESHOLD_RMS_AMPLITUDE = 0e-5d;
 
     private final RtcManager manager;
     private final WebSocketConnection signalConnection;
@@ -164,70 +165,66 @@ public final class RtcHandler implements AutoCloseable {
             track.link(decodeBin.getStaticPad("sink"));
         });
 
-        // sendonly (https://gstreamer.freedesktop.org/documentation/webrtclib/webrtc_fwd.html?gi-language=c#GstWebRTCRTPTransceiverDirection), null caps
+        // 2 is sendonly (https://gstreamer.freedesktop.org/documentation/webrtclib/webrtc_fwd.html?gi-language=c#GstWebRTCRTPTransceiverDirection)
         this.rtcBin.emit("add-transceiver", 2L, RTC_OUT_ENCODED_CAPS);
 
-        if (true) {
-            // create audio output pipeline elements
-            AppSrc outSrc = new AppSrc(ELEMENT_TX_PREFIX + "src");
-            outSrc.set("format", 3L); // time (https://gstreamer.freedesktop.org/documentation/gstreamer/gstformat.html?gi-language=c#GstFormat)
-            outSrc.set("is-live", true);
-            outSrc.set("do-timestamp", true);
-            Element srcFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "srcfilter");
-            srcFilter.setCaps(RTC_OUT_CAPS);
-            Element conv = ElementFactory.make("audioconvert", ELEMENT_TX_PREFIX + "audioconvert");
-            Element resample = ElementFactory.make("audioresample", ELEMENT_TX_PREFIX + "audioresample");
-            Element encoder = ElementFactory.make("opusenc", ELEMENT_TX_PREFIX + "opusencoder");
-            Element realtime = ElementFactory.make("rtpopuspay", ELEMENT_TX_PREFIX + "rtpopuspay");
-            Element dstFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "dstfilter");
-            dstFilter.setCaps(RTC_OUT_ENCODED_CAPS);
-            Element queue = ElementFactory.make("queue", ELEMENT_TX_PREFIX + "queue");
+        // create audio output pipeline elements
+        AppSrc outSrc = new AppSrc(ELEMENT_TX_PREFIX + "src");
+        outSrc.set("format", 3L); // time (https://gstreamer.freedesktop.org/documentation/gstreamer/gstformat.html?gi-language=c#GstFormat)
+        outSrc.set("is-live", true);
+        outSrc.set("do-timestamp", true);
+        Element srcFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "srcfilter");
+        srcFilter.setCaps(RTC_OUT_CAPS);
+        Element conv = ElementFactory.make("audioconvert", ELEMENT_TX_PREFIX + "audioconvert");
+        Element resample = ElementFactory.make("audioresample", ELEMENT_TX_PREFIX + "audioresample");
+        Element encoder = ElementFactory.make("opusenc", ELEMENT_TX_PREFIX + "opusencoder");
+        Element realtime = ElementFactory.make("rtpopuspay", ELEMENT_TX_PREFIX + "rtpopuspay");
+        Element dstFilter = ElementFactory.make("capsfilter", ELEMENT_TX_PREFIX + "dstfilter");
+        dstFilter.setCaps(RTC_OUT_ENCODED_CAPS);
+        Element queue = ElementFactory.make("queue", ELEMENT_TX_PREFIX + "queue");
 
-            // add to pipeline
-            this.pipe.addMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue);
-            outSrc.syncStateWithParent();
-            srcFilter.syncStateWithParent();
-            conv.syncStateWithParent();
-            resample.syncStateWithParent();
-            encoder.syncStateWithParent();
-            realtime.syncStateWithParent();
-            dstFilter.syncStateWithParent();
-            queue.syncStateWithParent();
+        // add to pipeline
+        this.pipe.addMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue);
+        outSrc.syncStateWithParent();
+        srcFilter.syncStateWithParent();
+        conv.syncStateWithParent();
+        resample.syncStateWithParent();
+        encoder.syncStateWithParent();
+        realtime.syncStateWithParent();
+        dstFilter.syncStateWithParent();
+        queue.syncStateWithParent();
 
-            AtomicBoolean push = new AtomicBoolean(true);
-            outSrc.connect((AppSrc.ENOUGH_DATA) elem -> {
-                System.out.println("ENOUGH DATA " + elem);
-                push.set(false);
-            });
-            outSrc.connect((AppSrc.NEED_DATA) (elem, size) -> {
-                System.out.println("NEED DATA " + elem + " " + size);
-                push.set(true);
-            });
+        AtomicBoolean push = new AtomicBoolean(true);
+        outSrc.connect((AppSrc.ENOUGH_DATA) elem -> {
+            System.out.println("ENOUGH DATA " + elem);
+            push.set(false);
+        });
+        outSrc.connect((AppSrc.NEED_DATA) (elem, size) -> {
+            System.out.println("NEED DATA " + elem + " " + size);
+            push.set(true);
+        });
 
-            // start push task
-            ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
-            sched.scheduleAtFixedRate(() -> {
-                // *2*2 because 16-bit and stereo
-                Buffer buf = new Buffer(RtcConstants.FRAME_SIZE << 2);
-                this.mixer.tick(buf.map(true));
-                FlowReturn ret = null;
-                if (push.get()) {
-                    buf.unmap();
-                    ret = outSrc.pushBuffer(buf);
-                } else {
-                    buf.close();
-                }
-                System.out.println("PUSHED: " + System.nanoTime() / 1_000_000d + " " + outSrc.getState() + " " + ret);
-            }, RtcConstants.FRAME_INTERVAL, RtcConstants.FRAME_INTERVAL, TimeUnit.MILLISECONDS);
+        // start push task
+        ScheduledExecutorService sched = Executors.newSingleThreadScheduledExecutor();
+        sched.scheduleAtFixedRate(() -> {
+            // *2*2 because 16-bit and stereo
+            Buffer buf = new Buffer(RtcConstants.FRAME_SIZE << 2);
+            this.mixer.tick(buf.map(true));
+            FlowReturn ret = null;
+            if (push.get()) {
+                buf.unmap();
+                ret = outSrc.pushBuffer(buf);
+            } else {
+                buf.close();
+            }
+            System.out.println("PUSHED: " + System.nanoTime() / 1_000_000d + " " + outSrc.getState() + " " + ret);
+        }, RtcConstants.FRAME_INTERVAL, RtcConstants.FRAME_INTERVAL, TimeUnit.MILLISECONDS);
 
-            // link
-            Element.linkMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue, this.rtcBin);
-        }
+        // link
+        Element.linkMany(outSrc, srcFilter, conv, resample, encoder, realtime, dstFilter, queue, this.rtcBin);
 
-        System.out.println("PRE PLAY");
         // start!
         this.pipe.play();
-        System.out.println("POST PLAY");
     }
 
     public void handleMicInput(ByteBuffer data) {
@@ -252,7 +249,7 @@ public final class RtcHandler implements AutoCloseable {
                 rmsAmplitude += amplitude * amplitude;
             }
             // check whether this is loud enough or not
-            if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > 0e-5d * 0e-5d) {
+            if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > QUIET_THRESHOLD_RMS_AMPLITUDE * QUIET_THRESHOLD_RMS_AMPLITUDE) {
                 this.quietBuffer = 0; // reset quiet buffer
                 this.signalConnection.setVoiceActive(player.getUniqueId(), true);
                 SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);
