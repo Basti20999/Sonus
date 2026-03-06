@@ -4,7 +4,6 @@ package dev.minceraft.sonus.web.adapter.util;
 import dev.minceraft.sonus.common.SonusConstants;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -49,7 +48,7 @@ public final class AudioMixer implements AutoCloseable {
     }
 
 
-    public byte @Nullable [] tick(int samples) {
+    public @Nullable ByteBuf tick(int samples) {
         boolean gc = (this.tick++ & GC_INTERVAL) == 0;
         ByteBuf mixed = null;
         synchronized (this.lock) {
@@ -62,7 +61,7 @@ public final class AudioMixer implements AutoCloseable {
                 }
                 if (mixed == null) {
                     // lazy init, samples*2*2 because of stereo and 16-bit audio
-                    mixed = Unpooled.wrappedBuffer(new byte[samples << 2]);
+                    mixed = PooledByteBufAllocator.DEFAULT.buffer(samples << 2);
                 }
                 // samples*2*2 because see above
                 int maxStereoSamples = Math.min(samples << 2, buf.readableBytes());
@@ -75,7 +74,7 @@ public final class AudioMixer implements AutoCloseable {
                 }
             }
         }
-        return mixed != null ? mixed.array() : null;
+        return mixed;
     }
 
     private static short clampedAdd(short a, short b) {

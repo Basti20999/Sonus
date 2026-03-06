@@ -18,6 +18,7 @@ import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacke
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.util.ReferenceCountUtil;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -63,7 +64,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
         List<PionApi.IceServer> servers = config.iceServers.stream()
                 .map(WebConfig.IceServerConfig::create).toList();
         String streamId = signalConnection.getPlayer().getUniqueId().toString().substring(0, 8);
-        this.peer = PionApi.allocatePeer(servers, config.bundlePolicy, this, streamId);
+        this.peer = manager.getPion().allocatePeer(servers, config.bundlePolicy, streamId, this);
     }
 
     public void disconnect(String reason) {
@@ -102,10 +103,29 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
         OpusNativesLoader.Decoder opusDecoder = this.manager.getOpusLoader().new Decoder(sampleRate, channels);
         this.opusDecoder = opusDecoder;
 
-        return (data, durationNanos) -> {
-            int frameInterval = (int) (durationNanos / 1_000_000L);
-            opusDecoder.setFrameSize(sampleRate * frameInterval / 1000);
-            this.handleMicInput(opusDecoder.decode(data));
+        return new PionRemoteTrack.Callback() {
+            private long lastDurationNanos = -1;
+            private byte @Nullable [] lastDataArray;
+
+            @Override
+            public void onData(ByteBuf data, long durationNanos) {
+                // dynamically adjust frame size depending on frame duration
+                if (this.lastDurationNanos != durationNanos) {
+                    int frameInterval = (int) (durationNanos / 1_000_000L);
+                    opusDecoder.setFrameSize(sampleRate * frameInterval / 1000);
+                    this.lastDurationNanos = durationNanos;
+                }
+                // re-use byte array from last frame if possible
+                int dataLen = data.readableBytes();
+                byte[] dataArr = this.lastDataArray;
+                if (dataArr == null || dataArr.length != dataLen) {
+                    this.lastDataArray = dataArr = new byte[dataLen];
+                }
+                data.readBytes(dataArr);
+                // decode opus data and handle pcm audio frame
+                short[] pcmFrame = opusDecoder.decode(dataArr);
+                RtcHandler.this.handleMicInput(pcmFrame);
+            }
         };
     }
 
@@ -127,13 +147,16 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
     }
 
     private void tickAudio() {
+        ByteBuf frame = null;
         try {
-            byte[] frame = this.mixer.tick(RtcConstants.FRAME_SIZE);
+            frame = this.mixer.tick(RtcConstants.FRAME_SIZE);
             if (frame != null) {
-                this.outputTrack.sendData(frame, RtcConstants.FRAME_INTERVAL * 1_000_000L);
+                this.outputTrack.sendData(frame.retain(), RtcConstants.FRAME_INTERVAL * 1_000_000L);
             }
         } catch (Throwable throwable) {
             LOGGER.error("Error while ticking audio", throwable);
+        } finally {
+            ReferenceCountUtil.release(frame);
         }
     }
 

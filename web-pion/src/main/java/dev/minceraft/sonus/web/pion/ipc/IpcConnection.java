@@ -2,6 +2,7 @@ package dev.minceraft.sonus.web.pion.ipc;
 // Created by booky10 in Sonus (6:16 PM 06.03.2026)
 
 import dev.minceraft.sonus.network.TransportType;
+import dev.minceraft.sonus.web.pion.ipc.pionbound.IpcPeerClose;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -12,11 +13,12 @@ import org.slf4j.LoggerFactory;
 import java.net.UnixDomainSocketAddress;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @NullMarked
-public final class IpcConnection {
+public final class IpcConnection implements AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("PionIpc");
 
@@ -60,5 +62,24 @@ public final class IpcConnection {
 
     public Channel getChannel() {
         return this.channel;
+    }
+
+    @Override
+    public void close() {
+        if (this.channel.isActive()) {
+            // safely shutdown
+            CompletableFuture.runAsync(() -> {
+                this.handlers.keySet().removeIf(handlerId -> {
+                    this.channel.write(new IpcPeerClose(handlerId));
+                    return true;
+                });
+                this.channel.flush();
+                this.channel.close();
+            }, this.channel.eventLoop()).join();
+        } else {
+            // abort, channel is already closed
+            this.channel.close();
+            this.handlers.clear();
+        }
     }
 }

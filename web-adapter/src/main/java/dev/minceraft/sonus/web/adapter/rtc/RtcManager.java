@@ -4,6 +4,7 @@ package dev.minceraft.sonus.web.adapter.rtc;
 import dev.minceraft.sonus.common.natives.OpusNativesLoader;
 import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
+import dev.minceraft.sonus.web.pion.PionApi;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -17,6 +18,7 @@ import java.util.function.Supplier;
 @NullMarked
 public final class RtcManager implements AutoCloseable {
 
+    private final PionApi pion = new PionApi();
     private final OpusNativesLoader opusLoader = new OpusNativesLoader();
 
     private final ScheduledExecutorService audioTicker = Executors.newScheduledThreadPool(1, r -> {
@@ -52,6 +54,10 @@ public final class RtcManager implements AutoCloseable {
         }
     }
 
+    public PionApi getPion() {
+        return this.pion;
+    }
+
     public OpusNativesLoader getOpusLoader() {
         return this.opusLoader;
     }
@@ -68,5 +74,6 @@ public final class RtcManager implements AutoCloseable {
         });
         this.audioTicker.close();
         this.opusLoader.close();
+        this.pion.close();
     }
 }

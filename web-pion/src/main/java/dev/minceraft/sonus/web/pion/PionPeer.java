@@ -3,14 +3,16 @@ package dev.minceraft.sonus.web.pion;
 
 import dev.minceraft.sonus.web.pion.ipc.IpcConnection;
 import dev.minceraft.sonus.web.pion.ipc.IpcError;
-import dev.minceraft.sonus.web.pion.ipc.IpcHandler;
+import dev.minceraft.sonus.web.pion.ipc.IpcMessage;
 import dev.minceraft.sonus.web.pion.ipc.commonbound.IpcPeerAddIceCandidate;
 import dev.minceraft.sonus.web.pion.ipc.commonbound.IpcPeerSdp;
 import dev.minceraft.sonus.web.pion.ipc.pionbound.IpcApiAllocatePeer;
 import dev.minceraft.sonus.web.pion.ipc.pionbound.IpcPeerClose;
 import dev.minceraft.sonus.web.pion.ipc.sonusbound.IpcPeerError;
+import dev.minceraft.sonus.web.pion.ipc.sonusbound.IpcPeerOnAudioTrack;
 import dev.minceraft.sonus.web.pion.ipc.sonusbound.IpcPeerOnConnectionStateChange;
 import dev.minceraft.sonus.web.pion.ipc.sonusbound.IpcPeerOnIceConnectionStateChange;
+import dev.minceraft.sonus.web.pion.ipc.sonusbound.IpcRemoteTrackOnData;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -19,40 +21,69 @@ import java.util.List;
 @NullMarked
 public final class PionPeer implements AutoCloseable {
 
-    private final IpcConnection ipc;
-    private final int handlerId;
-    private final IpcHandler handler;
+    final IpcConnection ipc;
+    final int handlerId;
+
+    private final PionPeer.Callback callback;
+    private @Nullable PionRemoteTrack remoteTrack = null;
+    private PionRemoteTrack.@Nullable Callback remoteTrackCallback;
 
     private IceConnectionState iceConnectionState = IceConnectionState.UNKNOWN;
     private PeerConnectionState connectionState = PeerConnectionState.UNKNOWN;
 
     PionPeer(
-            IpcConnection ipc,
-            List<PionApi.IceServer> iceServers, PionApi.BundlePolicy bundlePolicy,
-            PionPeer.Callback callback, String id
+            IpcConnection ipc, PionPeer.Callback callback,
+            List<PionApi.IceServer> iceServers, PionApi.BundlePolicy bundlePolicy, String id
     ) {
         this.ipc = ipc;
+        this.callback = callback;
+        this.handlerId = ipc.registerHandler(this::handleIpcMessage);
+        ipc.send(new IpcApiAllocatePeer(this.handlerId, iceServers, bundlePolicy, id));
+    }
 
-        this.handler = message -> {
-            switch (message) {
-                case IpcPeerAddIceCandidate msg ->
-                        callback.onIceCandidate(msg.getCandidate(), msg.getSdpMid(), msg.getSdpMLineIndex());
-                case IpcPeerSdp msg -> callback.onAnswerCreated(msg.getSdp());
-                case IpcPeerOnIceConnectionStateChange msg -> {
-                    callback.onIceConnectionStateChange(msg.getState());
-                    this.iceConnectionState = msg.getState();
-                }
-                case IpcPeerOnConnectionStateChange msg -> {
-                    callback.onConnectionStateChange(msg.getState());
-                    this.connectionState = msg.getState();
-                }
-                case IpcPeerError msg -> callback.onError(new IpcError(msg.getError()));
-                default -> {
+    private void handleIpcMessage(IpcMessage message) {
+        switch (message) {
+            case IpcPeerAddIceCandidate msg ->
+                    this.callback.onIceCandidate(msg.getCandidate(), msg.getSdpMid(), msg.getSdpMLineIndex());
+            case IpcPeerSdp msg -> this.callback.onAnswerCreated(msg.getSdp());
+            case IpcPeerOnIceConnectionStateChange msg -> {
+                this.callback.onIceConnectionStateChange(msg.getState());
+                this.iceConnectionState = msg.getState();
+            }
+            case IpcPeerOnConnectionStateChange msg -> {
+                this.callback.onConnectionStateChange(msg.getState());
+                this.connectionState = msg.getState();
+            }
+            case IpcPeerOnAudioTrack msg -> {
+                switch (msg.getType()) {
+                    case REMOTE -> {
+                        this.remoteTrack = new PionRemoteTrack(msg.getTrackId(), msg.getSampleRate(), msg.getChannels());
+                        this.remoteTrackCallback = this.callback.onRemoteAudioTrack(this.remoteTrack);
+                    }
+                    case LOCAL -> {
+                        PionLocalTrack track = new PionLocalTrack(this, msg.getTrackId(), msg.getSampleRate(), msg.getChannels());
+                        this.callback.onLocalAudioTrack(track);
+                    }
                 }
             }
-        };
-        this.handlerId = ipc.registerHandler(this.handler);
-        ipc.send(new IpcApiAllocatePeer(this.handlerId, iceServers, bundlePolicy, id));
+            case IpcPeerError msg -> {
+                IpcError error = new IpcError(msg.getError());
+                this.callback.onError(error);
+            }
+            case IpcRemoteTrackOnData msg -> {
+                try {
+                    if (this.remoteTrack != null
+                            && this.remoteTrack.trackId == msg.getTrackId()
+                            && this.remoteTrackCallback != null) {
+                        this.remoteTrackCallback.onData(msg.getData(), msg.getDurationNanos());
+                    }
+                } finally {
+                    msg.getData().release();
+                }
+            }
+            default -> {
+            }
+        }
     }
 
     public void addIceCandidate(String candidate, @Nullable String sdpMid, @Nullable Short sdpMLineIndex) {

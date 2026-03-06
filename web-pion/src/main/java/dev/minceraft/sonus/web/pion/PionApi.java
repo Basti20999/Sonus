@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 @NullMarked
-public final class PionApi {
+public final class PionApi implements AutoCloseable {
 
     private static final Path DEFAULT_SOCKET_PATH = Path.of(System.getProperty("PION_IPC_SOCKET", "/tmp/pion.socket"));
 
@@ -24,10 +24,14 @@ public final class PionApi {
     }
 
     public PionPeer allocatePeer(
-            List<IceServer> iceServers, BundlePolicy bundlePolicy,
-            PionPeer.Callback callback, String id
+            List<IceServer> iceServers, BundlePolicy bundlePolicy, String id, PionPeer.Callback callback
     ) {
-        return new PionPeer(this.ipc, iceServers, bundlePolicy, id, callback);
+        return new PionPeer(this.ipc, callback, iceServers, bundlePolicy, id);
+    }
+
+    @Override
+    public void close() {
+        this.ipc.close();
     }
 
     public enum BundlePolicy {
