@@ -159,4 +159,8 @@ public class VelocitySonusPlayer implements IPlatformPlayer {
     public boolean isOnline() {
         return this.player.isActive();
     }
+
+    public Player getHandle() {
+        return this.player;
+    }
 }

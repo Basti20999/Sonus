@@ -723,4 +723,8 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             this.disconnect();
         }
     }
+
+    public IPlatformPlayer getPlatform() {
+        return this.platform;
+    }
 }
