@@ -102,6 +102,8 @@ func (handler *HandlerCallback) OnError(err error) {
 		Error:     err.Error(),
 	})
 	if writeErr != nil {
-		log.Printf("failed to send error %s to %s: %s", err, handler.Peer.String(), writeErr)
+		log.Printf("failed to send error \"%s\" to %s: %s", err, handler.Peer.String(), writeErr)
+	} else {
+		log.Printf("received error for %s: %s", handler.Peer.String(), err)
 	}
 }
