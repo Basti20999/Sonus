@@ -87,7 +87,8 @@ func (peer *PionPeer) handleLocalCandidate(candidate *webrtc.ICECandidate) {
 	if candidate.SDPMLineIndex != 0 {
 		sdpMLineIndex = &candidate.SDPMLineIndex
 	}
-	if err = peer.Callback.OnIceCandidate(iceCandidate.Marshal(), sdpMid, sdpMLineIndex); err != nil {
+	candidateStr := "candidate:" + iceCandidate.Marshal()
+	if err = peer.Callback.OnIceCandidate(candidateStr, sdpMid, sdpMLineIndex); err != nil {
 		peer.Callback.OnError(err)
 	}
 }
