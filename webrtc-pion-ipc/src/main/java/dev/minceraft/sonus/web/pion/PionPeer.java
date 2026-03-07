@@ -112,6 +112,11 @@ public final class PionPeer implements AutoCloseable {
         return this.connectionState;
     }
 
+    @Override
+    public String toString() {
+        return "PionPeer[" + this.handlerId + "]";
+    }
+
     public interface Callback {
 
         void onIceCandidate(String candidate, @Nullable String sdpMid, @Nullable Short sdpMLineIndex);
