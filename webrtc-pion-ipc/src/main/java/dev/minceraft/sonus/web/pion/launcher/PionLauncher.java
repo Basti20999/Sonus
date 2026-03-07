@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.LockSupport;
 
@@ -29,7 +31,7 @@ public final class PionLauncher {
         }
         LOGGER.info("Will be extracting pion (webrtc) for {}/{}...", operatingSystem, systemArch);
 
-        String execName = "/webrtc-pion/pion_" + operatingSystem + "_" + systemArch;
+        String execName = "webrtc-pion/pion_" + operatingSystem + "_" + systemArch;
         try {
             Path tempPath = Files.createTempFile("webrtcpion", "bin");
             // delete on exit using old file api
@@ -40,8 +42,15 @@ public final class PionLauncher {
                 if (execStream == null) {
                     throw new IllegalStateException("Can't find binary in classpath: " + execName);
                 }
-                Files.copy(execStream, tempPath);
+                Files.copy(execStream, tempPath, StandardCopyOption.REPLACE_EXISTING);
             }
+
+            // non-windows requires us to mark the executable as executable
+            // needs to be done after copying exec from classpath because our copy overwrites the previous file
+            if (operatingSystem != OperatingSystem.WINDOWS) {
+                Files.setPosixFilePermissions(tempPath, PosixFilePermissions.fromString("rwxr--r--")); // 0o744
+            }
+
             return tempPath.toAbsolutePath();
         } catch (IOException exception) {
             throw new IllegalStateException("Error while extracting binary from classpath: " + exception, exception);
@@ -76,9 +85,13 @@ public final class PionLauncher {
             // wait for process to start up
             return CompletableFuture.runAsync(() -> {
                 // wait for socket path to be allocated
+                long timeout = System.nanoTime() + 5 * 1000 * 1_000_000L; // timeout after 5s
                 while (Files.notExists(socketPath)) {
                     if (!process.isAlive()) {
                         throw new IllegalStateException("Pion process exited: " + process.exitValue());
+                    } else if (System.nanoTime() > timeout) {
+                        process.destroy();
+                        throw new IllegalStateException("Timed out while waiting for pion process to start");
                     }
                     LockSupport.parkNanos(10 * 1_000_000L); // 10ms
                 }

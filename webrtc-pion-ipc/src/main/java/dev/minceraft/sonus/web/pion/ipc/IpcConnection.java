@@ -13,12 +13,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.ReferenceCountUtil;
 import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.UnixDomainSocketAddress;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -71,7 +71,7 @@ public final class IpcConnection implements AutoCloseable {
         // connect to socket
         ChannelFuture channelFuture = new Bootstrap()
                 .channelFactory(transport.getUnixChannelFactory())
-                .remoteAddress(UnixDomainSocketAddress.of(path))
+                .remoteAddress(new DomainSocketAddress(path.toAbsolutePath().toString()))
                 .group(transport.createGroup("sonus-pion-ipc"))
                 .handler(new ChannelInitializer<>() {
                     @Override

@@ -12,6 +12,12 @@ sequenceOf("darwin", "windows", "linux").forEach { os ->
         val compileTask = tasks.register<Exec>("compileGo$capOs$capArch") {
             workingDir(project.layout.projectDirectory)
 
+            inputs.files(
+                project.fileTree(project.layout.projectDirectory)
+                    .filter { it.name.endsWith(".go") }
+            )
+            inputs.files("go.mod", "go.sum")
+
             val outputFile = compileOutputDir.get().file("pion_${os}_$arch")
             outputs.file(outputFile)
 
