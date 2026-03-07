@@ -21,7 +21,7 @@ public class WebConfig implements ISubConfig {
     public String linkPattern = "https://sonus.example.com/%s";
 
     public List<IceServerConfig> iceServers = List.of(
-            new IceServerConfig("stun://stun.l.google.com:5349", null, null)
+            new IceServerConfig("stun:stun.l.google.com:5349", null, null)
     );
 
     @ConfigSerializable
