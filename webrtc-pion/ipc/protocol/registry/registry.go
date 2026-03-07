@@ -14,7 +14,7 @@ import (
 var (
 	inboundMessages = buildInboundMessages([]ipc.Message{
 		// commonbound
-		&commonbound.IcpPeerAddIceCandidate{},
+		&commonbound.IpcPeerAddIceCandidate{},
 		&commonbound.IpcPeerSdp{},
 		// pionbound
 		&pionbound.IpcApiAllocatePeer{},

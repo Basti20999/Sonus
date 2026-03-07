@@ -113,11 +113,10 @@ public final class IpcConnection implements AutoCloseable {
     }
 
     public void send(IpcMessage message) {
-        this.channel.writeAndFlush(message);
-    }
-
-    public Channel getChannel() {
-        return this.channel;
+        // skip sending messages for unregistered handlers
+        if (this.handlers.containsKey(message.getHandlerId())) {
+            this.channel.writeAndFlush(message);
+        }
     }
 
     @Override

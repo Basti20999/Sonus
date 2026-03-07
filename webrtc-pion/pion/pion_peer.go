@@ -90,13 +90,13 @@ func (peer *PionPeer) handleLocalCandidate(candidate *webrtc.ICECandidate) {
 }
 
 func (peer *PionPeer) handleIceConnectionStateChange(state webrtc.ICEConnectionState) {
-	if err := peer.Callback.OnIceConnectionStateChange(int(state)); err != nil {
+	if err := peer.Callback.OnIceConnectionStateChange(state); err != nil {
 		peer.Callback.OnError(err)
 	}
 }
 
 func (peer *PionPeer) handleConnectionStateChange(state webrtc.PeerConnectionState) {
-	if err := peer.Callback.OnConnectionStateChange(int(state)); err != nil {
+	if err := peer.Callback.OnConnectionStateChange(state); err != nil {
 		peer.Callback.OnError(err)
 	}
 }

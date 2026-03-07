@@ -42,7 +42,7 @@ func (msg *IpcLocalTrackSendData) Encode(*buffer.ByteBuf) error {
 }
 
 func (msg *IpcLocalTrackSendData) Handle(handler *ipc.Handler) error {
-	// FIXME
+	return handler.SendLocalAudio(msg.TrackId, msg.Data, msg.Duration)
 }
 
 func (msg *IpcLocalTrackSendData) GetHandlerId() uint32 {
