@@ -90,7 +90,7 @@ func (buf *ByteBuf) IsWritable(bytes uint32) bool {
 
 func (buf *ByteBuf) EnsureWritable(bytes uint32) {
 	if !buf.IsWritable(bytes) {
-		extra := max(bytes-buf.wi, buf.len) // double length or use bytes param
+		extra := max(bytes, buf.len) // double length or use bytes param
 		buf.data = append(buf.data, make([]uint8, extra)...)
 		buf.len += extra
 	}
