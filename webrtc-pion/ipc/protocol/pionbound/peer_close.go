@@ -27,9 +27,7 @@ func (msg *IpcPeerClose) Encode(*buffer.ByteBuf) error {
 }
 
 func (msg *IpcPeerClose) Handle(handler *ipc.Handler) error {
-	err := handler.Peer.Close()
-	delete(handler.Socket.Handlers, msg.HandlerId) // remove nonetheless
-	return err
+	return handler.Close()
 }
 
 func (msg *IpcPeerClose) GetHandlerId() uint32 {

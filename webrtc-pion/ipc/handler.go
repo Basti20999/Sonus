@@ -13,6 +13,7 @@ type Handler struct {
 	Peer          *pion.PionPeer
 	LocalTrackMap sync.Map
 	Send          func(msg Message) error
+	Close         func() error
 }
 
 func (handler *Handler) SendLocalAudio(trackId uint32, frame []byte, duration time.Duration) error {

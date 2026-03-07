@@ -201,22 +201,22 @@ func (buf *ByteBuf) ReadVarInt() (uint32, error) {
 
 func (buf *ByteBuf) WriteVarInt(v uint32) {
 	wi := buf.wi
-	if (v & (uint32(0xFFFFFFFF) << 7)) == 0 {
+	if (v & 0xFFFFFF80) == 0 {
 		buf.EnsureWritable(1)
 		buf.data[wi] = uint8(v)
 		buf.wi = wi + 1
-	} else if (v & (uint32(0xFFFFFFFF) << 14)) == 0 {
+	} else if (v & 0xFFFFC000) == 0 {
 		buf.EnsureWritable(2)
 		buf.data[wi] = uint8(v&0x7F | 0x80)
 		buf.data[wi+1] = uint8(v >> 7)
 		buf.wi = wi + 2
-	} else if (v & (uint32(0xFFFFFFFF) << 21)) == 0 {
+	} else if (v & 0xFFE00000) == 0 {
 		buf.EnsureWritable(3)
 		buf.data[wi] = uint8(v&0x7F | 0x80)
 		buf.data[wi+1] = uint8((v>>7)&0x7F | 0x80)
 		buf.data[wi+2] = uint8(v >> 14)
 		buf.wi = wi + 3
-	} else if (v & (uint32(0xFFFFFFFF) << 28)) == 0 {
+	} else if (v & 0xF0000000) == 0 {
 		buf.EnsureWritable(4)
 		buf.data[wi] = uint8(v&0x7F | 0x80)
 		buf.data[wi+1] = uint8((v>>7)&0x7F | 0x80)

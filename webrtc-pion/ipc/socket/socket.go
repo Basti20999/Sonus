@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	"minceraft.dev/sonus/webrtc-pion/ipc"
 	"minceraft.dev/sonus/webrtc-pion/ipc/protocol/buffer"
@@ -18,25 +20,47 @@ type SocketConn struct {
 }
 
 func BindSocket(path string) error {
+	// listen on path for IPC connections
 	listener, err := net.Listen("unix", path)
 	if err != nil {
 		return err
 	}
+
+	running := true
+	// properly shutdown unix socket on termination
+	// https://stackoverflow.com/a/16702173
+	exitSignalCh := make(chan os.Signal, 1)
+	signal.Notify(exitSignalCh, os.Interrupt, os.Kill, syscall.SIGTERM)
+	go func(ch chan os.Signal) {
+		exitSignal := <-ch
+		fmt.Printf("shutting down, received %s\n", exitSignal)
+		// graceful shutdown
+		running = false
+		_ = listener.Close()
+		os.Exit(0)
+	}(exitSignalCh)
+
+	// start loop
 	var conn net.Conn
-	for {
+	for running {
 		conn, err = listener.Accept()
 		if err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error while accepting connection: %e", err)
+			if running {
+				_, _ = fmt.Fprintf(os.Stderr, "error while accepting connection: %e\n", err)
+			}
 			continue // don't abort
 		}
 		go handleSocket(conn)
 	}
+
+	return nil // done executing
 }
 
 // gcMessageInterval determines when we remove read bytes from the socket read buffer
 const gcMessageInterval = uint8(15)
 
 func handleSocket(conn net.Conn) {
+	fmt.Printf("accepted connection from %s\n", conn.RemoteAddr())
 	socketConn := SocketConn{conn: conn}
 	bufGcTick := gcMessageInterval
 
@@ -56,7 +80,7 @@ func handleSocket(conn net.Conn) {
 		buf.EnsureWritable(buffer.DefaultInitialCapacity)
 		// read bytes from socket directly into bytebuf
 		if err = buf.ReadFrom(conn); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error while reading from %s: %e", conn.RemoteAddr(), err)
+			_, _ = fmt.Fprintf(os.Stderr, "error while reading from %s: %e\n", conn.RemoteAddr(), err)
 			_ = conn.Close()
 			return
 		}
@@ -73,7 +97,7 @@ func handleSocket(conn net.Conn) {
 		frame, _ := buf.ReadUnsafeSlice(frameLen)
 		// decode frame to an ipc message
 		if msg, err = registry.Decode(frame); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error while decoding message from %s: %e", conn.RemoteAddr(), err)
+			_, _ = fmt.Fprintf(os.Stderr, "error while decoding message from %s: %e\n", conn.RemoteAddr(), err)
 			continue // trusted connection, don't close
 		}
 
@@ -81,13 +105,20 @@ func handleSocket(conn net.Conn) {
 		handlerId := msg.GetHandlerId()
 		handler, exists := socketConn.Handlers[handlerId]
 		if !exists {
-			handler = &ipc.Handler{Id: handlerId, Send: socketConn.Send}
+			handler = &ipc.Handler{
+				Id:   handlerId,
+				Send: socketConn.Send,
+				Close: func() error {
+					delete(socketConn.Handlers, handlerId)
+					return handler.Peer.Close()
+				},
+			}
 			socketConn.Handlers[handlerId] = handler
 		}
 
 		// handle message using handler and handle error
 		if err = msg.Handle(handler); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error while handling message from %s: %e", conn.RemoteAddr(), err)
+			_, _ = fmt.Fprintf(os.Stderr, "error while handling message from %s: %e\n", conn.RemoteAddr(), err)
 		}
 	}
 }

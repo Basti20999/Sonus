@@ -103,6 +103,6 @@ func (handler *HandlerCallback) OnError(err error) {
 		Error:     err.Error(),
 	})
 	if writeErr != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "failed to send error %e to %s: %e", err, handler.Peer.String(), writeErr)
+		_, _ = fmt.Fprintf(os.Stderr, "failed to send error %e to %s: %e\n", err, handler.Peer.String(), writeErr)
 	}
 }
