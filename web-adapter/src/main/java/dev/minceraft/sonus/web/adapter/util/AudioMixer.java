@@ -48,9 +48,9 @@ public final class AudioMixer implements AutoCloseable {
     }
 
 
-    public @Nullable ByteBuf tick(int samples) {
+    public short @Nullable [] tick(int samples) {
         boolean gc = (this.tick++ & GC_INTERVAL) == 0;
-        ByteBuf mixed = null;
+        short[] mixed = null;
         synchronized (this.lock) {
             for (Iterator<ByteBuf> it = this.queue.values().iterator(); it.hasNext(); ) {
                 ByteBuf buf = it.next();
@@ -60,14 +60,14 @@ public final class AudioMixer implements AutoCloseable {
                     continue;
                 }
                 if (mixed == null) {
-                    // lazy init, samples*2*2 because of stereo and 16-bit audio
-                    mixed = PooledByteBufAllocator.DEFAULT.buffer(samples << 2);
+                    // lazy init, samples*2 because of stereo
+                    mixed = new short[samples << 1];
                 }
                 // samples*2*2 because see above
                 int maxStereoSamples = Math.min(samples << 2, buf.readableBytes());
                 for (int i = 0; i < maxStereoSamples; i += Short.BYTES) {
-                    short v = clampedAdd(buf.readShortLE(), mixed.getShortLE(i));
-                    mixed.setShortLE(i, v);
+                    short v = clampedAdd(buf.readShortLE(), mixed[i]);
+                    mixed[i] = v;
                 }
                 if (gc) {
                     buf.discardSomeReadBytes();

@@ -2,23 +2,23 @@ package dev.minceraft.sonus.web.adapter.rtc;
 // Created by booky10 in Sonus (5:02 PM 02.03.2026)
 
 import dev.minceraft.sonus.common.SonusConstants;
+import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.natives.OpusNativesLoader;
 import dev.minceraft.sonus.web.adapter.config.WebConfig;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.adapter.util.AudioMixer;
-import dev.minceraft.sonus.web.pion.ipc.model.IceConnectionState;
-import dev.minceraft.sonus.web.pion.ipc.model.PeerConnectionState;
 import dev.minceraft.sonus.web.pion.PionLocalTrack;
 import dev.minceraft.sonus.web.pion.PionPeer;
 import dev.minceraft.sonus.web.pion.PionRemoteTrack;
+import dev.minceraft.sonus.web.pion.ipc.model.IceConnectionState;
 import dev.minceraft.sonus.web.pion.ipc.model.IceServer;
+import dev.minceraft.sonus.web.pion.ipc.model.PeerConnectionState;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.util.ReferenceCountUtil;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -47,6 +47,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
     private final AudioMixer mixer = new AudioMixer();
     private @MonotonicNonNull ScheduledFuture<?> ticker = null;
     private @MonotonicNonNull PionLocalTrack outputTrack;
+    private final OpusNativesLoader.Encoder opusEncoder;
 
     // audio input handling
     private OpusNativesLoader.@Nullable Decoder opusDecoder;
@@ -58,6 +59,8 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
     public RtcHandler(RtcManager manager, WebSocketConnection signalConnection) {
         this.manager = manager;
         this.signalConnection = signalConnection;
+        this.opusEncoder = manager.getOpusLoader().new Encoder(SonusConstants.SAMPLE_RATE,
+                2, AudioProcessor.Mode.VOICE);
 
         // configure pion
         WebConfig config = manager.getConfig();
@@ -147,16 +150,14 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
     }
 
     private void tickAudio() {
-        ByteBuf frame = null;
         try {
-            frame = this.mixer.tick(RtcConstants.FRAME_SIZE);
+            short[] frame = this.mixer.tick(RtcConstants.FRAME_SIZE);
             if (frame != null) {
-                this.outputTrack.sendData(frame.retain(), RtcConstants.FRAME_INTERVAL * 1_000_000L);
+                byte[] opusData = this.opusEncoder.encode(frame);
+                this.outputTrack.sendData(opusData, RtcConstants.FRAME_INTERVAL * 1_000_000L);
             }
         } catch (Throwable throwable) {
             LOGGER.error("Error while ticking audio", throwable);
-        } finally {
-            ReferenceCountUtil.release(frame);
         }
     }
 
