@@ -78,5 +78,14 @@ func Decode(buf *buffer.ByteBuf) (ipc.Message, error) {
 	} else if id >= inboundMessageCount {
 		return nil, ErrorUnknownMessageId
 	}
-	return inboundMessages[id].decode(buf)
+	// decode message content
+	ret, err := inboundMessages[id].decode(buf)
+	if err != nil {
+		return nil, err
+	}
+	// check we fully this message was fully read
+	if buf.IsReadable(1) {
+		return nil, fmt.Errorf("still %d bytes left in buffer after reading %e", buf.ReadableBytes(), ret)
+	}
+	return ret, nil
 }
