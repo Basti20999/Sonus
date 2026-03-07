@@ -88,11 +88,17 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
     @Override
     public void onIceConnectionStateChange(IceConnectionState state) {
         LOGGER.info("Received ice connection state change for {}: {}", this.peer, state);
+        if (state == IceConnectionState.FAILED) {
+            this.disconnect("ice connection failed");
+        }
     }
 
     @Override
     public void onConnectionStateChange(PeerConnectionState state) {
         LOGGER.info("Received connection state change for {}: {}", this.peer, state);
+        if (state == PeerConnectionState.FAILED) {
+            this.disconnect("peer connection failed");
+        }
     }
 
     @Override
@@ -127,7 +133,9 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
                 data.readBytes(dataArr);
                 // decode opus data and handle pcm audio frame
                 short[] pcmFrame = opusDecoder.decode(dataArr);
-                RtcHandler.this.handleMicInput(pcmFrame, channels);
+                synchronized (RtcHandler.this.inputBuffer) {
+                    RtcHandler.this.handleMicInput(pcmFrame, channels);
+                }
             }
         };
     }
@@ -260,7 +268,9 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
     public void close() {
         this.peer.close();
         this.mixer.close();
-        this.inputBuffer.release();
+        synchronized (this.inputBuffer) {
+            this.inputBuffer.release();
+        }
         if (this.ticker != null) {
             this.ticker.cancel(false);
             this.ticker = null;
@@ -269,5 +279,6 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
             this.opusDecoder.close();
             this.opusDecoder = null;
         }
+        this.signalConnection.close();
     }
 }
