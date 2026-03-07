@@ -67,7 +67,7 @@ func (msg *IpcApiAllocatePeer) Encode(*buffer.ByteBuf) error {
 }
 
 func (msg *IpcApiAllocatePeer) Handle(handler *ipc.Handler) error {
-	peer, err := webrtc.NewPeerConnection(webrtc.Configuration{
+	peer, err := pion.WebrtcApi.NewPeerConnection(webrtc.Configuration{
 		ICEServers:   msg.IceServers,
 		BundlePolicy: msg.BundlePolicy,
 	})

@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	txCodec      = webrtc.MimeTypeOpus
-	txSampleRate = 48_000
-	txChannels   = 2
+	codec      = webrtc.MimeTypeOpus
+	sampleRate = 48_000
+	rxChannels = 1
+	txChannels = 2
 )

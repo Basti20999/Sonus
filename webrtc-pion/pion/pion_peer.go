@@ -39,8 +39,8 @@ func (peer *PionPeer) Initialize(id string) error {
 
 	// and we want to send a local track
 	outputTrack, err := webrtc.NewTrackLocalStaticSample(webrtc.RTPCodecCapability{
-		MimeType:     txCodec,
-		ClockRate:    txSampleRate,
+		MimeType:     codec,
+		ClockRate:    sampleRate,
 		Channels:     txChannels,
 		SDPFmtpLine:  "",
 		RTCPFeedback: nil,
