@@ -61,7 +61,10 @@ const gcMessageInterval = uint8(15)
 
 func handleSocket(conn net.Conn) {
 	log.Printf("accepted connection from %s", conn.RemoteAddr())
-	socketConn := SocketConn{conn: conn}
+	socketConn := SocketConn{
+		conn:     conn,
+		Handlers: make(map[uint32]*ipc.Handler),
+	}
 	bufGcTick := gcMessageInterval
 
 	var msg ipc.Message
