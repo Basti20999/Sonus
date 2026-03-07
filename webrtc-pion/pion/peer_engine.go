@@ -13,7 +13,7 @@ func constructApi() *webrtc.API {
 		RTPCodecCapability: webrtc.RTPCodecCapability{
 			MimeType: codec, ClockRate: sampleRate, Channels: rxChannels, SDPFmtpLine: "", RTCPFeedback: nil,
 		},
-		PayloadType: 111,
+		PayloadType: 42,
 	}, webrtc.RTPCodecTypeAudio); err != nil {
 		panic(err)
 	}
@@ -22,7 +22,7 @@ func constructApi() *webrtc.API {
 		RTPCodecCapability: webrtc.RTPCodecCapability{
 			MimeType: codec, ClockRate: sampleRate, Channels: txChannels, SDPFmtpLine: "", RTCPFeedback: nil,
 		},
-		PayloadType: 111,
+		PayloadType: 84,
 	}, webrtc.RTPCodecTypeAudio); err != nil {
 		panic(err)
 	}
