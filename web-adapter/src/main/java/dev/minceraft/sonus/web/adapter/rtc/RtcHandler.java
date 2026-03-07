@@ -120,8 +120,8 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
             public void onData(ByteBuf data, long durationNanos) {
                 // dynamically adjust frame size depending on frame duration
                 if (this.lastDurationNanos != durationNanos) {
-                    int frameInterval = (int) (durationNanos / 1_000_000L);
-                    opusDecoder.setFrameSize(sampleRate * frameInterval / 1000);
+                    long frameSize = sampleRate * durationNanos / 1_000_000_000L;
+                    opusDecoder.setFrameSize((int) frameSize);
                     this.lastDurationNanos = durationNanos;
                 }
                 // re-use byte array from last frame if possible
