@@ -10,10 +10,10 @@ import org.jspecify.annotations.NullMarked;
 public class IpcLocalTrackSendData extends IpcMessage {
 
     private final int trackId;
-    private final ByteBuf data;
+    private final byte[] data;
     private final long durationNanos;
 
-    public IpcLocalTrackSendData(int handlerId, int trackId, ByteBuf data, long durationNanos) {
+    public IpcLocalTrackSendData(int handlerId, int trackId, byte[] data, long durationNanos) {
         super(handlerId);
         this.trackId = trackId;
         this.data = data;
@@ -24,12 +24,8 @@ public class IpcLocalTrackSendData extends IpcMessage {
     public void encode(ByteBuf buf) {
         super.encode(buf);
         VarInt.write(buf, this.trackId);
-        try {
-            VarInt.write(buf, this.data.readableBytes());
-            buf.writeBytes(this.data);
-        } finally {
-            this.data.release();
-        }
+        VarInt.write(buf, this.data.length);
+        buf.writeBytes(this.data);
         buf.writeLong(this.durationNanos);
     }
 
@@ -37,7 +33,7 @@ public class IpcLocalTrackSendData extends IpcMessage {
         return this.trackId;
     }
 
-    public ByteBuf getData() {
+    public byte[] getData() {
         return this.data;
     }
 

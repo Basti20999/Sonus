@@ -29,7 +29,7 @@ public final class PionLocalTrack {
         return this.channels;
     }
 
-    public void sendData(ByteBuf data, long durationNanos) {
+    public void sendData(byte[] data, long durationNanos) {
         this.peer.ipc.send(new IpcLocalTrackSendData(this.peer.handlerId, this.trackId, data, durationNanos));
     }
 }

@@ -37,11 +37,11 @@ public final class IpcMessageRegistry {
             new Entry<>(IpcLocalTrackSendData.class, ENCODE),
             new Entry<>(IpcPeerClose.class, ENCODE),
             // sonusbound
-            new Entry<>(IpcPeerError.class, DECODE),
-            new Entry<>(IpcPeerOnAudioTrack.class, DECODE),
-            new Entry<>(IpcPeerOnConnectionStateChange.class, DECODE),
-            new Entry<>(IpcPeerOnIceConnectionStateChange.class, DECODE),
-            new Entry<>(IpcRemoteTrackOnData.class, DECODE)
+            new Entry<>(IpcPeerError.class, IpcPeerError::new, DECODE),
+            new Entry<>(IpcPeerOnAudioTrack.class, IpcPeerOnAudioTrack::new, DECODE),
+            new Entry<>(IpcPeerOnConnectionStateChange.class, IpcPeerOnConnectionStateChange::new, DECODE),
+            new Entry<>(IpcPeerOnIceConnectionStateChange.class, IpcPeerOnIceConnectionStateChange::new, DECODE),
+            new Entry<>(IpcRemoteTrackOnData.class, IpcRemoteTrackOnData::new, DECODE)
     ));
 
     private final List<IpcTypes.Decoder<? extends IpcMessage>> inbound;
