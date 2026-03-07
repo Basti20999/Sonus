@@ -46,7 +46,7 @@ func BindSocket(path string) error {
 		conn, err = listener.Accept()
 		if err != nil {
 			if running {
-				log.Printf("error while accepting connection: %e", err)
+				log.Printf("error while accepting connection: %s", err)
 			}
 			continue // don't abort
 		}
@@ -80,7 +80,7 @@ func handleSocket(conn net.Conn) {
 		buf.EnsureWritable(buffer.DefaultInitialCapacity)
 		// read bytes from socket directly into bytebuf
 		if err = buf.ReadFrom(conn); err != nil {
-			log.Printf("error while reading from %s: %e", conn.RemoteAddr(), err)
+			log.Printf("error while reading from %s: %s", conn.RemoteAddr(), err)
 			_ = conn.Close()
 			return
 		}
@@ -97,7 +97,7 @@ func handleSocket(conn net.Conn) {
 		frame, _ := buf.ReadUnsafeSlice(frameLen)
 		// decode frame to an ipc message
 		if msg, err = registry.Decode(frame); err != nil {
-			log.Printf("error while decoding message from %s: %e", conn.RemoteAddr(), err)
+			log.Printf("error while decoding message from %s: %s", conn.RemoteAddr(), err)
 			continue // trusted connection, don't close
 		}
 
@@ -118,7 +118,7 @@ func handleSocket(conn net.Conn) {
 
 		// handle message using handler and handle error
 		if err = msg.Handle(handler); err != nil {
-			log.Printf("error while handling message from %s: %e", conn.RemoteAddr(), err)
+			log.Printf("error while handling message from %s: %s", conn.RemoteAddr(), err)
 		}
 	}
 }
