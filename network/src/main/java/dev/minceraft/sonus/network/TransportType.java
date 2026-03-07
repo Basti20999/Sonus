@@ -7,24 +7,28 @@ import io.netty.channel.IoHandlerFactory;
 import io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollDatagramChannel;
+import io.netty.channel.epoll.EpollDomainSocketChannel;
 import io.netty.channel.epoll.EpollIoHandler;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.kqueue.KQueue;
 import io.netty.channel.kqueue.KQueueDatagramChannel;
+import io.netty.channel.kqueue.KQueueDomainSocketChannel;
 import io.netty.channel.kqueue.KQueueIoHandler;
 import io.netty.channel.kqueue.KQueueServerSocketChannel;
 import io.netty.channel.kqueue.KQueueSocketChannel;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.channel.socket.DatagramChannel;
+import io.netty.channel.socket.DuplexChannel;
 import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.channel.socket.nio.NioDomainSocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.channel.unix.UnixChannel;
 import io.netty.channel.uring.IoUring;
 import io.netty.channel.uring.IoUringDatagramChannel;
+import io.netty.channel.uring.IoUringDomainSocketChannel;
 import io.netty.channel.uring.IoUringIoHandler;
 import io.netty.channel.uring.IoUringServerSocketChannel;
 import io.netty.channel.uring.IoUringSocketChannel;
@@ -38,10 +42,34 @@ import java.util.function.Supplier;
 @NullMarked
 public enum TransportType {
 
-    NIO("nio", NioIoHandler::newFactory, NioServerSocketChannel::new, NioSocketChannel::new, NioDatagramChannel::new),
-    EPOLL("epoll", EpollIoHandler::newFactory, EpollServerSocketChannel::new, EpollSocketChannel::new, EpollDatagramChannel::new),
-    IO_URING("io_uring", IoUringIoHandler::newFactory, IoUringServerSocketChannel::new, IoUringSocketChannel::new, IoUringDatagramChannel::new),
-    KQUEUE("kqueue", KQueueIoHandler::newFactory, KQueueServerSocketChannel::new, KQueueSocketChannel::new, KQueueDatagramChannel::new),
+    NIO("nio",
+            NioIoHandler::newFactory,
+            NioServerSocketChannel::new,
+            NioSocketChannel::new,
+            NioDatagramChannel::new,
+            NioDomainSocketChannel::new
+    ),
+    EPOLL("epoll",
+            EpollIoHandler::newFactory,
+            EpollServerSocketChannel::new,
+            EpollSocketChannel::new,
+            EpollDatagramChannel::new,
+            EpollDomainSocketChannel::new
+    ),
+    IO_URING("io_uring",
+            IoUringIoHandler::newFactory,
+            IoUringServerSocketChannel::new,
+            IoUringSocketChannel::new,
+            IoUringDatagramChannel::new,
+            IoUringDomainSocketChannel::new
+    ),
+    KQUEUE("kqueue",
+            KQueueIoHandler::newFactory,
+            KQueueServerSocketChannel::new,
+            KQueueSocketChannel::new,
+            KQueueDatagramChannel::new,
+            KQueueDomainSocketChannel::new
+    ),
     ;
 
     private static final boolean NO_IO_URING = Boolean.getBoolean("sonus.network.no_io_uring");
@@ -57,7 +85,7 @@ public enum TransportType {
     private final ChannelFactory<? extends DatagramChannel> datagramChannelFactory;
 
     // unix
-    private final ChannelFactory<? extends UnixChannel> unixChannelFactory;
+    private final ChannelFactory<? extends DuplexChannel> unixChannelFactory;
 
     TransportType(
             String displayName,
@@ -65,7 +93,7 @@ public enum TransportType {
             ChannelFactory<? extends ServerSocketChannel> serverSocketChannelFactory,
             ChannelFactory<? extends SocketChannel> socketChannelFactory,
             ChannelFactory<? extends DatagramChannel> datagramChannelFactory,
-            ChannelFactory<? extends UnixChannel> unixChannelFactory
+            ChannelFactory<? extends DuplexChannel> unixChannelFactory
     ) {
         this.displayName = displayName;
         this.ioHandlerCtor = ioHandlerCtor;
@@ -110,7 +138,7 @@ public enum TransportType {
         return this.datagramChannelFactory;
     }
 
-    public ChannelFactory<? extends UnixChannel> getUnixChannelFactory() {
+    public ChannelFactory<? extends DuplexChannel> getUnixChannelFactory() {
         return this.unixChannelFactory;
     }
 }
