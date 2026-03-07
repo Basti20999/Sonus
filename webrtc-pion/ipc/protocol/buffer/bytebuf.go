@@ -49,10 +49,6 @@ func (buf *ByteBuf) ReadFrom(reader io.Reader) error {
 	return err
 }
 
-func (buf *ByteBuf) ResetReaderIndex() {
-	buf.ri = 0
-}
-
 func (buf *ByteBuf) Clear() {
 	buf.ri = 0
 	buf.wi = 0
@@ -187,15 +183,14 @@ func (buf *ByteBuf) ReadVarInt() (uint32, error) {
 	maxRead := min(5, buf.wi-buf.ri)
 	i := uint32(k & 0x7F)
 	for j := uint32(1); j < maxRead; j++ {
-		k = buf.data[buf.ri+j-1]
-		i |= uint32(k&0x7F) << j * 7
+		k = buf.data[buf.ri]
+		buf.ri++
+		i |= uint32(k&0x7F) << (j * 7)
 		if (k & 0x80) == 0 {
-			buf.ri += j // increase reader index
 			return i, nil
 		}
 	}
 
-	buf.ri += maxRead // increase reader index nonetheless
 	return 0, ErrorBadVarInt
 }
 
