@@ -70,6 +70,9 @@ func (peer *PionPeer) Initialize(id string) error {
 }
 
 func (peer *PionPeer) handleLocalCandidate(candidate *webrtc.ICECandidate) {
+	if candidate == nil {
+		return // means gathering is done
+	}
 	iceCandidate, err := candidate.ToICE()
 	if err != nil {
 		peer.Callback.OnError(err)
