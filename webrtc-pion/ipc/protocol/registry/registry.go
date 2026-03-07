@@ -35,7 +35,7 @@ type messageDecoder struct {
 }
 
 func (decoder messageDecoder) decode(buf *buffer.ByteBuf) (msg ipc.Message, err error) {
-	msg = reflect.ValueOf(decoder.message).Elem().Interface().(ipc.Message)
+	msg = reflect.ValueOf(decoder.message).Elem().Addr().Interface().(ipc.Message)
 	err = msg.Decode(buf)
 	return
 }
