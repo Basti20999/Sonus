@@ -79,23 +79,26 @@ func handleSocket(conn net.Conn) {
 			buf.DiscardSomeReadBytes(buffer.DefaultInitialCapacity)
 		}
 
-		// ensure there is always enough space in buffer
-		buf.EnsureWritable(buffer.DefaultInitialCapacity)
-		// read bytes from socket directly into bytebuf
-		if err = buf.ReadFrom(conn); err != nil {
-			log.Printf("error while reading from %s: %s", conn.RemoteAddr(), err)
-			_ = conn.Close()
-			return
-		}
 		// attempt reading frame length
 		ri := buf.GetReaderIndex()
 		var frameLen uint32
 		frameLen, err = buf.ReadVarInt()
 		if err != nil || !buf.IsReadable(frameLen) {
-			// either can't read full varint yet or frame hasn't fully arrived yet, wait for more data to arrive
+			// either can't read full varint yet or frame hasn't fully arrived yet; wait for more data to arrive
 			_ = buf.SetReaderIndex(ri)
-			continue
+
+			// ensure there is always enough space in buffer
+			buf.EnsureWritable(buffer.DefaultInitialCapacity)
+			// read bytes from socket directly into bytebuf
+			if err = buf.ReadFrom(conn); err != nil {
+				log.Printf("error while reading from %s: %s", conn.RemoteAddr(), err)
+				_ = conn.Close()
+				return
+			}
+
+			continue // try again
 		}
+
 		// read frame slice; ignore error, we checked this before
 		frame, _ := buf.ReadUnsafeSlice(frameLen)
 		// decode frame to an ipc message
