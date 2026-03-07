@@ -123,8 +123,8 @@ func (peer *PionPeer) initOutputTrack(track *webrtc.TrackLocalStaticSample) erro
 	}()
 
 	// push callback to api consumer and let them write samples
-	codec := track.Codec()
-	return peer.Callback.OnLocalAudioTrack(codec.ClockRate, codec.Channels, func(data []byte, duration time.Duration) {
+	trackCodec := track.Codec()
+	return peer.Callback.OnLocalAudioTrack(trackCodec.ClockRate, trackCodec.Channels, func(data []byte, duration time.Duration) {
 		writeError := track.WriteSample(media.Sample{Data: data, Duration: duration})
 		if writeError != nil {
 			peer.Callback.OnError(writeError)
@@ -133,8 +133,8 @@ func (peer *PionPeer) initOutputTrack(track *webrtc.TrackLocalStaticSample) erro
 }
 
 func (peer *PionPeer) handleOpusTrack(track *webrtc.TrackRemote) {
-	codec := track.Codec()
-	callback, err := peer.Callback.OnRemoteAudioTrack(codec.ClockRate, codec.Channels)
+	trackCodec := track.Codec()
+	callback, err := peer.Callback.OnRemoteAudioTrack(trackCodec.ClockRate, trackCodec.Channels)
 	if err != nil {
 		peer.Callback.OnError(err)
 		return
@@ -146,7 +146,7 @@ func (peer *PionPeer) handleOpusTrack(track *webrtc.TrackRemote) {
 	peer.activeTrack = &trackId
 
 	// continuously handle samples
-	sb := samplebuilder.New(100, &codecs.OpusPacket{}, codec.ClockRate)
+	sb := samplebuilder.New(100, &codecs.OpusPacket{}, trackCodec.ClockRate)
 	for peer.isTrackActive(track) {
 		packet, _, err := track.ReadRTP()
 		if !peer.isTrackActive(track) {
