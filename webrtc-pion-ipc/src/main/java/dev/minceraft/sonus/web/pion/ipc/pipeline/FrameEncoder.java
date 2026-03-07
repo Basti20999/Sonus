@@ -23,6 +23,6 @@ public class FrameEncoder extends MessageToMessageEncoder<ByteBuf> {
     protected void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out) {
         out.add(ctx.alloc().compositeBuffer(2)
                 .addComponent(true, VarInt.buffer(ctx.alloc(), msg.readableBytes()))
-                .addComponent(true, msg));
+                .addComponent(true, msg.retain()));
     }
 }
