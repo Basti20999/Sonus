@@ -10,9 +10,9 @@ import (
 
 type Handler struct {
 	Id            uint32
-	Socket        *SocketConn
 	Peer          *pion.PionPeer
 	LocalTrackMap sync.Map
+	Send          func(msg Message) error
 }
 
 func (handler *Handler) SendLocalAudio(trackId uint32, frame []byte, duration time.Duration) error {

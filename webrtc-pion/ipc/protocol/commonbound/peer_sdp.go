@@ -37,7 +37,7 @@ func (msg *IpcPeerSdp) Handle(handler *ipc.Handler) error {
 	if err != nil {
 		return err
 	}
-	return handler.Socket.Send(&IpcPeerSdp{
+	return handler.Send(&IpcPeerSdp{
 		HandlerId: msg.HandlerId,
 		Sdp:       answerSdp,
 	})

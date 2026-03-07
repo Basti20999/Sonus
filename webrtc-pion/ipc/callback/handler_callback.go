@@ -20,7 +20,7 @@ type HandlerCallback struct {
 }
 
 func (handler *HandlerCallback) OnIceCandidate(candidate string, sdpMid *string, sdpMLineIndex *uint16) error {
-	return handler.Socket.Send(&commonbound.IpcPeerAddIceCandidate{
+	return handler.Send(&commonbound.IpcPeerAddIceCandidate{
 		HandlerId:     handler.Id,
 		Candidate:     candidate,
 		SdpMid:        sdpMid,
@@ -29,14 +29,14 @@ func (handler *HandlerCallback) OnIceCandidate(candidate string, sdpMid *string,
 }
 
 func (handler *HandlerCallback) OnIceConnectionStateChange(state webrtc.ICEConnectionState) error {
-	return handler.Socket.Send(&sonusbound.IpcPeerOnIceConnectionStateChange{
+	return handler.Send(&sonusbound.IpcPeerOnIceConnectionStateChange{
 		HandlerId: handler.Id,
 		State:     state,
 	})
 }
 
 func (handler *HandlerCallback) OnConnectionStateChange(state webrtc.PeerConnectionState) error {
-	return handler.Socket.Send(&sonusbound.IpcPeerOnConnectionStateChange{
+	return handler.Send(&sonusbound.IpcPeerOnConnectionStateChange{
 		HandlerId: handler.Id,
 		State:     state,
 	})
@@ -55,7 +55,7 @@ func (handler *HandlerCallback) OnRemoteAudioTrack(sampleRate uint32, channels u
 	trackId := handler.GenerateTrackId()
 
 	// inform sonus about new track
-	if err := handler.Socket.Send(&sonusbound.IpcPeerOnAudioTrack{
+	if err := handler.Send(&sonusbound.IpcPeerOnAudioTrack{
 		HandlerId:  handler.Id,
 		Type:       sonusbound.AudioTrackTypeRemote,
 		TrackId:    trackId,
@@ -67,7 +67,7 @@ func (handler *HandlerCallback) OnRemoteAudioTrack(sampleRate uint32, channels u
 
 	// handle track data
 	return func(data []byte, duration time.Duration) {
-		if writeErr := handler.Socket.Send(&sonusbound.IpcRemoteTrackOnData{
+		if writeErr := handler.Send(&sonusbound.IpcRemoteTrackOnData{
 			HandlerId: handler.Id,
 			TrackId:   trackId,
 			Data:      data,
@@ -82,7 +82,7 @@ func (handler *HandlerCallback) OnLocalAudioTrack(sampleRate uint32, channels ui
 	trackId := handler.GenerateTrackId()
 
 	// inform sonus about new track
-	if err := handler.Socket.Send(&sonusbound.IpcPeerOnAudioTrack{
+	if err := handler.Send(&sonusbound.IpcPeerOnAudioTrack{
 		HandlerId:  handler.Id,
 		Type:       sonusbound.AudioTrackTypeLocal,
 		TrackId:    trackId,
@@ -98,7 +98,7 @@ func (handler *HandlerCallback) OnLocalAudioTrack(sampleRate uint32, channels ui
 }
 
 func (handler *HandlerCallback) OnError(err error) {
-	writeErr := handler.Socket.Send(&sonusbound.IpcPeerError{
+	writeErr := handler.Send(&sonusbound.IpcPeerError{
 		HandlerId: handler.Id,
 		Error:     err.Error(),
 	})

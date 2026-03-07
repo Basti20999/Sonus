@@ -2,6 +2,8 @@ package buffer
 
 import (
 	"errors"
+	"fmt"
+	"io"
 )
 
 type ByteBuf struct {
@@ -17,8 +19,34 @@ var (
 	ErrorBadVarInt = errors.New("bad varint")
 )
 
+func (buf *ByteBuf) GetReaderIndex() uint32 {
+	return buf.ri
+}
+
+func (buf *ByteBuf) SetReaderIndex(ri uint32) error {
+	if ri > buf.wi {
+		return fmt.Errorf("can't move ri after wi: %d > %d (limit %d)", ri, buf.wi, buf.len)
+	}
+	buf.ri = ri
+	return nil
+}
+
+func (buf *ByteBuf) ReadableBytes() uint32 {
+	return buf.wi - buf.ri
+}
+
 func (buf *ByteBuf) Array() []uint8 {
+	return append([]uint8{}, buf.UnsafeArraySlice()...)
+}
+
+func (buf *ByteBuf) UnsafeArraySlice() []uint8 {
 	return buf.data[buf.ri:buf.wi]
+}
+
+func (buf *ByteBuf) ReadFrom(reader io.Reader) error {
+	n, err := reader.Read(buf.data[buf.wi:buf.len])
+	buf.wi += uint32(n)
+	return err
 }
 
 func (buf *ByteBuf) ResetReaderIndex() {
@@ -66,7 +94,7 @@ func (buf *ByteBuf) IsWritable(bytes uint32) bool {
 
 func (buf *ByteBuf) EnsureWritable(bytes uint32) {
 	if !buf.IsWritable(bytes) {
-		extra := max(bytes, buf.len) // double length or use bytes param
+		extra := max(bytes-buf.wi, buf.len) // double length or use bytes param
 		buf.data = append(buf.data, make([]uint8, extra)...)
 		buf.len += extra
 	}
@@ -207,7 +235,9 @@ func (buf *ByteBuf) WriteVarInt(v uint32) {
 }
 
 func (buf *ByteBuf) ReadUtf8() (string, error) {
-	arr, err := buf.ReadByteArray()
+	// doesn't matter that we don't copy the memory, the reference
+	// gets lost when converting to string
+	arr, err := buf.ReadUnsafeByteArray()
 	if err != nil {
 		return "", err
 	}
@@ -259,16 +289,44 @@ func WriteSlice[T any](buf *ByteBuf, vs []T, encoder func(v T)) {
 	}
 }
 
+// ReadByteArray copies the return value to prevent errors caused by memory being re-used
 func (buf *ByteBuf) ReadByteArray() ([]uint8, error) {
+	arr, err := buf.ReadUnsafeByteArray()
+	if err != nil {
+		return nil, err
+	}
+	return append([]uint8{}, arr...), nil
+}
+
+func (buf *ByteBuf) ReadUnsafeByteArray() ([]uint8, error) {
 	size, err := buf.ReadVarInt()
 	if err != nil {
 		return nil, err
-	} else if err = buf.EnsureReadable(size); err != nil {
+	}
+	return buf.ReadUnsafeByteArrayWithLength(size)
+}
+
+func (buf *ByteBuf) ReadUnsafeByteArrayWithLength(size uint32) ([]uint8, error) {
+	if err := buf.EnsureReadable(size); err != nil {
 		return nil, err
 	}
 	ret := buf.data[buf.ri : buf.ri+size]
 	buf.ri += size
 	return ret, nil
+}
+
+// ReadUnsafeSlice returns a slice of this buffer, with separate ri + wi; note
+// that this still respects the refcount of the "parent" and is not safe against modifications
+// of the "parent" buffer
+func (buf *ByteBuf) ReadUnsafeSlice(size uint32) (*ByteBuf, error) {
+	data, err := buf.ReadUnsafeByteArrayWithLength(size)
+	if err != nil {
+		return nil, err
+	}
+	return &ByteBuf{
+		data: data,
+		len:  size,
+	}, nil
 }
 
 func (buf *ByteBuf) WriteByteArray(vs []uint8) {
@@ -278,4 +336,24 @@ func (buf *ByteBuf) WriteByteArray(vs []uint8) {
 	// copy given array into data array at writer index
 	copy(buf.data[buf.wi:], vs)
 	buf.wi += arrLen
+}
+
+func (buf *ByteBuf) WriteBytes(vs *ByteBuf) {
+	wlen := vs.wi - vs.ri
+	buf.EnsureWritable(wlen)
+	copy(buf.data[buf.wi:], vs.data[buf.ri:buf.wi])
+	buf.wi += wlen
+}
+
+func (buf *ByteBuf) DiscardSomeReadBytes(threshold uint32) {
+	ri := buf.ri
+	if ri < threshold {
+		return // don't discard, not enough read
+	}
+	// adjust indices
+	buf.len -= ri
+	buf.wi -= ri
+	buf.ri = 0
+	// resize data array to start at reader index without copying
+	buf.data = buf.data[ri:]
 }
