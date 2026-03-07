@@ -11,6 +11,14 @@ type IpcPeerOnIceConnectionStateChange struct {
 	State     webrtc.ICEConnectionState
 }
 
+func (msg *IpcPeerOnIceConnectionStateChange) GetSonusboundId() uint8 {
+	return 0x05
+}
+
+func (msg *IpcPeerOnIceConnectionStateChange) GetPionboundId() uint8 {
+	return 0xFF
+}
+
 func (msg *IpcPeerOnIceConnectionStateChange) Decode(*buffer.ByteBuf) (err error) {
 	panic("unsupported")
 }

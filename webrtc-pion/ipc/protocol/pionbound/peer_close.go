@@ -9,6 +9,14 @@ type IpcPeerClose struct {
 	HandlerId uint32
 }
 
+func (msg *IpcPeerClose) GetSonusboundId() uint8 {
+	return 0xFF
+}
+
+func (msg *IpcPeerClose) GetPionboundId() uint8 {
+	return 0x04
+}
+
 func (msg *IpcPeerClose) Decode(buf *buffer.ByteBuf) (err error) {
 	msg.HandlerId, err = buf.ReadVarInt()
 	return

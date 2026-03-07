@@ -20,6 +20,14 @@ type IpcPeerOnAudioTrack struct {
 	Channels   uint16
 }
 
+func (msg *IpcPeerOnAudioTrack) GetSonusboundId() uint8 {
+	return 0x03
+}
+
+func (msg *IpcPeerOnAudioTrack) GetPionboundId() uint8 {
+	return 0xFF
+}
+
 func (msg *IpcPeerOnAudioTrack) Decode(*buffer.ByteBuf) (err error) {
 	panic("unsupported")
 }

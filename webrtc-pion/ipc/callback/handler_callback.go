@@ -21,11 +21,11 @@ func (handler *HandlerCallback) OnIceCandidate(candidate string, sdpMid *string,
 }
 
 func (handler *HandlerCallback) OnIceConnectionStateChange(state webrtc.ICEConnectionState) error {
-	//return handler.Socket.Send()
+	//return handler.SocketConn.Send()
 }
 
 func (handler *HandlerCallback) OnConnectionStateChange(state webrtc.PeerConnectionState) error {
-	//return handler.Socket.Send()
+	//return handler.SocketConn.Send()
 }
 
 func (handler *HandlerCallback) OnRemoteAudioTrack(sampleRate uint32, channels uint16) (pion.PionTrackCallback, error) {

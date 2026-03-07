@@ -10,6 +10,14 @@ type IpcPeerSdp struct {
 	Sdp       string
 }
 
+func (msg *IpcPeerSdp) GetSonusboundId() uint8 {
+	return 0x01
+}
+
+func (msg *IpcPeerSdp) GetPionboundId() uint8 {
+	return 0x01
+}
+
 func (msg *IpcPeerSdp) Decode(buf *buffer.ByteBuf) (err error) {
 	if msg.HandlerId, err = buf.ReadVarInt(); err != nil {
 		return

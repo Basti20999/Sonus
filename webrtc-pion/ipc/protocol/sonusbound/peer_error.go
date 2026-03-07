@@ -10,6 +10,14 @@ type IpcPeerError struct {
 	Error     string
 }
 
+func (msg *IpcPeerError) GetSonusboundId() uint8 {
+	return 0x02
+}
+
+func (msg *IpcPeerError) GetPionboundId() uint8 {
+	return 0xFF
+}
+
 func (msg *IpcPeerError) Decode(*buffer.ByteBuf) (err error) {
 	panic("unsupported")
 }

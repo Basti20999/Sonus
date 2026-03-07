@@ -14,6 +14,14 @@ type IpcRemoteTrackOnData struct {
 	Duration  time.Duration
 }
 
+func (msg *IpcRemoteTrackOnData) GetSonusboundId() uint8 {
+	return 0x06
+}
+
+func (msg *IpcRemoteTrackOnData) GetPionboundId() uint8 {
+	return 0xFF
+}
+
 func (msg *IpcRemoteTrackOnData) Decode(*buffer.ByteBuf) (err error) {
 	panic("unsupported")
 }

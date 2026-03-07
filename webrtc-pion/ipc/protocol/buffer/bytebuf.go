@@ -5,10 +5,11 @@ import (
 )
 
 type ByteBuf struct {
-	data []uint8
-	len  uint32
-	ri   uint32
-	wi   uint32
+	data     []uint8
+	len      uint32
+	ri       uint32
+	wi       uint32
+	refCount uint16
 }
 
 var (
@@ -16,8 +17,40 @@ var (
 	ErrorBadVarInt = errors.New("bad varint")
 )
 
+func (buf *ByteBuf) Array() []uint8 {
+	return buf.data[buf.ri:buf.wi]
+}
+
+func (buf *ByteBuf) ResetReaderIndex() {
+	buf.ri = 0
+}
+
+func (buf *ByteBuf) Clear() {
+	buf.ri = 0
+	buf.wi = 0
+	// don't need to clear data, can't be read anyway
+}
+
+func (buf *ByteBuf) Retain() *ByteBuf {
+	if buf.refCount >= 1 {
+		buf.refCount++
+	}
+	return buf
+}
+
+func (buf *ByteBuf) Release() *ByteBuf {
+	if buf.refCount == 1 {
+		buf.refCount = 0
+		buf.Clear()
+		bufferPool.Put(buf)
+	} else if buf.refCount > 1 {
+		buf.refCount--
+	}
+	return buf
+}
+
 func (buf *ByteBuf) IsReadable(bytes uint32) bool {
-	return buf.ri+bytes <= buf.len
+	return buf.ri+bytes <= buf.wi
 }
 
 func (buf *ByteBuf) EnsureReadable(bytes uint32) error {
@@ -123,7 +156,7 @@ func (buf *ByteBuf) ReadVarInt() (uint32, error) {
 		return uint32(k), nil
 	}
 
-	maxRead := min(5, buf.len-buf.ri)
+	maxRead := min(5, buf.wi-buf.ri)
 	i := uint32(k & 0x7F)
 	for j := uint32(1); j < maxRead; j++ {
 		k = buf.data[buf.ri+j-1]

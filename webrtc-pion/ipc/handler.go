@@ -6,6 +6,6 @@ import (
 
 type Handler struct {
 	Id     uint32
-	Socket *Socket
+	Socket *SocketConn
 	Peer   *pion.PionPeer
 }

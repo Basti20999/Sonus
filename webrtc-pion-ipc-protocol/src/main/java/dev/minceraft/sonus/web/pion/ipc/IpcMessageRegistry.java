@@ -32,7 +32,7 @@ public final class IpcMessageRegistry {
             // commonbound
             new Entry<>(IpcPeerAddIceCandidate.class, IpcPeerAddIceCandidate::new, ANY),
             new Entry<>(IpcPeerSdp.class, IpcPeerSdp::new, ANY),
-            // pionbund
+            // pionbound
             new Entry<>(IpcApiAllocatePeer.class, ENCODE),
             new Entry<>(IpcLocalTrackSendData.class, ENCODE),
             new Entry<>(IpcPeerClose.class, ENCODE),

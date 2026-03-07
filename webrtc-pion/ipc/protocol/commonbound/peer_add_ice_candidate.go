@@ -12,6 +12,14 @@ type IcpPeerAddIceCandidate struct {
 	SdpMLineIndex *uint16
 }
 
+func (msg *IcpPeerAddIceCandidate) GetSonusboundId() uint8 {
+	return 0x00
+}
+
+func (msg *IcpPeerAddIceCandidate) GetPionboundId() uint8 {
+	return 0x00
+}
+
 func (msg *IcpPeerAddIceCandidate) Decode(buf *buffer.ByteBuf) (err error) {
 	if msg.HandlerId, err = buf.ReadVarInt(); err != nil {
 		return

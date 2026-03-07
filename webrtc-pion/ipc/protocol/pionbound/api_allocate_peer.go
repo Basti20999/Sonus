@@ -15,6 +15,14 @@ type IpcApiAllocatePeer struct {
 	Id           string
 }
 
+func (msg *IpcApiAllocatePeer) GetSonusboundId() uint8 {
+	return 0xFF
+}
+
+func (msg *IpcApiAllocatePeer) GetPionboundId() uint8 {
+	return 0x02
+}
+
 func (msg *IpcApiAllocatePeer) Decode(buf *buffer.ByteBuf) (err error) {
 	// read data
 	var bundlePolicy uint32

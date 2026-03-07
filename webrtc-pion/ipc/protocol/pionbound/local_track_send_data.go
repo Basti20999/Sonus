@@ -14,6 +14,14 @@ type IpcLocalTrackSendData struct {
 	Duration  time.Duration
 }
 
+func (msg *IpcLocalTrackSendData) GetSonusboundId() uint8 {
+	return 0xFF
+}
+
+func (msg *IpcLocalTrackSendData) GetPionboundId() uint8 {
+	return 0x03
+}
+
 func (msg *IpcLocalTrackSendData) Decode(buf *buffer.ByteBuf) (err error) {
 	var durationNanos uint64
 	if msg.HandlerId, err = buf.ReadVarInt(); err != nil {
