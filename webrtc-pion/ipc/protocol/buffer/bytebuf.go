@@ -149,10 +149,10 @@ func (buf *ByteBuf) ReadLong() (uint64, error) {
 		return 0, err
 	}
 	ri := buf.ri
-	ret := (uint64(buf.data[ri]) << 56) & (uint64(buf.data[ri]) << 48) &
-		(uint64(buf.data[ri]) << 40) & (uint64(buf.data[ri]) << 32) &
-		(uint64(buf.data[ri]) << 24) & (uint64(buf.data[ri]) << 16) &
-		(uint64(buf.data[ri]) << 8) & uint64(buf.data[ri])
+	ret := (uint64(buf.data[ri]) << 56) | (uint64(buf.data[ri+1]) << 48) |
+		(uint64(buf.data[ri+2]) << 40) | (uint64(buf.data[ri+3]) << 32) |
+		(uint64(buf.data[ri+4]) << 24) | (uint64(buf.data[ri+5]) << 16) |
+		(uint64(buf.data[ri+6]) << 8) | uint64(buf.data[ri+7])
 	buf.ri = ri + 8
 	return ret, nil
 }
