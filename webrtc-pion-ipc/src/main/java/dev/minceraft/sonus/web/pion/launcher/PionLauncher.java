@@ -76,7 +76,7 @@ public final class PionLauncher {
             Process process;
             try {
                 process = new ProcessBuilder(execPath.toString(), socketPath.toAbsolutePath().toString())
-                        .redirectError(ProcessBuilder.Redirect.INHERIT)
+                        .redirectErrorStream(true) // redir stderr to stdout
                         .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                         .start();
             } catch (IOException exception) {
