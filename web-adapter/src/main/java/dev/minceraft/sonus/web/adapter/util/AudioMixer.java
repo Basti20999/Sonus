@@ -63,9 +63,10 @@ public final class AudioMixer implements AutoCloseable {
                     // lazy init, samples*2 because of stereo
                     mixed = new short[samples << 1];
                 }
-                // samples*2*2 because see above
-                int maxStereoSamples = Math.min(samples << 2, buf.readableBytes());
-                for (int i = 0; i < maxStereoSamples; i += Short.BYTES) {
+                // samples*2 because see above, bytes/2 because 16-bit is two bytes
+                int maxStereoSamples = Math.min(samples << 1, buf.readableBytes() >> 1);
+                for (int i = 0; i < maxStereoSamples; i++) {
+                    // add values together
                     short v = clampedAdd(buf.readShortLE(), mixed[i]);
                     mixed[i] = v;
                 }
