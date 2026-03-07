@@ -166,7 +166,9 @@ func (peer *PionPeer) handleOpusTrack(track *webrtc.TrackRemote) {
 				break // no more samples
 			}
 			// push sample to callback
-			callback(sample.Data, sample.Duration)
+			if len(sample.Data) > 0 && sample.Duration >= time.Microsecond {
+				callback(sample.Data, sample.Duration)
+			}
 		}
 	}
 }
