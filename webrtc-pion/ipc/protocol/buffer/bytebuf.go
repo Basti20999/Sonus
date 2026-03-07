@@ -321,6 +321,8 @@ func (buf *ByteBuf) ReadUnsafeSlice(size uint32) (*ByteBuf, error) {
 	return &ByteBuf{
 		data: data,
 		len:  size,
+		ri:   0,
+		wi:   size,
 	}, nil
 }
 
