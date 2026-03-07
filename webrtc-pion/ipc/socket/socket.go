@@ -1,7 +1,7 @@
 package socket
 
 import (
-	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -33,7 +33,7 @@ func BindSocket(path string) error {
 	signal.Notify(exitSignalCh, os.Interrupt, os.Kill, syscall.SIGTERM)
 	go func(ch chan os.Signal) {
 		exitSignal := <-ch
-		fmt.Printf("shutting down, received %s\n", exitSignal)
+		log.Printf("shutting down, received %s", exitSignal)
 		// graceful shutdown
 		running = false
 		_ = listener.Close()
@@ -46,7 +46,7 @@ func BindSocket(path string) error {
 		conn, err = listener.Accept()
 		if err != nil {
 			if running {
-				_, _ = fmt.Fprintf(os.Stderr, "error while accepting connection: %e\n", err)
+				log.Printf("error while accepting connection: %e", err)
 			}
 			continue // don't abort
 		}
@@ -60,7 +60,7 @@ func BindSocket(path string) error {
 const gcMessageInterval = uint8(15)
 
 func handleSocket(conn net.Conn) {
-	fmt.Printf("accepted connection from %s\n", conn.RemoteAddr())
+	log.Printf("accepted connection from %s", conn.RemoteAddr())
 	socketConn := SocketConn{conn: conn}
 	bufGcTick := gcMessageInterval
 
@@ -80,7 +80,7 @@ func handleSocket(conn net.Conn) {
 		buf.EnsureWritable(buffer.DefaultInitialCapacity)
 		// read bytes from socket directly into bytebuf
 		if err = buf.ReadFrom(conn); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error while reading from %s: %e\n", conn.RemoteAddr(), err)
+			log.Printf("error while reading from %s: %e", conn.RemoteAddr(), err)
 			_ = conn.Close()
 			return
 		}
@@ -97,7 +97,7 @@ func handleSocket(conn net.Conn) {
 		frame, _ := buf.ReadUnsafeSlice(frameLen)
 		// decode frame to an ipc message
 		if msg, err = registry.Decode(frame); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error while decoding message from %s: %e\n", conn.RemoteAddr(), err)
+			log.Printf("error while decoding message from %s: %e", conn.RemoteAddr(), err)
 			continue // trusted connection, don't close
 		}
 
@@ -118,7 +118,7 @@ func handleSocket(conn net.Conn) {
 
 		// handle message using handler and handle error
 		if err = msg.Handle(handler); err != nil {
-			_, _ = fmt.Fprintf(os.Stderr, "error while handling message from %s: %e\n", conn.RemoteAddr(), err)
+			log.Printf("error while handling message from %s: %e", conn.RemoteAddr(), err)
 		}
 	}
 }

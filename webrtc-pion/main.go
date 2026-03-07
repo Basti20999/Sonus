@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"minceraft.dev/sonus/webrtc-pion/ipc/socket"
@@ -17,7 +17,7 @@ func main() {
 			socketPath = "/tmp/pion.socket"
 		}
 	}
-	fmt.Printf("using socket path: %s\n", socketPath)
+	log.Printf("using socket path: %s", socketPath)
 
 	err := socket.BindSocket(socketPath)
 	if err != nil {
