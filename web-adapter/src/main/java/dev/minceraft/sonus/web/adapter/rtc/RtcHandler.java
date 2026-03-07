@@ -59,7 +59,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
     public RtcHandler(RtcManager manager, WebSocketConnection signalConnection) {
         this.manager = manager;
         this.signalConnection = signalConnection;
-        this.opusEncoder = manager.getOpusLoader().new Encoder(SonusConstants.SAMPLE_RATE,
+        this.opusEncoder = manager.getOpus().new Encoder(SonusConstants.SAMPLE_RATE,
                 2, AudioProcessor.Mode.VOICE);
 
         // configure pion
@@ -103,7 +103,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
         }
         int sampleRate = track.getSampleRate();
         short channels = track.getChannels();
-        OpusNativesLoader.Decoder opusDecoder = this.manager.getOpusLoader().new Decoder(sampleRate, channels);
+        OpusNativesLoader.Decoder opusDecoder = this.manager.getOpus().new Decoder(sampleRate, channels);
         this.opusDecoder = opusDecoder;
 
         return new PionRemoteTrack.Callback() {

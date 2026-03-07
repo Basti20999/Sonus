@@ -155,10 +155,6 @@ public final class SonusService implements ISonusService {
     }
 
     @Override
-    public AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
-        return new AudioProcessor(this.getOpusNatives(), () -> this.getConfig().getMtuSize(), mode);
-    }
-
     public OpusNativesLoader getOpusNatives() {
         if (this.opusNatives == null) {
             throw new IllegalStateException("Opus natives have already been closed");

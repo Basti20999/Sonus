@@ -19,21 +19,24 @@ import java.util.function.Supplier;
 @NullMarked
 public final class RtcManager implements AutoCloseable {
 
-    private final PionApi pion;
-    private final OpusNativesLoader opusLoader = new OpusNativesLoader();
-
     private final ScheduledExecutorService audioTicker = Executors.newScheduledThreadPool(1, r -> {
         Thread thread = new Thread(r);
         thread.setName("webrtc_scheduler_" + System.identityHashCode(r));
         thread.setDaemon(true);
         return thread;
     });
+    private final PionApi pion;
+
+    private final OpusNativesLoader opusNatives;
     private final Supplier<WebConfig> config;
 
     private final Map<UUID, RtcHandler> peers = new HashMap<>();
 
-    public RtcManager(Supplier<WebConfig> config) {
+    public RtcManager(OpusNativesLoader opusNatives, Supplier<WebConfig> config) {
+        this.opusNatives = opusNatives;
         this.config = config;
+
+        // run pion webrtc server
         this.pion = PionLauncher.launch().join();
     }
 
@@ -60,8 +63,8 @@ public final class RtcManager implements AutoCloseable {
         return this.pion;
     }
 
-    public OpusNativesLoader getOpusLoader() {
-        return this.opusLoader;
+    public OpusNativesLoader getOpus() {
+        return this.opusNatives;
     }
 
     public WebConfig getConfig() {
@@ -75,7 +78,6 @@ public final class RtcManager implements AutoCloseable {
             return true;
         });
         this.audioTicker.close();
-        this.opusLoader.close();
         this.pion.close();
     }
 }

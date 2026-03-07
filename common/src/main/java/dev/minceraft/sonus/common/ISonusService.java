@@ -3,6 +3,7 @@ package dev.minceraft.sonus.common;
 import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.config.ISonusConfig;
 import dev.minceraft.sonus.common.config.YamlConfigHolder;
+import dev.minceraft.sonus.common.natives.OpusNativesLoader;
 import dev.minceraft.sonus.common.protocol.tcp.IPluginMessenger;
 import dev.minceraft.sonus.common.protocol.udp.IUdpServer;
 import dev.minceraft.sonus.common.service.ISonusEventManager;
@@ -33,5 +34,9 @@ public interface ISonusService {
 
     IPlayerManager getPlayerManager();
 
-    AudioProcessor createAudioProcessor(AudioProcessor.Mode mode);
+    OpusNativesLoader getOpusNatives();
+
+    default AudioProcessor createAudioProcessor(AudioProcessor.Mode mode) {
+        return new AudioProcessor(this.getOpusNatives(), () -> this.getConfig().getMtuSize(), mode);
+    }
 }
