@@ -127,7 +127,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
                 data.readBytes(dataArr);
                 // decode opus data and handle pcm audio frame
                 short[] pcmFrame = opusDecoder.decode(dataArr);
-                RtcHandler.this.handleMicInput(pcmFrame);
+                RtcHandler.this.handleMicInput(pcmFrame, channels);
             }
         };
     }
@@ -161,7 +161,28 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
         }
     }
 
-    private void handleMicInput(short[] samples) {
+    private void queueMicInput(short[] samples, short channels) {
+        ByteBuf inputBuf = this.inputBuffer;
+        if (channels == 1) {
+            // fast path
+            for (short sample : samples) {
+                inputBuf.writeShortLE(sample);
+            }
+        } else {
+            int sum = 0;
+            for (int i = 0, j = 0, len = samples.length; i < len; i++, j++) {
+                if (j == channels) {
+                    // write avg audio sample amplitude across channels
+                    inputBuf.writeShortLE(sum / (int) channels);
+                    sum = 0;
+                    j = 0;
+                }
+                sum += samples[i];
+            }
+        }
+    }
+
+    private void handleMicInput(short[] samples, short channels) {
         ISonusPlayer player = this.signalConnection.getPlayer();
         if (player.isMuted()) {
             this.inputBuffer.clear();
@@ -171,9 +192,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
 
         // append to local buffer, webrtc usually has higher FPS than what we expect
         ByteBuf inputBuf = this.inputBuffer;
-        for (short sample : samples) {
-            inputBuf.writeShortLE(sample);
-        }
+        this.queueMicInput(samples, channels);
         while (inputBuf.isReadable(SonusConstants.FRAME_SIZE * Short.BYTES)) {
             // read pcm shorts from buffer whilst also calculating audio level using RMS
             double rmsAmplitude = 0d;
