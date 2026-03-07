@@ -132,7 +132,7 @@ func (buf *ByteBuf) ReadShort() (uint16, error) {
 	if err := buf.EnsureReadable(2); err != nil {
 		return 0, err
 	}
-	ret := (uint16(buf.data[buf.ri]) << 8) & uint16(buf.data[buf.ri+1])
+	ret := (uint16(buf.data[buf.ri]) << 8) | uint16(buf.data[buf.ri+1])
 	buf.ri += 2
 	return ret, nil
 }
