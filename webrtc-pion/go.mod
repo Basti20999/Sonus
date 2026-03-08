@@ -1,6 +1,6 @@
 module minceraft.dev/sonus/webrtc-pion
 
-go 1.25
+go 1.26
 
 require (
 	github.com/pion/interceptor v0.1.44
