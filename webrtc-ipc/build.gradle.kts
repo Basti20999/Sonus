@@ -1,4 +1,4 @@
 dependencies {
-    api(libs.netty.handler)
+    compileOnlyApi(libs.netty.handler)
     api(projects.commonProtocol)
 }
