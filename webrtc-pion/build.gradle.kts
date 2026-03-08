@@ -46,7 +46,16 @@ sequenceOf("darwin", "windows", "linux").forEach { os ->
 
         val packTask = if (packable) {
             tasks.register<Exec>("packGo$capOs$capArch") {
-                commandLine("upx", "-$compressionLevel", compileOutputFile, "-o$packOutputFile")
+                val parts = ArrayList<Any>()
+                parts.add("upx")
+                parts.add("-$compressionLevel")
+                parts.add(compileOutputFile)
+                parts.add("-o$packOutputFile")
+                parts.add("--force-overwrite")
+                if (os == "darwin") {
+                    parts.add("--force-macos")
+                }
+                commandLine(parts)
             }
         } else {
             tasks.register<Copy>("packGo$capOs$capArch") {
