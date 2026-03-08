@@ -27,6 +27,11 @@ subprojects {
     }
 
     configure<PublishingExtension> {
+        repositories.maven("https://repo.minceraft.dev/releases/") {
+            name = "minceraft"
+            authentication { create<BasicAuthentication>("basic") }
+            credentials(PasswordCredentials::class)
+        }
         publications.create<MavenPublication>("maven") {
             artifactId = "${rootProject.name}-${project.name}".lowercase()
             from(components["java"])

@@ -34,8 +34,8 @@ jobs:
           version: latest
           install-only: true
 
-      - name: Build project
-        run: ./gradlew build --no-daemon --parallel -PpackGo
+      - name: Build and publish project
+        run: ./gradlew build publish --no-daemon --parallel -PpackGo -PminceraftUsername=${{ secrets.PUBLISH_USERNAME }} -PminceraftPassword=${{ secrets.PUBLISH_PASSWORD }}
 
       - name: Upload project jars
         uses: actions/upload-artifact@v7
