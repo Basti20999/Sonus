@@ -4,6 +4,7 @@ package dev.minceraft.sonus.web.pion;
 import dev.minceraft.sonus.web.pion.ipc.IpcConnection;
 import dev.minceraft.sonus.web.pion.ipc.model.BundlePolicy;
 import dev.minceraft.sonus.web.pion.ipc.model.IceServer;
+import dev.minceraft.sonus.web.pion.ipc.model.IceTransportPolicy;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 
@@ -26,9 +27,10 @@ public final class PionApi implements AutoCloseable {
     }
 
     public PionPeer allocatePeer(
-            List<IceServer> iceServers, BundlePolicy bundlePolicy, String id, PionPeer.Callback callback
+            List<IceServer> iceServers, IceTransportPolicy iceTransportPolicy,
+            BundlePolicy bundlePolicy, String id, PionPeer.Callback callback
     ) {
-        return new PionPeer(this.ipc, callback, iceServers, bundlePolicy, id);
+        return new PionPeer(this.ipc, callback, iceServers, iceTransportPolicy, bundlePolicy, id);
     }
 
     @Override

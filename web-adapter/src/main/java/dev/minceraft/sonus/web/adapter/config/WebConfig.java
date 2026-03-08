@@ -3,6 +3,7 @@ package dev.minceraft.sonus.web.adapter.config;
 import dev.minceraft.sonus.common.config.ISubConfig;
 import dev.minceraft.sonus.web.pion.ipc.model.BundlePolicy;
 import dev.minceraft.sonus.web.pion.ipc.model.IceServer;
+import dev.minceraft.sonus.web.pion.ipc.model.IceTransportPolicy;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
@@ -34,5 +35,6 @@ public class WebConfig implements ISubConfig {
         }
     }
 
+    public IceTransportPolicy iceTransportPolicy = IceTransportPolicy.ALL;
     public BundlePolicy bundlePolicy = BundlePolicy.MAX_BUNDLE;
 }

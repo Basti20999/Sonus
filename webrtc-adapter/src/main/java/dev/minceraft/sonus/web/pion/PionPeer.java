@@ -9,6 +9,7 @@ import dev.minceraft.sonus.web.pion.ipc.commonbound.IpcPeerSdp;
 import dev.minceraft.sonus.web.pion.ipc.model.BundlePolicy;
 import dev.minceraft.sonus.web.pion.ipc.model.IceConnectionState;
 import dev.minceraft.sonus.web.pion.ipc.model.IceServer;
+import dev.minceraft.sonus.web.pion.ipc.model.IceTransportPolicy;
 import dev.minceraft.sonus.web.pion.ipc.model.PeerConnectionState;
 import dev.minceraft.sonus.web.pion.ipc.pionbound.IpcApiAllocatePeer;
 import dev.minceraft.sonus.web.pion.ipc.pionbound.IpcPeerClose;
@@ -37,12 +38,12 @@ public final class PionPeer implements AutoCloseable {
 
     PionPeer(
             IpcConnection ipc, PionPeer.Callback callback,
-            List<IceServer> iceServers, BundlePolicy bundlePolicy, String id
+            List<IceServer> iceServers, IceTransportPolicy iceTransportPolicy, BundlePolicy bundlePolicy, String id
     ) {
         this.ipc = ipc;
         this.callback = callback;
         this.handlerId = ipc.registerHandler(this::handleIpcMessage);
-        ipc.send(new IpcApiAllocatePeer(this.handlerId, iceServers, bundlePolicy, id));
+        ipc.send(new IpcApiAllocatePeer(this.handlerId, iceServers, iceTransportPolicy, bundlePolicy, id));
     }
 
     private void handleIpcMessage(IpcMessage message) {

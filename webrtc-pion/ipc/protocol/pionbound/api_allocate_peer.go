@@ -9,10 +9,11 @@ import (
 )
 
 type IpcApiAllocatePeer struct {
-	HandlerId    uint32
-	IceServers   []webrtc.ICEServer
-	BundlePolicy webrtc.BundlePolicy
-	Id           string
+	HandlerId          uint32
+	IceServers         []webrtc.ICEServer
+	IceTransportPolicy webrtc.ICETransportPolicy
+	BundlePolicy       webrtc.BundlePolicy
+	Id                 string
 }
 
 func (msg *IpcApiAllocatePeer) GetSonusboundId() uint8 {
@@ -25,6 +26,7 @@ func (msg *IpcApiAllocatePeer) GetPionboundId() uint8 {
 
 func (msg *IpcApiAllocatePeer) Decode(buf *buffer.ByteBuf) (err error) {
 	// read data
+	var iceTransportPolicy uint32
 	var bundlePolicy uint32
 	if msg.HandlerId, err = buf.ReadVarInt(); err != nil {
 		return
@@ -52,12 +54,15 @@ func (msg *IpcApiAllocatePeer) Decode(buf *buffer.ByteBuf) (err error) {
 		return
 	}); err != nil {
 		return
+	} else if iceTransportPolicy, err = buf.ReadVarInt(); err != nil {
+		return
 	} else if bundlePolicy, err = buf.ReadVarInt(); err != nil {
 		return
 	} else if msg.Id, err = buf.ReadUtf8(); err != nil {
 		return
 	}
 	// set to struct
+	msg.IceTransportPolicy = webrtc.ICETransportPolicy(iceTransportPolicy)
 	msg.BundlePolicy = webrtc.BundlePolicy(bundlePolicy)
 	return
 }
@@ -68,8 +73,9 @@ func (msg *IpcApiAllocatePeer) Encode(*buffer.ByteBuf) error {
 
 func (msg *IpcApiAllocatePeer) Handle(handler *ipc.Handler) error {
 	peer, err := pion.WebrtcApi.NewPeerConnection(webrtc.Configuration{
-		ICEServers:   msg.IceServers,
-		BundlePolicy: msg.BundlePolicy,
+		ICEServers:         msg.IceServers,
+		ICETransportPolicy: msg.IceTransportPolicy,
+		BundlePolicy:       msg.BundlePolicy,
 	})
 	if err != nil {
 		return err

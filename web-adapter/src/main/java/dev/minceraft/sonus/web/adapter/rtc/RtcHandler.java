@@ -67,7 +67,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
         List<IceServer> servers = config.iceServers.stream()
                 .map(WebConfig.IceServerConfig::create).toList();
         String streamId = signalConnection.getPlayer().getUniqueId().toString().substring(0, 8);
-        this.peer = manager.getPion().allocatePeer(servers, config.bundlePolicy, streamId, this);
+        this.peer = manager.getPion().allocatePeer(servers, config.iceTransportPolicy, config.bundlePolicy, streamId, this);
     }
 
     public void disconnect(String reason) {
