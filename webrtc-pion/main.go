@@ -1,10 +1,10 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"minceraft.dev/sonus/webrtc-pion/ipc/socket"
+	"minceraft.dev/sonus/webrtc-pion/log"
 )
 
 func main() {

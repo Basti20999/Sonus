@@ -1,7 +1,6 @@
 package socket
 
 import (
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -11,6 +10,7 @@ import (
 	"minceraft.dev/sonus/webrtc-pion/ipc"
 	"minceraft.dev/sonus/webrtc-pion/ipc/protocol/buffer"
 	"minceraft.dev/sonus/webrtc-pion/ipc/protocol/registry"
+	"minceraft.dev/sonus/webrtc-pion/log"
 )
 
 type SocketConn struct {

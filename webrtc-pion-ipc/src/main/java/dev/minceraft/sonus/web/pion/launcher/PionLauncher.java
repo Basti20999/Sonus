@@ -75,9 +75,12 @@ public final class PionLauncher {
             LOGGER.info("Launching pion (webrtc) from {}...", execPath);
             Process process;
             try {
-                process = new ProcessBuilder(execPath.toString(), socketPath.toAbsolutePath().toString())
-                        .redirectErrorStream(true) // redir stderr to stdout
-                        .start();
+                ProcessBuilder bob = new ProcessBuilder(execPath.toString(), socketPath.toAbsolutePath().toString());
+                // redir stderr to stdout
+                bob.redirectErrorStream(true);
+                // mark as embedded
+                bob.environment().put("PION_EMBEDDED", "1");
+                process = bob.start();
             } catch (IOException exception) {
                 throw new RuntimeException("Error while starting process for " + socketPath, exception);
             }
