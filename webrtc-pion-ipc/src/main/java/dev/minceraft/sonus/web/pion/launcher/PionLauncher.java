@@ -77,25 +77,32 @@ public final class PionLauncher {
             try {
                 process = new ProcessBuilder(execPath.toString(), socketPath.toAbsolutePath().toString())
                         .redirectErrorStream(true) // redir stderr to stdout
-                        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
                         .start();
             } catch (IOException exception) {
                 throw new RuntimeException("Error while starting process for " + socketPath, exception);
             }
+            // launch logger thread, automatically exits when process is dead
+            PionLogTask.launch(process, "PionProcess");
             // wait for process to start up
             return CompletableFuture.runAsync(() -> {
-                // wait for socket path to be allocated
-                long timeout = System.nanoTime() + 5 * 1000 * 1_000_000L; // timeout after 5s
-                while (Files.notExists(socketPath)) {
-                    if (!process.isAlive()) {
-                        throw new IllegalStateException("Pion process exited: " + process.exitValue());
-                    } else if (System.nanoTime() > timeout) {
-                        process.destroy();
-                        throw new IllegalStateException("Timed out while waiting for pion process to start");
-                    }
-                    LockSupport.parkNanos(10 * 1_000_000L); // 10ms
-                }
-            }).thenApply(__ -> new PionApi(process, socketPath));
+                        // wait for socket path to be allocated
+                        long timeout = System.nanoTime() + 5 * 1000 * 1_000_000L; // timeout after 5s
+                        while (Files.notExists(socketPath)) {
+                            if (!process.isAlive()) {
+                                throw new IllegalStateException("Pion process exited: " + process.exitValue());
+                            } else if (System.nanoTime() > timeout) {
+                                throw new IllegalStateException("Timed out while waiting for pion process to start");
+                            }
+                            LockSupport.parkNanos(10 * 1_000_000L); // 10ms
+                        }
+                    })
+                    .thenApply(__ -> new PionApi(process, socketPath))
+                    .whenComplete((result, error) -> {
+                        if (error != null && process.isAlive()) {
+                            // stop process on unexpected error
+                            process.destroy();
+                        }
+                    });
         });
     }
 }
