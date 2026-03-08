@@ -1,7 +1,7 @@
 dependencies {
     api(projects.webProtocol)
 
-    api(projects.webrtcPionIpc)
+    api(projects.webrtcAdapter)
     runtimeOnly(projects.webrtcPion)
 
     compileOnly(libs.bundles.configurate)
