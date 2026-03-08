@@ -38,7 +38,9 @@ public class VelocityListener {
     public void onQuit(DisconnectEvent event) {
         UUID playerId = event.getPlayer().getUniqueId();
         SonusPlayer player = this.service.getPlayerManager().getPlayer(playerId);
-        if (player != null) {
+        // velocity fires disconnects even for players who got kicked for trying to log in twice,
+        // so ensure we don't accidentally disconnect the player who is already connected
+        if (player != null && ((VelocitySonusPlayer) player.getPlatform()).getHandle() == event.getPlayer()) {
             this.service.getEventManager().onPlayerQuit(player);
         }
     }

@@ -79,11 +79,9 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
         PlayerManager playerManager = this.service.getPlayerManager();
         for (Map.Entry<UUID, WorldRotatedVec3d> entry : positions.entrySet()) {
             SonusPlayer player = playerManager.getPlayer(entry.getKey());
-            if (player == null) {
-                continue;
+            if (player != null) {
+                player.setPosition(entry.getValue());
             }
-            player.setPosition(entry.getValue());
-            this.service.getEventManager().onPlayerPositionUpdate(player);
         }
     }
 

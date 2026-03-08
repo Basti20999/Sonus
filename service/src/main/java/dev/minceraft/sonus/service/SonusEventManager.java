@@ -90,17 +90,6 @@ public class SonusEventManager implements ISonusEventManager {
     }
 
     @Override
-    public void onPlayerPositionUpdate(ISonusPlayer player) {
-        for (ISonusServiceEvents listener : this.listeners) {
-            try {
-                listener.onPlayerPositionUpdate(player);
-            } catch (Exception exception) {
-                LOGGER.error("Error in onPlayerPositionUpdate for listener {}", listener.getClass().getSimpleName(), exception);
-            }
-        }
-    }
-
-    @Override
     public void onChannelRegistered(UUID playerId, Set<Key> channel) {
         for (ISonusServiceEvents listener : this.listeners) {
             try {

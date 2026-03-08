@@ -2,13 +2,11 @@ package dev.minceraft.sonus.web.adapter;
 
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
-import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusServiceEvents;
 import dev.minceraft.sonus.web.adapter.connection.WebSocketConnection;
 import dev.minceraft.sonus.web.protocol.model.SonusWebPlayerState;
 import dev.minceraft.sonus.web.protocol.model.SonusWebRoom;
-import dev.minceraft.sonus.web.protocol.packets.clientbound.PositionUpdatePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomRemovePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateRemovePacket;
@@ -37,12 +35,8 @@ public class WebSonusListener implements ISonusServiceEvents {
 
     @Override
     public void onPlayerDisconnect(ISonusPlayer player) {
-        boolean existed = this.adapter.getSessions().removeSession(player.getUniqueId());
+        this.adapter.getSessions().removeSession(player.getUniqueId());
         this.adapter.getSessions().broadcastFrom(player, new StateRemovePacket(player.getUniqueId()));
-
-        if (existed && player.isOnline()) {
-            this.sendConnectionStateMessage(player, false);
-        }
     }
 
     @Override
@@ -62,21 +56,6 @@ public class WebSonusListener implements ISonusServiceEvents {
                 new StateRemovePacket(previousNick));
 
         this.onPlayerStateUpdate(player, true);
-    }
-
-    @Override
-    public void onPlayerPositionUpdate(ISonusPlayer player) {
-        if (!player.isVoiceActive()) {
-            return;
-        }
-        WebSocketConnection connection = this.adapter.getSessions().getConnection(player.getUniqueId());
-        if (connection == null) {
-            return;
-        }
-        WorldRotatedVec3d position = player.getPosition();
-        if (position != null) {
-            connection.sendPacket(new PositionUpdatePacket(position));
-        }
     }
 
     @Override

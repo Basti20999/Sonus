@@ -3,11 +3,11 @@ val natives: Configuration by configurations.creating {
 }
 
 dependencies {
+    api(projects.commonProtocol)
+
     compileOnlyApi(libs.leangen)
     compileOnlyApi(libs.jspecify)
     compileOnlyApi(libs.checkerqual)
-    compileOnlyApi(libs.netty.buffer)
-    compileOnlyApi(libs.netty.handler)
     compileOnlyApi(libs.adventure.api)
     compileOnlyApi(libs.adventure.text.serializer.gson)
     compileOnlyApi(libs.slf4j.api)

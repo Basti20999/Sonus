@@ -1,31 +1,32 @@
 package dev.minceraft.sonus.web.adapter.connection;
 
 import dev.minceraft.sonus.common.SonusConstants;
-import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.ISonusPlayer;
 import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.common.service.ISonusRoomManager;
+import dev.minceraft.sonus.web.adapter.rtc.RtcHandler;
 import dev.minceraft.sonus.web.protocol.packets.IWebSocketHandler;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomJoinResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomLeaveResponsePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.KeepAlivePacket;
 import dev.minceraft.sonus.web.protocol.packets.commonbound.PingPacket;
-import dev.minceraft.sonus.web.protocol.packets.servicebound.InputEndPacket;
-import dev.minceraft.sonus.web.protocol.packets.servicebound.InputSoundPacket;
+import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcIceCandidatePacket;
+import dev.minceraft.sonus.web.protocol.packets.commonbound.RtcOfferPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomCreatePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomJoinRequestPacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.RoomLeavePacket;
 import dev.minceraft.sonus.web.protocol.packets.servicebound.StateInfoPacket;
+import dev.minceraft.sonus.web.protocol.packets.servicebound.VolumePacket;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.UUID;
 
+@NullMarked
 public class WebSocketPacketHandler implements IWebSocketHandler {
-
-    private static final UUID MIC_CHANNEL_ID = new UUID(9018035903106730674L, -6405133132459802568L);
 
     private final WebSocketConnection connection;
     private State state = State.WAITING_ACK;
-    private long sequence = 0L;
 
     public WebSocketPacketHandler(WebSocketConnection connection) {
         this.connection = connection;
@@ -45,24 +46,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         }
     }
 
-    @Override
-    public void handleInputSound(InputSoundPacket packet) {
-        if (this.state != State.CONNECTED) {
-            return;
-        }
-        SonusAudio.Pcm pcm = packet.getAudio().asPcm(() -> this.connection.getProcessor(MIC_CHANNEL_ID));
-        this.connection.getPlayer().handleAudioInput(pcm.withSequenceNumber(this.sequence++));
-    }
-
-    @Override
-    public void handleInputEnd(InputEndPacket packet) {
-        if (this.state == State.CONNECTED) {
-            this.connection.getPlayer().handleAudioInputEnd(this.sequence++);
-            this.sequence = 0L;
-        }
-    }
-
-    private void tryJoinRoom(UUID roomId, String password) {
+    private void tryJoinRoom(UUID roomId, @Nullable String password) {
         IRoom room = this.connection.getAdapter().getService().getRoomManager().getRoom(roomId);
         boolean success = room != null && this.connection.getPlayer().canAccessRoom(room, password);
         if (success) {
@@ -121,6 +105,26 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
         player.setMuted(packet.isMuted());
         player.setDeafened(packet.isDeafened());
         player.updateState();
+    }
+
+    @Override
+    public void handleRtcIceCandidate(RtcIceCandidatePacket packet) {
+        RtcHandler rtc = this.connection.getRtc();
+        if (rtc.isIceConnected()) {
+            rtc.handleRemoteIce(packet.getCandidate(), packet.getSdpMid(), packet.getSdpMLineIndex());
+        }
+    }
+
+    @Override
+    public void handleRtcOffer(RtcOfferPacket packet) {
+        if (packet.getType() == RtcOfferPacket.Type.OFFER) {
+            this.connection.getRtc().handleRemoteOffer(packet.getSdp());
+        }
+    }
+
+    @Override
+    public void handleVolume(VolumePacket packet) {
+        this.connection.setVolume(packet.getType(), packet.getEntryId(), packet.getVolume());
     }
 
     public void handleDisconnect() {

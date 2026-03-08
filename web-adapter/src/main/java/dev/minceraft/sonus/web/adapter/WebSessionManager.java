@@ -8,6 +8,7 @@ import dev.minceraft.sonus.web.protocol.AbstractWebPacket;
 import dev.minceraft.sonus.web.protocol.model.SonusWebPlayerState;
 import dev.minceraft.sonus.web.protocol.model.SonusWebRoom;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.RoomAddPacket;
+import dev.minceraft.sonus.web.protocol.packets.clientbound.RtcConnectPacket;
 import dev.minceraft.sonus.web.protocol.packets.clientbound.StateUpdatePacket;
 import org.jspecify.annotations.Nullable;
 
@@ -51,6 +52,9 @@ public class WebSessionManager {
 
         // inform the player that they are fully connected
         connection.sendConnected();
+
+        // tell them to start building rtc connection
+        connection.sendPacket(RtcConnectPacket.INSTANCE);
     }
 
     public void broadcast(AbstractWebPacket<?> packet) {
@@ -75,10 +79,10 @@ public class WebSessionManager {
                 continue; // target not connected or target can't see source
             }
             ISonusPlayer targetPlayer = conn.getPlayer();
-            if (!targetPlayer.canSee(source)){
+            if (!targetPlayer.canSee(source)) {
                 continue;
             }
-            if (requireVisibility && !source.canReceive(source)){
+            if (requireVisibility && !source.canReceive(source)) {
                 continue;
             }
 
@@ -122,6 +126,8 @@ public class WebSessionManager {
     public boolean removeSession(UUID playerId) {
         try (WebSocketConnection conn = this.connections.remove(playerId)) {
             return conn != null;
+        } finally {
+            this.adapter.getWebRtc().removePeer(playerId);
         }
     }
 }

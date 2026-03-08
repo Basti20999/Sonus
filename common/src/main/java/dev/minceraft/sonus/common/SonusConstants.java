@@ -10,9 +10,11 @@ public final class SonusConstants {
     public static final String PLUGIN_MESSAGE_CHANNEL = "sonus:agent";
     public static final Key PLUGIN_MESSAGE_CHANNEL_KEY = Key.key(PLUGIN_MESSAGE_CHANNEL);
 
-    public static final int SAMPLE_RATE = 48000; // 48 kHz
-    public static final int FRAME_SIZE = (SAMPLE_RATE / 1000) * 20;
-    public static final int FRAMES_PER_SECOND = SAMPLE_RATE / FRAME_SIZE;
+    public static final int BITS_PER_SAMPLE = Short.SIZE;
+    public static final int SAMPLE_RATE = 48_000; // 48 kHz
+    public static final int FRAMES_INTERVAL = 20;
+    public static final int FRAMES_PER_SECOND = 1000 / FRAMES_INTERVAL;
+    public static final int FRAME_SIZE = SAMPLE_RATE / FRAMES_PER_SECOND;
     public static final int CHANNELS = 1; // Mono
     public static final int CURRENT_VERSION = 0;
 
