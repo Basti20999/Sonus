@@ -1,98 +1,114 @@
 package dev.minceraft.sonus.common.audio;
 // Created by booky10 in Sonus (02:44 17.07.2025)
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.function.Supplier;
 
+/**
+ * Should be used with caution, thread-safety is only limited to lazy initialization of
+ * pcm/opus audio data and returned arrays are mutable but should not be modified
+ * without calling {@link #setDirtyPcm()}/{@link #setDirtyOpus()} respectively.
+ */
 @NullMarked
-public sealed interface SonusAudio {
+public final class SonusAudio {
 
-    short[] pcm();
+    private long sequenceNumber;
+    private @Nullable Supplier<AudioProcessor> processor;
+    private volatile short @MonotonicNonNull [] pcm;
+    private volatile byte @MonotonicNonNull [] opus;
 
-    short[] pcm(Supplier<AudioProcessor> processor);
-
-    default Pcm asPcm(Supplier<AudioProcessor> processor) {
-        return new Pcm(this.pcm(processor), this.sequenceNumber());
+    private SonusAudio(
+            long sequenceNumber, @Nullable Supplier<AudioProcessor> processor,
+            short @MonotonicNonNull [] pcm, byte @MonotonicNonNull [] opus
+    ) {
+        this.sequenceNumber = sequenceNumber;
+        this.processor = processor;
+        this.pcm = pcm;
+        this.opus = opus;
     }
 
-    byte[] opus();
-
-    byte[] opus(Supplier<AudioProcessor> processor);
-
-    default Opus asOpus(Supplier<AudioProcessor> processor) {
-        return new Opus(this.opus(processor), this.sequenceNumber());
+    public static SonusAudio fromPcm(long sequenceNumber, short[] pcm) {
+        return new SonusAudio(sequenceNumber, null, pcm, null);
     }
 
-    long sequenceNumber();
+    public static SonusAudio fromOpus(long sequenceNumber, byte[] opus) {
+        return new SonusAudio(sequenceNumber, null, null, opus);
+    }
 
-    SonusAudio withSequenceNumber(long sequenceNumber);
-
-    boolean isZeroLength();
-
-    record Pcm(short[] pcm, long sequenceNumber) implements SonusAudio {
-
-        @Override
-        public short[] pcm(Supplier<AudioProcessor> processor) {
-            return this.pcm;
+    public short[] pcm() {
+        short[] pcm = this.pcm;
+        byte[] opus = this.opus;
+        if (pcm == null) {
+            if (opus == null || this.processor == null) {
+                throw new IllegalStateException("Raw audio data is not present");
+            }
+            synchronized (this) {
+                if (this.pcm == null) {
+                    this.pcm = pcm = this.processor.get().decode(opus);
+                } else {
+                    pcm = this.pcm;
+                }
+            }
         }
+        return pcm;
+    }
 
-        @Override
-        public Pcm asPcm(Supplier<AudioProcessor> processor) {
-            return this;
-        }
-
-        @Override
-        public byte[] opus() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public byte[] opus(Supplier<AudioProcessor> processor) {
-            return processor.get().encode(this.pcm);
-        }
-
-        @Override
-        public SonusAudio withSequenceNumber(long sequenceNumber) {
-            return new SonusAudio.Pcm(this.pcm, sequenceNumber);
-        }
-
-        @Override
-        public boolean isZeroLength() {
-            return this.pcm.length == 0;
+    public void setDirtyPcm() {
+        synchronized (this) {
+            // pcm has been changed, invalidate opus
+            this.opus = null;
         }
     }
 
-    record Opus(byte[] opus, long sequenceNumber) implements SonusAudio {
-
-        @Override
-        public short[] pcm() {
-            throw new UnsupportedOperationException();
+    public byte[] opus() {
+        byte[] opus = this.opus;
+        short[] pcm = this.pcm;
+        if (opus == null) {
+            if (pcm == null || this.processor == null) {
+                throw new IllegalStateException("Opus audio data is not present");
+            }
+            synchronized (this) {
+                if (this.opus == null) {
+                    this.opus = opus = this.processor.get().encode(pcm);
+                } else {
+                    opus = this.opus;
+                }
+            }
         }
+        return opus;
+    }
 
-        @Override
-        public short[] pcm(Supplier<AudioProcessor> processor) {
-            return processor.get().decode(this.opus);
+    public void setDirtyOpus() {
+        synchronized (this) {
+            // opus has been changed, invalidate pcm
+            this.pcm = null;
         }
+    }
 
-        @Override
-        public byte[] opus(Supplier<AudioProcessor> processor) {
-            return this.opus;
-        }
+    public boolean isEmpty() {
+        return this.pcm != null && this.pcm.length == 0
+                || this.opus != null && this.opus.length == 0;
+    }
 
-        @Override
-        public Opus asOpus(Supplier<AudioProcessor> processor) {
-            return this;
-        }
+    public long getSequenceNumber() {
+        return this.sequenceNumber;
+    }
 
-        @Override
-        public SonusAudio withSequenceNumber(long sequenceNumber) {
-            return new SonusAudio.Opus(this.opus, sequenceNumber);
-        }
+    public SonusAudio setSequenceNumber(long sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
+        return this;
+    }
 
-        @Override
-        public boolean isZeroLength() {
-            return this.opus.length == 0;
-        }
+    public SonusAudio setProcessor(Supplier<AudioProcessor> processor) {
+        this.processor = processor;
+        return this;
+    }
+
+    public SonusAudio copy() {
+        // intentionally discard audio processor while copying
+        return new SonusAudio(this.sequenceNumber, null, this.pcm, this.opus);
     }
 }

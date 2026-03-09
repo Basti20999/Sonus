@@ -1,7 +1,13 @@
 package dev.minceraft.sonus.service.agent;
 
+import com.google.common.base.Ticker;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
 import com.google.common.collect.Table;
 import dev.minceraft.sonus.common.IAudioSource;
+import dev.minceraft.sonus.common.audio.AudioProcessor;
 import dev.minceraft.sonus.common.audio.SonusAudio;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
@@ -20,12 +26,30 @@ import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @NullMarked
 public class AgentListener implements IMetaHandler, AutoCloseable {
 
     private final SonusService service;
     private final SonusServer server;
+
+    private final LoadingCache<UUID, AudioProcessor> processorCache = CacheBuilder.newBuilder()
+            .expireAfterAccess(15L, TimeUnit.MINUTES)
+            .removalListener((RemovalListener<UUID, AudioProcessor>) notification -> {
+                AudioProcessor processor = notification.getValue();
+                if (processor != null) {
+                    processor.close();
+                }
+            })
+            .ticker(Ticker.systemTicker())
+            .build(new CacheLoader<>() {
+                @Override
+                public AudioProcessor load(UUID key) {
+                    return AgentListener.this.service.createAudioProcessor(AudioProcessor.Mode.AUDIO);
+                }
+            });
 
     public AgentListener(SonusService service, SonusServer server) {
         this.service = service;
@@ -61,9 +85,12 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
         }
 
         // send all frames at once, the client will queue them (at most 32)
-        IAudioSource source = new IAudioSource.Static(message.getChannelId(), categoryId);
+        UUID channelId = message.getChannelId();
+        IAudioSource source = new IAudioSource.Static(channelId, categoryId);
+        Supplier<AudioProcessor> processor = () -> this.processorCache.getUnchecked(channelId);
         for (AudioStreamMessage.Frame frame : frames) {
-            player.sendStaticAudio(source, new SonusAudio.Opus(frame.data(), frame.sequence()));
+            SonusAudio audio = SonusAudio.fromOpus(frame.sequence(), frame.data()).setProcessor(processor);
+            player.sendStaticAudio(source, audio);
         }
     }
 
@@ -115,6 +142,6 @@ public class AgentListener implements IMetaHandler, AutoCloseable {
 
     @Override
     public void close() {
-        // NO-OP for now
+        this.processorCache.invalidateAll();
     }
 }

@@ -30,7 +30,7 @@ public class VoiceHandler implements UdpHandler {
     public void handlePlayerAudioPacket(PlayerAudioPlasmoPacket packet) {
         if (this.state == State.CONNECTED) {
             short[] pcm = this.connection.getProcessor(packet.getActivationId()).decode(packet.getAudioData());
-            this.connection.getPlayer().handleAudioInput(new SonusAudio.Pcm(pcm, packet.getSequenceNumber()));
+            this.connection.getPlayer().handleAudioInput(SonusAudio.fromPcm(packet.getSequenceNumber(), pcm));
         }
     }
 

@@ -215,7 +215,7 @@ public final class RtcHandler implements AutoCloseable, PionPeer.Callback {
             if (rmsAmplitude / (double) SonusConstants.FRAME_SIZE > QUIET_THRESHOLD_RMS_AMPLITUDE * QUIET_THRESHOLD_RMS_AMPLITUDE) {
                 this.quietBuffer = 0; // reset quiet buffer
                 this.signalConnection.setVoiceActive(player.getUniqueId(), true);
-                SonusAudio.Pcm audio = new SonusAudio.Pcm(pcmData, this.sequenceNumber++);
+                SonusAudio audio = SonusAudio.fromPcm(this.sequenceNumber++, pcmData);
                 player.handleAudioInput(audio);
             } else if (this.quietBuffer == QUIET_FRAMES_THRESHOLD) {
                 this.quietBuffer++;

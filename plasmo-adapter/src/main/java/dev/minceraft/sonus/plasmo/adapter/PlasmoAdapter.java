@@ -235,8 +235,8 @@ public class PlasmoAdapter implements SonusAdapter {
         }
         SourceAudioPlasmoPacket packet = new SourceAudioPlasmoPacket();
         packet.setDistance((short) this.getService().getConfig().getVoiceChatRange());
-        packet.setAudioData(audio.opus(() -> connection.getProcessor(source.getSenderId(connection.getPlayer()))));
-        packet.setSequenceNumber(audio.sequenceNumber());
+        packet.setAudioData(audio.setProcessor(() -> connection.getProcessor(source.getSenderId(connection.getPlayer()))).opus());
+        packet.setSequenceNumber(audio.getSequenceNumber());
         packet.setSourceId(sourceInfo.getId());
         packet.setSourceState(sourceInfo.getState());
 

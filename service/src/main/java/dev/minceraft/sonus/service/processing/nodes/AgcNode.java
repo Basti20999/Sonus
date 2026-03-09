@@ -33,11 +33,9 @@ public final class AgcNode implements AudioPipelineNode, AutoCloseable {
 
     @Override
     public void process(SonusAudio audio) {
-        if (audio instanceof SonusAudio.Pcm pcm) {
-            this.agc.agc(pcm.pcm());
-        } else {
-            throw new UnsupportedOperationException("Only able to process AGC for PCM audio");
-        }
+        // thread safety is not relevant here
+        this.agc.agc(audio.pcm());
+        audio.setDirtyPcm();
     }
 
     @Override

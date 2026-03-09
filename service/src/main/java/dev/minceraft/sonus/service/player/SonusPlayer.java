@@ -92,7 +92,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
             return;
         }
 
-        this.maxSequenceNumber.updateAndGet(l -> Math.max(l, audio.sequenceNumber()));
+        this.maxSequenceNumber.updateAndGet(l -> Math.max(l, audio.getSequenceNumber()));
         this.processAudioInput(audio);
         this.handleRoomBroadcast(room -> room.sendAudio(this, audio));
     }
@@ -107,7 +107,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     }
 
     private void processAudioInput(SonusAudio audio) {
-        if (audio.isZeroLength()) {
+        if (audio.isEmpty()) {
             return; // don't process zero-length audio
         }
         if (this.service.getConfig().agcEnabled()) {

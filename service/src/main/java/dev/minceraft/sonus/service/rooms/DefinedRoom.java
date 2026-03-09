@@ -27,9 +27,9 @@ public class DefinedRoom extends AbstractRoom {
             }
             RoomDefinition.RelationState state = this.definition.getState(source, receiver);
             switch (state) {
-                case STATIC -> receiver.sendStaticAudio(source, audio);
-                case SPATIAL -> receiver.sendSpatialAudio(source, audio);
-                case SPATIAL_NORMALIZED -> receiver.sendSpatialNormedAudio(source, audio);
+                case STATIC -> receiver.sendStaticAudio(source, audio.copy());
+                case SPATIAL -> receiver.sendSpatialAudio(source, audio.copy());
+                case SPATIAL_NORMALIZED -> receiver.sendSpatialNormedAudio(source, audio.copy());
             }
         }
     }
