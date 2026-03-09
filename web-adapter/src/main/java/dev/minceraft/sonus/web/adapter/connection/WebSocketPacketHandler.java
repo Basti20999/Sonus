@@ -110,7 +110,7 @@ public class WebSocketPacketHandler implements IWebSocketHandler {
     @Override
     public void handleRtcIceCandidate(RtcIceCandidatePacket packet) {
         RtcHandler rtc = this.connection.getRtc();
-        if (rtc.isIceConnected()) {
+        if (!rtc.isIceConnected()) {
             rtc.handleRemoteIce(packet.getCandidate(), packet.getSdpMid(), packet.getSdpMLineIndex());
         }
     }
