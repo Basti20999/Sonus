@@ -73,6 +73,10 @@ func (peer *PionPeer) handleLocalCandidate(candidate *webrtc.ICECandidate) {
 	if candidate == nil {
 		return // means gathering is done
 	}
+	// remove related address/port
+	candidate.RelatedAddress = ""
+	candidate.RelatedPort = 0
+
 	iceCandidate, err := candidate.ToICE()
 	if err != nil {
 		peer.Callback.OnError(err)
