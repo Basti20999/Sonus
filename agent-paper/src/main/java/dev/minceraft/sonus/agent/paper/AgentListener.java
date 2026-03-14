@@ -22,7 +22,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.event.player.PlayerShowEntityEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.jspecify.annotations.NullMarked;
@@ -199,21 +198,6 @@ public class AgentListener implements Listener {
         this.tickVisibilityChanges();
 
         this.tickDirtyPlayerMeta();
-    }
-
-    @EventHandler
-    public void onSwitch(PlayerSwapHandItemsEvent event) {
-        Player player = event.getPlayer();
-        for (Player other : Bukkit.getOnlinePlayers()) {
-            if (player == other) {
-                continue;
-            }
-            if (other.canSee(player)) {
-                other.hidePlayer(this.plugin, player);
-            } else {
-                other.showPlayer(this.plugin, player);
-            }
-        }
     }
 
     public void tickDirtyPlayerMeta() {
