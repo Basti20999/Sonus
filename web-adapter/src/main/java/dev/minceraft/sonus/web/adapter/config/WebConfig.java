@@ -13,7 +13,7 @@ import java.util.List;
 @ConfigSerializable
 public class WebConfig implements ISubConfig {
 
-    public boolean enabled = true;
+    public boolean enabled = false;
 
     public boolean useRootCommand = true;
 
