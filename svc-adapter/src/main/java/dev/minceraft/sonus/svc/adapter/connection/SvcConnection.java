@@ -35,6 +35,9 @@ public class SvcConnection implements AutoCloseable {
     private @Nullable SvcPlayerCipherCodec cipher;
     private final Map<UUID, AudioProcessor> processors = new ConcurrentHashMap<>();
 
+    // Pending pings keyed by ping ID → sent timestamp (ms)
+    private final Map<UUID, Long> pendingPings = new ConcurrentHashMap<>();
+
     // RemoteAddress will be set after first packet is received - usually at the construction of the connection
     private @MonotonicNonNull InetSocketAddress remoteAddress;
     private SvcPacketContext ctx = SvcPacketContext.INITIAL;
@@ -166,8 +169,30 @@ public class SvcConnection implements AutoCloseable {
         this.currentRoomId = currentRoomId;
     }
 
+    /**
+     * Records the send time of an outbound ping so RTT can be calculated on reply.
+     */
+    public void trackSentPing(UUID pingId, long sentTimeMs) {
+        this.pendingPings.put(pingId, sentTimeMs);
+    }
+
+    /**
+     * Called when a ping packet is received. If the ID matches an outbound ping we sent,
+     * the RTT is calculated and forwarded to the player; returns {@code true} in that case.
+     * Returns {@code false} if the ping was client-initiated and should be echoed back.
+     */
+    public boolean onPingReceived(UUID pingId, long nowMs) {
+        Long sentTime = this.pendingPings.remove(pingId);
+        if (sentTime == null) {
+            return false; // client-initiated ping
+        }
+        this.player.setVoicePing(nowMs - sentTime);
+        return true;
+    }
+
     @Override
     public void close() {
+        this.pendingPings.clear();
         this.processors.values().removeIf(processor -> {
             processor.close();
             return true;

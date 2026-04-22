@@ -6,6 +6,7 @@ import dev.minceraft.sonus.protocol.meta.IMetaHandler;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
 import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
+import dev.minceraft.sonus.protocol.meta.agentbound.PlayerVoicePingMessage;
 import dev.minceraft.sonus.protocol.meta.agentbound.TriggerCommandUpdateMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -75,5 +76,10 @@ public class AgentMessageListener implements PluginMessageListener, IMetaHandler
         if (player != null) {
             player.updateCommands();
         }
+    }
+
+    @Override
+    public void handlePlayerVoicePing(PlayerVoicePingMessage message) {
+        this.plugin.getApi().setVoicePing(message.getPlayerId(), message.getPingMs());
     }
 }

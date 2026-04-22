@@ -20,6 +20,7 @@ import dev.minceraft.sonus.svc.protocol.voice.clientbound.GroupSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.clientbound.LocationSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.clientbound.PlayerSoundSvcPacket;
 import dev.minceraft.sonus.svc.protocol.voice.commonbound.KeepAliveSvcPacket;
+import dev.minceraft.sonus.svc.protocol.voice.commonbound.PingSvcPacket;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jspecify.annotations.NullMarked;
 
@@ -147,9 +148,18 @@ public class SvcAdapter implements SonusAdapter {
     @Override
     public void sendKeepAlive(ISonusPlayer player, long currentTime) {
         SvcConnection connection = this.sessions.getConnection(player.getUniqueId());
-        if (connection != null) {
-            connection.sendPacket(KeepAliveSvcPacket.INSTANCE);
+        if (connection == null) {
+            return;
         }
+        connection.sendPacket(KeepAliveSvcPacket.INSTANCE);
+
+        // Send a server-initiated ping to measure voice-chat UDP RTT
+        UUID pingId = UUID.randomUUID();
+        PingSvcPacket ping = new PingSvcPacket();
+        ping.setId(pingId);
+        ping.setTimestamp(currentTime);
+        connection.trackSentPing(pingId, currentTime);
+        connection.sendPacket(ping);
     }
 
     @Override

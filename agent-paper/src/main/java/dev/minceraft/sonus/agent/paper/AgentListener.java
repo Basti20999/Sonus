@@ -1,14 +1,13 @@
 package dev.minceraft.sonus.agent.paper;
 // Created by booky10 in Sonus (01:39 17.07.2025)
 
-import com.destroystokyo.paper.event.server.ServerTickEndEvent;
 import com.google.common.collect.HashBasedTable;
 import dev.minceraft.sonus.agent.paper.util.delta.DeltaTrackerMap;
 import dev.minceraft.sonus.agent.paper.util.delta.DeltaTrackerTable;
 import dev.minceraft.sonus.common.data.SonusPlayerState;
 import dev.minceraft.sonus.common.data.WorldRotatedVec3d;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
-import org.bukkit.Bukkit;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -28,11 +27,10 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static dev.minceraft.sonus.common.SonusConstants.PLUGIN_MESSAGE_CHANNEL;
 
@@ -45,9 +43,13 @@ public class AgentListener implements Listener {
 
     protected final DeltaTrackerTable<UUID, UUID, SonusPlayerState> playerStates = new DeltaTrackerTable<>(HashBasedTable::create);
 
-    protected final Set<Map.Entry<Player, Player>> visibilityChanges = new HashSet<>();
+    // Concurrent set so visibility events from multiple entity regions are safe
+    protected final Set<Map.Entry<Player, Player>> visibilityChanges = ConcurrentHashMap.newKeySet();
 
     protected final DeltaTrackerMap<UUID, @Nullable String> teams = new DeltaTrackerMap<>(HashMap::new);
+
+    // Per-player entity scheduler tasks (cancelled on quit / plugin disable)
+    private final Map<UUID, ScheduledTask> playerTasks = new ConcurrentHashMap<>();
 
     protected boolean dirtyRoomDefinition = true;
 
@@ -69,36 +71,67 @@ public class AgentListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
-        // specify initial player position
         Player player = event.getPlayer();
         this.onChangePos(player, player.getLocation());
 
-        // set default player states for everything
         UUID playerId = player.getUniqueId();
-        for (Player target : Bukkit.getOnlinePlayers()) {
+        // Import online players but skip this new player – initialise both directions
+        for (Player target : plugin.getServer().getOnlinePlayers()) {
             if (player == target || this.isPlayerIgnored(target)) {
                 continue;
             }
             UUID targetId = target.getUniqueId();
-
-            // initialize state for both directions, as visibility is not necessarily symmetric
             this.playerStates.computeIfAbsent(targetId, playerId, () -> this.buildState(player, target));
             this.playerStates.computeIfAbsent(playerId, targetId, () -> this.buildState(target, player));
+        }
+
+        this.schedulePlayerEntityTask(player);
+    }
+
+    /**
+     * Schedules a per-tick entity task for the given player.
+     * Uses entity schedulers so that in Folia each player's position/team
+     * is read from the correct region thread.
+     */
+    public void schedulePlayerEntityTask(Player player) {
+        ScheduledTask existing = this.playerTasks.remove(player.getUniqueId());
+        if (existing != null) {
+            existing.cancel();
+        }
+        ScheduledTask task = player.getScheduler().runAtFixedRate(
+                this.plugin,
+                scheduled -> {
+                    if (!this.isPlayerIgnored(player)) {
+                        this.tickPosition(player);
+                        this.tickTeam(player);
+                    }
+                },
+                null, // retired callback – nothing to do if entity is removed
+                1L,   // initial delay (ticks)
+                1L    // period (ticks)
+        );
+        if (task != null) {
+            this.playerTasks.put(player.getUniqueId(), task);
         }
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        // remove cached data for player
         UUID playerId = event.getPlayer().getUniqueId();
+
+        // Cancel per-player entity task
+        ScheduledTask task = this.playerTasks.remove(playerId);
+        if (task != null) {
+            task.cancel();
+        }
+
         this.positions.removeSilent(playerId);
         this.playerStates.removeRowSilent(playerId);
         this.playerStates.removeColumnSilent(playerId);
         this.teams.removeSilent(playerId);
 
-        // re-send room definition to service if everyone quits
         int playerCount = 0;
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
             if (!this.isPlayerIgnored(player)) {
                 if (++playerCount > 1) {
                     break;
@@ -110,6 +143,7 @@ public class AgentListener implements Listener {
         }
 
         this.plugin.getApi().getConnectedPlayers().remove(playerId);
+        this.plugin.getApi().removeVoicePing(playerId);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -117,8 +151,7 @@ public class AgentListener implements Listener {
         Player player = event.getPlayer();
         if (event.getNewGameMode() == GameMode.SPECTATOR
                 || player.getGameMode() == GameMode.SPECTATOR) {
-            // TODO better solution for this
-            for (Player target : Bukkit.getOnlinePlayers()) {
+            for (Player target : plugin.getServer().getOnlinePlayers()) {
                 if (player != target && !this.isPlayerIgnored(target)) {
                     this.visibilityChanges.add(Map.entry(player, target));
                     this.visibilityChanges.add(Map.entry(target, player));
@@ -169,15 +202,14 @@ public class AgentListener implements Listener {
     }
 
     public void tickTeam(Player player) {
-        Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+        Scoreboard scoreboard = plugin.getServer().getScoreboardManager().getMainScoreboard();
         Team playerTeam = scoreboard.getPlayerTeam(player);
         String name = playerTeam == null ? null : playerTeam.getName();
-
         this.teams.change(player.getUniqueId(), name);
     }
 
     public void tickVisibilityChanges() {
-        Iterator<Map.Entry<Player, Player>> it = this.visibilityChanges.iterator();
+        var it = this.visibilityChanges.iterator();
         while (it.hasNext()) {
             Map.Entry<Player, Player> entry = it.next();
             it.remove();
@@ -186,42 +218,31 @@ public class AgentListener implements Listener {
         }
     }
 
-    @EventHandler
-    public void onTickEnd(ServerTickEndEvent event) {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (this.isPlayerIgnored(player)) {
-                continue;
-            }
-            this.tickPosition(player);
-            this.tickTeam(player);
-        }
-        this.tickVisibilityChanges();
-
-        this.tickDirtyPlayerMeta();
-    }
-
     public void tickDirtyPlayerMeta() {
         boolean hasChanges = false;
         BackendTickMessage packet = new BackendTickMessage();
-        if (this.positions.isDirty()) {
-            packet.setPositions(this.positions.getChanges());
+
+        var posChanges = this.positions.drainChanges();
+        if (!posChanges.isEmpty()) {
+            packet.setPositions(posChanges);
             hasChanges = true;
         }
-        if (this.playerStates.isDirty()) {
-            packet.setPerPlayerStates(this.playerStates.getChanges());
+
+        var stateChanges = this.playerStates.drainChanges();
+        if (!stateChanges.isEmpty()) {
+            packet.setPerPlayerStates(stateChanges);
             hasChanges = true;
         }
-        if (this.teams.isDirty()) {
-            packet.setTeams(this.teams.getChanges());
+
+        var teamChanges = this.teams.drainChanges();
+        if (!teamChanges.isEmpty()) {
+            packet.setTeams(teamChanges);
             hasChanges = true;
         }
+
         if (hasChanges) {
             this.plugin.sendMetaPacket(packet);
         }
-
-        this.positions.clearChanges();
-        this.playerStates.clearChanges();
-        this.teams.clearChanges();
     }
 
     private void sendRoomDefinition() {
@@ -232,13 +253,18 @@ public class AgentListener implements Listener {
         }
     }
 
-    // try to send room definition only after a channel has been registered
     @EventHandler
     public void onAgentChannelRegistration(PlayerRegisterChannelEvent event) {
         if (PLUGIN_MESSAGE_CHANNEL.equals(event.getChannel())) {
-            // try fire room definition for this server room to service, as
-            // we don't have a connection to the service if there is no player connected
             this.sendRoomDefinition();
         }
+    }
+
+    /**
+     * Cancels all outstanding per-player entity tasks. Called on plugin disable.
+     */
+    public void cancelAllTasks() {
+        this.playerTasks.values().forEach(ScheduledTask::cancel);
+        this.playerTasks.clear();
     }
 }

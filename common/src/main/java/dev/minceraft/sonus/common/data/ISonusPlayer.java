@@ -51,6 +51,15 @@ public interface ISonusPlayer extends IAudioSource {
 
     long getLastKeepAlive();
 
+    /** Returns the voice-chat UDP round-trip ping in milliseconds, or {@code -1} if not measured yet. */
+    default long getVoicePing() {
+        return -1L;
+    }
+
+    /** Called by adapters when a new voice-chat RTT measurement is available. */
+    default void setVoicePing(long pingMs) {
+    }
+
     @Nullable
     String getTeam();
 
