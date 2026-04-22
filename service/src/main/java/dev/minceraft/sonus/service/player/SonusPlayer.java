@@ -14,6 +14,7 @@ import dev.minceraft.sonus.common.rooms.IRoom;
 import dev.minceraft.sonus.protocol.meta.IMetaMessage;
 import dev.minceraft.sonus.protocol.meta.MetaRegistry;
 import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
+import dev.minceraft.sonus.protocol.meta.agentbound.PlayerVoicePingMessage;
 import dev.minceraft.sonus.protocol.meta.agentbound.TriggerCommandUpdateMessage;
 import dev.minceraft.sonus.service.SonusService;
 import dev.minceraft.sonus.service.commands.CommandSender;
@@ -76,6 +77,7 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     private boolean muted;
     private boolean deafened;
     private long lastKeepAlive = System.currentTimeMillis();
+    private final AtomicLong voicePing = new AtomicLong(-1L);
 
     // track server reference
     private volatile @Nullable SonusServer server;
@@ -202,6 +204,23 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     @Override
     public long getLastKeepAlive() {
         return this.lastKeepAlive;
+    }
+
+    @Override
+    public long getVoicePing() {
+        return this.voicePing.get();
+    }
+
+    @Override
+    public void setVoicePing(long pingMs) {
+        long previous = this.voicePing.getAndSet(pingMs);
+        // Only forward to agent if the value changed by more than 5 ms to avoid flooding
+        if (Math.abs(previous - pingMs) >= 5L) {
+            PlayerVoicePingMessage msg = new PlayerVoicePingMessage();
+            msg.setPlayerId(this.getUniqueId());
+            msg.setPingMs(pingMs);
+            this.sendMetaPacket(msg);
+        }
     }
 
     @Override

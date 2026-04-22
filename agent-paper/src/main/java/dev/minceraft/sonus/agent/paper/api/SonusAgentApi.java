@@ -17,6 +17,12 @@ public interface SonusAgentApi {
 
     boolean isConnected(Player player);
 
+    /**
+     * Returns the voice-chat UDP round-trip ping for the given player in milliseconds,
+     * or {@code -1} if the player is not connected to voice chat or no measurement is available yet.
+     */
+    long getVoiceChatPing(Player player);
+
     void registerAudioCategory(AudioCategory category);
 
     AudioPlayer createAudioPlayer(

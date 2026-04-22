@@ -92,7 +92,15 @@ public class VoiceHandler implements IVoiceSvcHandler {
 
     @Override
     public void handlePingPacket(PingSvcPacket packet) {
-        // NO-OP, we never send ping packets
+        if (this.state != State.CONNECTED) {
+            return;
+        }
+        // If this is the echo of a server-initiated ping, measure RTT
+        if (this.connection.onPingReceived(packet.getId(), System.currentTimeMillis())) {
+            return;
+        }
+        // Otherwise it is a client-initiated ping; echo it back so the client can measure its own RTT
+        this.connection.sendPacket(packet);
     }
 
     public enum State {

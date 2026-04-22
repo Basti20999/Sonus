@@ -4,6 +4,7 @@ package dev.minceraft.sonus.protocol.meta;
 import dev.minceraft.sonus.common.protocol.registry.SimpleRegistry;
 import dev.minceraft.sonus.common.protocol.util.VarInt;
 import dev.minceraft.sonus.protocol.meta.agentbound.PlayerConnectionStateMessage;
+import dev.minceraft.sonus.protocol.meta.agentbound.PlayerVoicePingMessage;
 import dev.minceraft.sonus.protocol.meta.agentbound.TriggerCommandUpdateMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.AudioStreamMessage;
 import dev.minceraft.sonus.protocol.meta.servicebound.BackendTickMessage;
@@ -26,6 +27,7 @@ public final class MetaRegistry {
                     .register(RegisterAudioCategoryMessage.class, RegisterAudioCategoryMessage::new)
                     .register(PlayerConnectionStateMessage.class, PlayerConnectionStateMessage::new)
                     .register(TriggerCommandUpdateMessage.class, TriggerCommandUpdateMessage::new)
+                    .register(PlayerVoicePingMessage.class, PlayerVoicePingMessage::new)
                     .build();
 
     private MetaRegistry() {

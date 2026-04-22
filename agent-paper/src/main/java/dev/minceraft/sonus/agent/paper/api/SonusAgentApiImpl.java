@@ -14,6 +14,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +31,7 @@ public class SonusAgentApiImpl implements SonusAgentApi {
     protected final SonusAgentPlugin plugin;
 
     protected final Set<UUID> connectedPlayers = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Long> voicePings = new ConcurrentHashMap<>();
 
     public SonusAgentApiImpl(SonusAgentPlugin plugin) {
         this.plugin = plugin;
@@ -38,6 +40,19 @@ public class SonusAgentApiImpl implements SonusAgentApi {
     @Override
     public boolean isConnected(Player player) {
         return this.connectedPlayers.contains(player.getUniqueId());
+    }
+
+    @Override
+    public long getVoiceChatPing(Player player) {
+        return this.voicePings.getOrDefault(player.getUniqueId(), -1L);
+    }
+
+    public void setVoicePing(UUID playerId, long pingMs) {
+        this.voicePings.put(playerId, pingMs);
+    }
+
+    public void removeVoicePing(UUID playerId) {
+        this.voicePings.remove(playerId);
     }
 
     @Override

@@ -18,6 +18,7 @@ configure<BukkitPluginDescription> {
     website = "https://minceraft.dev/sonus"
     apiVersion = "1.13"
     main = "dev.minceraft.sonus.agent.paper.SonusAgentPlugin"
+    foliaSupported = true
 }
 
 tasks {

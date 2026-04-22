@@ -1,5 +1,6 @@
 package dev.minceraft.sonus.agent.paper.util.delta;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import java.util.Objects;
@@ -15,19 +16,18 @@ public class DeltaTrackerTable<R, C, V> {
         this.changed = holderSupplier.get();
     }
 
-    public void change(R row, C column, V value) {
+    public synchronized void change(R row, C column, V value) {
         V previous = this.state.put(row, column, value);
-        if (Objects.equals(previous, value)) {
-            return;
+        if (!Objects.equals(previous, value)) {
+            this.changed.put(row, column, value);
         }
-        this.changed.put(row, column, value);
     }
 
-    public V get(R row, C column) {
+    public synchronized V get(R row, C column) {
         return this.state.get(row, column);
     }
 
-    public void computeIfAbsent(R row, C column, Supplier<V> valueSupplier) {
+    public synchronized void computeIfAbsent(R row, C column, Supplier<V> valueSupplier) {
         if (this.state.contains(row, column)) {
             return;
         }
@@ -36,30 +36,42 @@ public class DeltaTrackerTable<R, C, V> {
         this.changed.put(row, column, value);
     }
 
-    public void removeSilent(R row, C column) {
+    public synchronized void removeSilent(R row, C column) {
         this.state.remove(row, column);
         this.changed.remove(row, column);
     }
 
-    public void removeRowSilent(R row) {
+    public synchronized void removeRowSilent(R row) {
         this.state.row(row).clear();
         this.changed.row(row).clear();
     }
 
-    public void removeColumnSilent(C column) {
+    public synchronized void removeColumnSilent(C column) {
         this.state.column(column).clear();
         this.changed.column(column).clear();
     }
 
-    public Table<R, C, V> getChanges() {
+    public synchronized Table<R, C, V> getChanges() {
         return this.changed;
     }
 
-    public boolean isDirty() {
+    public synchronized boolean isDirty() {
         return !this.changed.isEmpty();
     }
 
-    public void clearChanges() {
+    public synchronized void clearChanges() {
         this.changed.clear();
+    }
+
+    /**
+     * Atomically returns a copy of all pending changes and clears the change set.
+     */
+    public synchronized Table<R, C, V> drainChanges() {
+        if (this.changed.isEmpty()) {
+            return HashBasedTable.create();
+        }
+        Table<R, C, V> copy = HashBasedTable.create(this.changed);
+        this.changed.clear();
+        return copy;
     }
 }

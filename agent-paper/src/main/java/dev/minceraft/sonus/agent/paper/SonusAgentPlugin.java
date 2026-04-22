@@ -37,6 +37,9 @@ public class SonusAgentPlugin extends JavaPlugin {
     protected @MonotonicNonNull OpusNativesLoader opusNatives;
     protected @MonotonicNonNull LameNativesLoader lameNatives;
 
+    // Kept for subclasses and cleanup
+    private @MonotonicNonNull AgentListener agentListener;
+
     protected void loadNatives() {
         this.opusNatives = new OpusNativesLoader();
         this.lameNatives = new LameNativesLoader();
@@ -72,7 +75,22 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(this.createAgentListener(), this);
+        AgentListener listener = this.createAgentListener();
+        this.agentListener = listener;
+        Bukkit.getPluginManager().registerEvents(listener, this);
+
+        // Schedule aggregation + send once per tick on the global region.
+        // On Paper (non-Folia) this runs on the main thread; on Folia it runs
+        // on the global region thread, which is safe for plugin messaging.
+        Bukkit.getGlobalRegionScheduler().runAtFixedRate(this, task -> {
+            listener.tickVisibilityChanges();
+            listener.tickDirtyPlayerMeta();
+        }, 1L, 1L);
+
+        // Handle any players that are already online (e.g. after /reload)
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            listener.schedulePlayerEntityTask(player);
+        }
 
         Bukkit.getMessenger().registerOutgoingPluginChannel(this, PLUGIN_MESSAGE_CHANNEL);
         Bukkit.getMessenger().registerIncomingPluginChannel(this, PLUGIN_MESSAGE_CHANNEL, this.createAgentMessageListener());
@@ -82,6 +100,9 @@ public class SonusAgentPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (this.agentListener != null) {
+            this.agentListener.cancelAllTasks();
+        }
         try (OpusNativesLoader ignoredOpusNatives = this.opusNatives;
              LameNativesLoader ignoredLameNatives = this.lameNatives) {
             this.opusNatives = null;
@@ -93,15 +114,14 @@ public class SonusAgentPlugin extends JavaPlugin {
         byte[] data = MetaRegistry.write(packet);
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!player.isConnected()) {
-                continue; // not connected
+                continue;
             }
-            // send to first player who has our agent messaging channel registered
             if (player.getListeningPluginChannels().contains(PLUGIN_MESSAGE_CHANNEL)) {
                 player.sendPluginMessage(this, PLUGIN_MESSAGE_CHANNEL, data);
                 return true;
             }
         }
-        return false; // no valid connection found
+        return false;
     }
 
     public void loadRoomDefinition() {

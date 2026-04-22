@@ -2,6 +2,7 @@ package dev.minceraft.sonus.agent.paper.util.delta;
 
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -16,33 +17,44 @@ public class DeltaTrackerMap<K, V> {
         this.changed = holderSupplier.get();
     }
 
-    public void change(K key, V value) {
+    public synchronized void change(K key, V value) {
         V previous = this.state.put(key, value);
-        if (Objects.equals(previous, value)) {
-            return;
+        if (!Objects.equals(previous, value)) {
+            this.changed.put(key, value);
         }
-        this.changed.put(key, value);
     }
 
     @Nullable
-    public V get(K key) {
+    public synchronized V get(K key) {
         return this.state.get(key);
     }
 
-    public void removeSilent(K key) {
+    public synchronized void removeSilent(K key) {
         this.state.remove(key);
         this.changed.remove(key);
     }
 
-    public Map<K, V> getChanges() {
+    public synchronized Map<K, V> getChanges() {
         return this.changed;
     }
 
-    public boolean isDirty() {
+    public synchronized boolean isDirty() {
         return !this.changed.isEmpty();
     }
 
-    public void clearChanges() {
+    public synchronized void clearChanges() {
         this.changed.clear();
+    }
+
+    /**
+     * Atomically returns a copy of all pending changes and clears the change set.
+     */
+    public synchronized Map<K, V> drainChanges() {
+        if (this.changed.isEmpty()) {
+            return Map.of();
+        }
+        Map<K, V> copy = new HashMap<>(this.changed);
+        this.changed.clear();
+        return copy;
     }
 }
