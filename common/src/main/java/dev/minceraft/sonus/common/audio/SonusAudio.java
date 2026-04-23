@@ -108,7 +108,7 @@ public final class SonusAudio {
     }
 
     public SonusAudio copy() {
-        // intentionally discard audio processor while copying
-        return new SonusAudio(this.sequenceNumber, null, this.pcm, this.opus);
+        // retain the processor so the copy can still lazy-transcode between pcm/opus
+        return new SonusAudio(this.sequenceNumber, this.processor, this.pcm, this.opus);
     }
 }

@@ -42,40 +42,23 @@ public class SpeexNativesLoader extends NativesLoader {
         private final MethodHandle close;
 
         public AutomaticGainControl(int frameSize, int sampleRate) {
-            Object agc;
-            try {
-                agc = SpeexNativesLoader.this.agcCtor.invoke(frameSize, sampleRate);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            Object agc = unchecked(() -> SpeexNativesLoader.this.agcCtor.invoke(frameSize, sampleRate));
             this.setTarget = SpeexNativesLoader.this.agcSetTarget.bindTo(agc);
             this.agc = SpeexNativesLoader.this.agcAgc.bindTo(agc);
             this.close = SpeexNativesLoader.this.agcClose.bindTo(agc);
         }
 
         public void setTarget(int target) {
-            try {
-                this.setTarget.invoke(target);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.setTarget.invoke(target));
         }
 
         public boolean agc(short[] input) {
-            try {
-                return (boolean) this.agc.invoke(input);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            return unchecked(() -> (boolean) this.agc.invoke(input));
         }
 
         @Override
         public void close() {
-            try {
-                this.close.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.close.invoke());
         }
     }
 }

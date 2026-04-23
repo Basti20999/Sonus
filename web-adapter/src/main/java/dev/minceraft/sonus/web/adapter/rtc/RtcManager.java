@@ -9,9 +9,9 @@ import dev.minceraft.sonus.web.pion.launcher.PionLauncher;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
@@ -30,7 +30,7 @@ public final class RtcManager implements AutoCloseable {
     private final OpusNativesLoader opusNatives;
     private final Supplier<WebConfig> config;
 
-    private final Map<UUID, RtcHandler> peers = new HashMap<>();
+    private final Map<UUID, RtcHandler> peers = new ConcurrentHashMap<>();
 
     public RtcManager(OpusNativesLoader opusNatives, Supplier<WebConfig> config) {
         this.opusNatives = opusNatives;

@@ -9,17 +9,17 @@ import org.jspecify.annotations.NullMarked;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @NullMarked
-public class SonusPluginMessenger implements IPluginMessenger {
+public final class SonusPluginMessenger implements IPluginMessenger {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("Sonus");
 
     private final SonusService service;
-    private final Map<Key, AbstractPluginMessageCodec> codecs = new HashMap<>();
+    private final Map<Key, AbstractPluginMessageCodec> codecs = new ConcurrentHashMap<>();
 
     public SonusPluginMessenger(SonusService service) {
         this.service = service;

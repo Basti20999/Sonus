@@ -3,6 +3,7 @@ package dev.minceraft.sonus.svc.protocol.util;
 import dev.minceraft.sonus.common.version.Versioned;
 import net.kyori.adventure.key.Key;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -55,6 +56,6 @@ public final class SvcPluginChannels {
     }
 
     public static Set<Key> getChannels() {
-        return Set.copyOf(CHANNELS);
+        return Collections.unmodifiableSet(CHANNELS);
     }
 }

@@ -18,11 +18,12 @@ public class StaticRoom extends AbstractRoom {
 
     @Override
     protected void sendAudio0(IAudioSource source, SonusAudio audio) {
+        // audio is shared across recipients; none of the sendXxxAudio paths mutate its backing arrays
         for (ISonusPlayer member : this.members.values()) {
             if (member.getSenderId(member).equals(source.getSenderId(member))) {
                 continue;
             }
-            member.sendStaticAudio(source, audio.copy());
+            member.sendStaticAudio(source, audio);
         }
     }
 

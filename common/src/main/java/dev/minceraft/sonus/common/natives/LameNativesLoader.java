@@ -49,12 +49,7 @@ public class LameNativesLoader extends NativesLoader {
         private final MethodHandle close;
 
         public Decoder(InputStream input) {
-            Object decoder;
-            try {
-                decoder = LameNativesLoader.this.decoderCtor.invoke(input);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            Object decoder = unchecked(() -> LameNativesLoader.this.decoderCtor.invoke(input));
             this.decodeNextFrame = LameNativesLoader.this.decoderDecodeNextFrame.bindTo(decoder);
             this.getSampleRate = LameNativesLoader.this.decoderGetSampleRate.bindTo(decoder);
             this.createAudioFormat = LameNativesLoader.this.decoderCreateAudioFormat.bindTo(decoder);
@@ -62,36 +57,20 @@ public class LameNativesLoader extends NativesLoader {
         }
 
         public short @Nullable [] decodeNextFrame() {
-            try {
-                return (short[]) this.decodeNextFrame.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            return unchecked(() -> (short[]) this.decodeNextFrame.invoke());
         }
 
         public int getSampleRate() {
-            try {
-                return (int) this.getSampleRate.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            return unchecked(() -> (int) this.getSampleRate.invoke());
         }
 
         public @Nullable AudioFormat createAudioFormat() {
-            try {
-                return (AudioFormat) this.createAudioFormat.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            return unchecked(() -> (AudioFormat) this.createAudioFormat.invoke());
         }
 
         @Override
         public void close() {
-            try {
-                this.close.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.close.invoke());
         }
     }
 }

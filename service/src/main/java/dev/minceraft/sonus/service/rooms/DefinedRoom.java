@@ -21,15 +21,16 @@ public class DefinedRoom extends AbstractRoom {
 
     @Override
     protected void sendAudio0(IAudioSource source, SonusAudio audio) {
+        // audio is shared across recipients; none of the sendXxxAudio paths mutate its backing arrays
         for (ISonusPlayer receiver : this.members.values()) {
             if (receiver.getSenderId(receiver).equals(source.getSenderId(receiver))) {
                 continue;
             }
             RoomDefinition.RelationState state = this.definition.getState(source, receiver);
             switch (state) {
-                case STATIC -> receiver.sendStaticAudio(source, audio.copy());
-                case SPATIAL -> receiver.sendSpatialAudio(source, audio.copy());
-                case SPATIAL_NORMALIZED -> receiver.sendSpatialNormedAudio(source, audio.copy());
+                case STATIC -> receiver.sendStaticAudio(source, audio);
+                case SPATIAL -> receiver.sendSpatialAudio(source, audio);
+                case SPATIAL_NORMALIZED -> receiver.sendSpatialNormedAudio(source, audio);
             }
         }
     }
