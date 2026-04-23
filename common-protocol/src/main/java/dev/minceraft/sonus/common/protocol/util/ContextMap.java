@@ -14,7 +14,7 @@ public class ContextMap {
         }
     };
     private final Recycler.Handle<ContextMap> handle;
-    private final Map<String, Object> delegate = new HashMap<>();
+    private final Map<String, Object> delegate = new HashMap<>(8);
 
     private ContextMap(Recycler.Handle<ContextMap> handle) {
         this.handle = handle;
@@ -25,6 +25,8 @@ public class ContextMap {
     }
 
     public void recycle() {
+        // clear before returning to the pool, otherwise the next user observes stale entries
+        this.delegate.clear();
         this.handle.recycle(this);
     }
 

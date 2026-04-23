@@ -47,6 +47,12 @@ public abstract class AbstractRoom implements IRoom {
         this.sendAudioEnd0(realSource, sequence);
     }
 
+    /**
+     * Delivers {@code audio} to each room member. The {@code audio} instance is shared across
+     * recipients for efficiency &mdash; implementations must not mutate its backing pcm/opus
+     * arrays or call {@link SonusAudio#setDirtyPcm()} / {@link SonusAudio#setDirtyOpus()} from
+     * this code path.
+     */
     @ApiStatus.OverrideOnly
     protected abstract void sendAudio0(IAudioSource source, SonusAudio audio);
 

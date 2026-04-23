@@ -91,9 +91,8 @@ public final class AudioConversionUtil {
                 sourceFormat.getSampleRate(), Short.SIZE, sourceFormat.getChannels(),
                 sourceFormat.getChannels() * 2,
                 sourceFormat.getSampleRate(), false);
-        AudioInputStream stream1 = AudioSystem.getAudioInputStream(convertFormat, source);
-        AudioInputStream stream2 = AudioSystem.getAudioInputStream(SONUS_FORMAT, stream1);
-        try {
+        try (AudioInputStream stream1 = AudioSystem.getAudioInputStream(convertFormat, source);
+             AudioInputStream stream2 = AudioSystem.getAudioInputStream(SONUS_FORMAT, stream1)) {
             return bytesToShorts(adjustVolume(stream2.readAllBytes(), volume));
         } catch (IOException exception) {
             throw new RuntimeException("Error while reading audio stream", exception);

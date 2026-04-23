@@ -58,6 +58,36 @@ public class NativesLoader implements AutoCloseable {
         }
     }
 
+    @FunctionalInterface
+    protected interface ThrowingSupplier<T> {
+        T get() throws Throwable;
+    }
+
+    @FunctionalInterface
+    protected interface ThrowingRunnable {
+        void run() throws Throwable;
+    }
+
+    /**
+     * Invokes {@code op} wrapping any thrown {@link Throwable} in a {@link RuntimeException}.
+     * Used by native loaders to unchecked-propagate {@code MethodHandle.invoke} failures.
+     */
+    protected static <T> T unchecked(ThrowingSupplier<T> op) {
+        try {
+            return op.get();
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
+    protected static void unchecked(ThrowingRunnable op) {
+        try {
+            op.run();
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
+    }
+
     public URLClassLoader getClassLoader() {
         return this.classLoader;
     }

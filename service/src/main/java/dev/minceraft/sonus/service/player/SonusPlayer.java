@@ -71,12 +71,12 @@ public final class SonusPlayer implements ISonusPlayer, CommandSender, AutoClose
     // metadata sent by the backend server agent
     private @Nullable WorldRotatedVec3d position;
     private @Nullable String team;
-    // player state
-    private boolean connected; // player has initialized connection, but may not be active yet
-    private boolean voiceActive; // active adapter connection
-    private boolean muted;
-    private boolean deafened;
-    private long lastKeepAlive = System.currentTimeMillis();
+    // player state (volatile: read by scheduler thread, written by network/adapter threads)
+    private volatile boolean connected; // player has initialized connection, but may not be active yet
+    private volatile boolean voiceActive; // active adapter connection
+    private volatile boolean muted;
+    private volatile boolean deafened;
+    private volatile long lastKeepAlive = System.currentTimeMillis();
     private final AtomicLong voicePing = new AtomicLong(-1L);
 
     // track server reference

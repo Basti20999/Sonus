@@ -77,13 +77,8 @@ public class OpusNativesLoader extends NativesLoader {
 
 
         public Encoder(int sampleRate, int channels, AudioProcessor.Mode mode) {
-            Object encoder;
-            try {
-                encoder = OpusNativesLoader.this.encoderCtor.invoke(
-                        sampleRate, channels, OpusNativesLoader.this.convertMode(mode));
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            Object encoder = unchecked(() -> OpusNativesLoader.this.encoderCtor.invoke(
+                    sampleRate, channels, OpusNativesLoader.this.convertMode(mode)));
             this.resetState = OpusNativesLoader.this.encoderResetState.bindTo(encoder);
             this.setMaxPayloadSize = OpusNativesLoader.this.encoderSetMaxPayloadSize.bindTo(encoder);
             this.setMaxPacketLossPercentage = OpusNativesLoader.this.encoderSetMaxPacketLossPercentage.bindTo(encoder);
@@ -92,44 +87,24 @@ public class OpusNativesLoader extends NativesLoader {
         }
 
         public void resetState() {
-            try {
-                this.resetState.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.resetState.invoke());
         }
 
         public void setMaxPayloadSize(int mtu) {
-            try {
-                this.setMaxPayloadSize.invoke(mtu);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.setMaxPayloadSize.invoke(mtu));
         }
 
         public void setMaxPacketLossPercentage(float percentage) {
-            try {
-                this.setMaxPacketLossPercentage.invoke(percentage);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.setMaxPacketLossPercentage.invoke(percentage));
         }
 
         public byte[] encode(short[] pcm) {
-            try {
-                return (byte[]) this.encode.invoke(pcm);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            return unchecked(() -> (byte[]) this.encode.invoke(pcm));
         }
 
         @Override
         public void close() {
-            try {
-                this.close.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.close.invoke());
         }
     }
 
@@ -141,12 +116,7 @@ public class OpusNativesLoader extends NativesLoader {
         private final MethodHandle close;
 
         public Decoder(int sampleRate, int channels) {
-            Object decoder;
-            try {
-                decoder = OpusNativesLoader.this.decoderCtor.invoke(sampleRate, channels);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            Object decoder = unchecked(() -> OpusNativesLoader.this.decoderCtor.invoke(sampleRate, channels));
             this.resetState = OpusNativesLoader.this.decoderResetState.bindTo(decoder);
             this.setFrameSize = OpusNativesLoader.this.decoderSetFrameSize.bindTo(decoder);
             this.decode = OpusNativesLoader.this.decoderDecode.bindTo(decoder);
@@ -154,36 +124,20 @@ public class OpusNativesLoader extends NativesLoader {
         }
 
         public void resetState() {
-            try {
-                this.resetState.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.resetState.invoke());
         }
 
         public void setFrameSize(int frameSize) {
-            try {
-                this.setFrameSize.invoke(frameSize);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.setFrameSize.invoke(frameSize));
         }
 
         public short[] decode(byte[] opus) {
-            try {
-                return (short[]) this.decode.invoke(opus);
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            return unchecked(() -> (short[]) this.decode.invoke(opus));
         }
 
         @Override
         public void close() {
-            try {
-                this.close.invoke();
-            } catch (Throwable throwable) {
-                throw new RuntimeException(throwable);
-            }
+            unchecked(() -> this.close.invoke());
         }
     }
 }

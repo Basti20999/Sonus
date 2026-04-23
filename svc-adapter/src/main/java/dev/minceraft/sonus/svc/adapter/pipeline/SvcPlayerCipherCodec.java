@@ -5,7 +5,6 @@ import dev.minceraft.sonus.svc.adapter.connection.SvcConnection;
 import dev.minceraft.sonus.svc.protocol.SvcUdpMagicCodec;
 import dev.minceraft.sonus.svc.protocol.version.VersionedCipher;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -34,6 +33,11 @@ public class SvcPlayerCipherCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
     private final Cipher decodeCipher;
     private byte @Nullable [] lastDecodeIv;
 
+    // scratch buffers reused per encode/decode; Netty runs a given channel's pipeline on a
+    // single event-loop thread, so per-instance non-shared state is safe without synchronization
+    private byte[] encodeScratch = new byte[256];
+    private byte[] decodeScratch = new byte[256];
+
     public SvcPlayerCipherCodec(SvcConnection connection, SvcUdpMagicCodec svcCodec, UUID secret) {
         super(svcCodec);
         this.connection = connection;
@@ -61,18 +65,35 @@ public class SvcPlayerCipherCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
         return iv;
     }
 
+    private byte[] ensureEncodeScratch(int size) {
+        if (this.encodeScratch.length < size) {
+            this.encodeScratch = new byte[Integer.highestOneBit(size - 1) << 1];
+        }
+        return this.encodeScratch;
+    }
+
+    private byte[] ensureDecodeScratch(int size) {
+        if (this.decodeScratch.length < size) {
+            this.decodeScratch = new byte[Integer.highestOneBit(size - 1) << 1];
+        }
+        return this.decodeScratch;
+    }
+
     @Override
     public void encode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) throws Exception {
         try {
-            byte[] unciphered = new byte[msg.readableBytes()];
-            msg.readBytes(unciphered);
+            int uncipheredLen = msg.readableBytes();
+            byte[] unciphered = this.ensureEncodeScratch(uncipheredLen);
+            msg.readBytes(unciphered, 0, uncipheredLen);
             byte[] iv = this.generateIV();
             VersionedCipher.initCipher(this.connection.getVersion(), this.encodeCipher, Cipher.ENCRYPT_MODE, this.key, iv);
-            byte[] ciphered = this.encodeCipher.doFinal(unciphered);
+            byte[] ciphered = this.encodeCipher.doFinal(unciphered, 0, uncipheredLen);
 
-            out.add(Unpooled.compositeBuffer(2)
-                    .addComponent(true, Unpooled.wrappedBuffer(iv))
-                    .addComponent(true, Unpooled.wrappedBuffer(ciphered)));
+            // single pooled buffer instead of composite+two wrapped buffers; same IV-then-ciphertext wire layout
+            ByteBuf outBuf = ctx.alloc().buffer(iv.length + ciphered.length);
+            outBuf.writeBytes(iv);
+            outBuf.writeBytes(ciphered);
+            out.add(outBuf);
         } finally {
             msg.release();
         }
@@ -80,19 +101,23 @@ public class SvcPlayerCipherCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
 
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) throws Exception {
-        byte[] iv = new byte[this.ivSize];
-        msg.readBytes(iv);
-        // if the IV hasn't changed, retain old decode cipher
-        if (this.lastDecodeIv == null || !Arrays.equals(this.lastDecodeIv, iv)) {
-            VersionedCipher.initCipher(this.connection.getVersion(), this.decodeCipher, Cipher.DECRYPT_MODE, this.key, iv);
-            this.lastDecodeIv = iv;
-        }
-
         try {
-            byte[] ciphered = new byte[msg.readableBytes()];
-            msg.readBytes(ciphered);
-            byte[] unciphered = this.decodeCipher.doFinal(ciphered);
-            out.add(Unpooled.wrappedBuffer(unciphered));
+            byte[] iv = new byte[this.ivSize];
+            msg.readBytes(iv);
+            // if the IV hasn't changed, retain old decode cipher
+            if (this.lastDecodeIv == null || !Arrays.equals(this.lastDecodeIv, iv)) {
+                VersionedCipher.initCipher(this.connection.getVersion(), this.decodeCipher, Cipher.DECRYPT_MODE, this.key, iv);
+                this.lastDecodeIv = iv;
+            }
+
+            int cipheredLen = msg.readableBytes();
+            byte[] ciphered = this.ensureDecodeScratch(cipheredLen);
+            msg.readBytes(ciphered, 0, cipheredLen);
+            byte[] unciphered = this.decodeCipher.doFinal(ciphered, 0, cipheredLen);
+
+            ByteBuf outBuf = ctx.alloc().buffer(unciphered.length);
+            outBuf.writeBytes(unciphered);
+            out.add(outBuf);
         } finally {
             msg.release();
         }
