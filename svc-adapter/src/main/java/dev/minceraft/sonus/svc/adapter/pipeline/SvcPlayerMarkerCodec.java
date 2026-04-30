@@ -31,11 +31,15 @@ public class SvcPlayerMarkerCodec extends SvcUdpPipelineNode<ByteBuf, ByteBuf> {
 
     @Override
     public void decode(ChannelHandlerContext ctx, ByteBuf msg, List<Object> out, SvcUdpContext svcCtx) {
-        UUID playerId = DataTypeUtil.readUniqueId(msg);
-        SvcConnection connection = this.adapter.getAdapter().getSessions().getConnection(playerId);
-        if (connection != null) {
-            svcCtx.connection = connection;
-            out.add(msg.retainedSlice());
+        try {
+            UUID playerId = DataTypeUtil.readUniqueId(msg);
+            SvcConnection connection = this.adapter.getAdapter().getSessions().getConnection(playerId);
+            if (connection != null) {
+                svcCtx.connection = connection;
+                out.add(msg.retainedSlice());
+            }
+        } finally {
+            msg.release();
         }
     }
 }
